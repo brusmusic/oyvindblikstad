@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Øyvind Blikstad</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="random-square"></div>
+
+    <main>
+        <h1>Øyvind Blikstad</h1>
+        <h2>Lydkunstner, komponist og utforsker av lydens betydning</h2>
+<div class="portrait-wrapper">
+    <img src="images/ØyvindProfil.avif" alt="Øyvind Blikstad" class="portrait">
+</div>
+        <p>
+            Jeg er født i 1983 og har arbeidet med lyd i over to tiår. Utdannet i
+            musikkvitenskap og filmkomposisjon, og med erfaring fra film, dokumentar,
+            kunstprosjekter, elektronisk musikk og helserettet lydarbeid.
+        </p>
+
+        <p>
+            Arbeidet mitt har aldri handlet om én form eller sjanger. For meg er lyd både
+            språk, struktur og energi. Alt som lever vibrerer, alt som beveger seg lager lyd,
+            og det er i dette møtepunktet jeg trives best: mellom menneske og lyd, mellom
+            nervesystem og tilstedeværelse, mellom kunst og biologi.
+        </p>
+
+        <h3>Erfaring og anerkjennelser</h3>
+
+        <p>
+            Jeg har komponert for et bredt spekter av produksjoner og prosjekter. Arbeidet har
+            blitt vist internasjonalt og mottatt blant annet:
+        </p>
+
+        <ul>
+            <li>Annecy Film Festival – Off Limits Award (vinner)</li>
+            <li>Animafest Cyprus – Grand Prix Award (vinner)</li>
+            <li>Nordic Docs – Best Short Documentary (vinner)</li>
+            <li>European Film Academy – Young Audience Award (vinner)</li>
+            <li>Gullrutens fagpris – nominasjon for beste musikk</li>
+            <li>Spellemann – nominasjon for beste elektroniske album</li>
+        </ul>
+
+        <h3>To parallelle spor</h3>
+
+        <p>
+            <strong>Lyd for andre:</strong> filmmusikk, dokumentarer, animasjon, installasjoner og
+            tverrfaglige prosjekter der lyd bærer historien og skaper rom som ikke finnes
+            i bildet alene.
+        </p>
+
+        <p>
+            <strong>Lyd som fenomen:</strong> en utforskning av hvordan lyd påvirker kroppen –
+            pust, puls, nervesystem, tilstedeværelse og oppmerksomhet. Dette sporet ligger
+            til grunn for mine mer personlige og eksperimentelle arbeider.
+        </p>
+
+        <h3>Kunstnerisk ståsted</h3>
+
+        <p>
+            Arbeidet mitt handler i bunn og grunn om å lytte: til historiene, til rommene,
+            til materialene og til menneskene. Lyd er for meg både konkret og gåtefull,
+            fysisk og grenseoverskridende. Jeg søker ikke konklusjoner – jeg følger prosesser,
+            bevegelser og vibrasjoner som peker utover musikken selv.
+        </p>
+
+        <p>
+            Jeg tror at lyd kan avsløre noe fundamentalt om oss: hvordan vi bærer spenning,
+            hvordan vi finner ro, og hvordan vi er forbundet med omgivelsene våre på måter
+            som ennå ikke er fullt forstått.
+        </p>
+    </main>
+
+    <script>
+        // Dissonerende random farge for kvadratet
+        function randomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            const saturation = 70 + Math.random() * 30;
+            const lightness = 40 + Math.random() * 20;
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+        document.getElementById("random-square").style.backgroundColor = randomColor();
+    </script>
+
+</body>
+</html>
