@@ -98,8 +98,8 @@ li {
 
 /* Tomt kvadrat med samme størrelse og farge */
 .contact-square {
-    width: calc(var(--square-size) + 2px);
-    height: calc(var(--square-size) + 2px);
+    width: calc(var(--square-size) + 20px);
+    height: calc(var(--square-size) + 20px);
     border: 2px solid var(--square-color);
     border-radius: 2px;
     box-sizing: border-box;
