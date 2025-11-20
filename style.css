@@ -85,7 +85,7 @@ li {
 /* CSS-variabel som JS oppdaterer automatisk */
 :root {
     --square-color: #ff6600;  /* Blir overskrevet av randomColor() */
-    --square-size: 14px;      /* Bruk samme størrelse som #random-square */
+    --square-size: 16px;      /* Bruk samme størrelse som #random-square */
 }
 
 /* Container for kvadrat + tekst */
