@@ -74,3 +74,23 @@ li {
     opacity: 0.92;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
+
+:root {
+  --square-color: #ff6600; /* Sett inn fargen på din randomiserte firkant */
+}
+
+.contact-button {
+  display: inline-block;
+  padding: 10px 18px;
+  border: 2px solid var(--square-color);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;         /* Bruker samme tekstfarge som resten av siden */
+  background: inherit;    /* Bruker samme bakgrunn */
+  font-size: 1rem;
+  margin-top: 40px;
+}
+
+.contact-button:hover {
+  opacity: 0.7;           /* Diskré hover-effekt */
+}
