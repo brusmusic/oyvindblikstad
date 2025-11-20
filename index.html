@@ -104,6 +104,14 @@
     // Oppdater CSS-variabel for det tomme kontakt-kvadratet
     document.documentElement.style.setProperty('--square-color', color);
 </script>
-
+    
+<script>
+function toggleContactMenu(e) {
+    e.preventDefault();
+    const menu = document.getElementById("contact-menu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+</script>
+    
 </body>
 </html>
