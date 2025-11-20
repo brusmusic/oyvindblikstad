@@ -85,7 +85,7 @@ li {
 /* CSS-variabel som JS oppdaterer automatisk */
 :root {
     --square-color: #ff6600;  /* Blir overskrevet av randomColor() */
-    --square-size: 16px;      /* Bruk samme størrelse som #random-square */
+    --square-size: 14px;      /* Bruk samme størrelse som #random-square */
 }
 
 /* Container for kvadrat + tekst */
@@ -98,8 +98,8 @@ li {
 
 /* Tomt kvadrat med samme størrelse og farge */
 .contact-square {
-    width: var(--square-size);
-    height: var(--square-size);
+    width: calc(var(--square-size) + 2px);
+    height: calc(var(--square-size) + 2px);
     border: 2px solid var(--square-color);
     border-radius: 2px;
     box-sizing: border-box;
