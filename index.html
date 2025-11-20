@@ -12,11 +12,12 @@
 
     <main>
         <h1>Øyvind Blikstad</h1>
-        <h2>
-Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
-<div class="portrait-wrapper">
-    <img src="images/ØyvindProfil.jpg" alt="Øyvind Blikstad" class="portrait">
-</div>
+        <h2>Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
+
+        <div class="portrait-wrapper">
+            <img src="images/OyvindProfil.jpg" alt="Øyvind Blikstad" class="portrait">
+        </div>
+
         <p>
             Jeg er født i 1983 og har arbeidet med lyd i over to tiår. Utdannet i
             musikkvitenskap og filmkomposisjon, og med erfaring fra film, dokumentar,
@@ -63,8 +64,8 @@ Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
 
         <p>
             Arbeidet mitt handler i bunn og grunn om å lytte. Til lyden av historiene, rommene,
-             materialene, menneskene og bidra til historiefortellingen. Lyd er for meg både konkret og gåtefull,
-            fysisk og grenseoverskridende. Jeg søker ikke konklusjoner - jeg følger prosesser,
+            materialene, menneskene og bidra til historiefortellingen. Lyd er for meg både konkret og gåtefull,
+            fysisk og grenseoverskridende. Jeg søker ikke konklusjoner – jeg følger prosesser,
             bevegelser og vibrasjoner som helst peker utover musikken selv.
         </p>
 
@@ -73,12 +74,18 @@ Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
             hvordan vi finner ro, og hvordan vi er forbundet med omgivelsene våre på måter
             som ennå ikke er fullt forstått.
         </p>
-       <p>
-<div class="contact-container">
+
+        <!-- RIKTIG KONTAKTSEKSJON (uten p rundt div) -->
+       <div class="contact-container">
     <div class="contact-square"></div>
-    <a href="mailto:oyvindblikstad@gmail.com" class="contact-text">Tacotakt</a>
+    <a href="#" class="contact-text" onclick="toggleContactMenu(event)">Ta kontakt</a>
 </div>
-</p>
+
+<div id="contact-menu" class="contact-menu">
+    <a href="tel:+4794307677" class="contact-option">📞 snakk </a>
+    <a href="mailto:oyvindblikstad@gmail.com" class="contact-option">✉️ skriv
+    </a>
+</div>
     </main>
 
 <script>
