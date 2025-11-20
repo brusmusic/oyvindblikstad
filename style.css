@@ -1,38 +1,53 @@
-/* Global style */
+/* --------------------------------------------------------
+   GLOBAL STYLE & RESET
+   -------------------------------------------------------- */
+
+/* Sikrer at padding og border er inkludert i bredden på elementer */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     padding: 0;
-    background: #f4f1ec; /* varm sandfarge */
+    background: #f4f1ec; /* Varm sandfarge */
     color: #1e1e1e;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.65;
+    -webkit-font-smoothing: antialiased; /* Gjør fonter skarpere på Mac/iOS */
 }
 
 main {
     max-width: 720px;
     margin: 80px auto;
-    padding: 0 20px;
+    padding: 0 20px 60px 20px; /* Litt ekstra padding i bunn */
 }
+
+/* --------------------------------------------------------
+   TYPOGRAFI
+   -------------------------------------------------------- */
 
 h1 {
     font-size: 42px;
     font-weight: 400;
     margin-bottom: 10px;
     color: #2e2e2e;
+    letter-spacing: -0.5px;
 }
 
 h2 {
     font-size: 20px;
     font-weight: 300;
     margin-bottom: 40px;
+    color: #555; /* Litt mykere kontrast på undertittel */
 }
 
 h3 {
     font-size: 22px;
     margin-top: 40px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: #3a3a3a;
+    font-weight: 500;
 }
 
 p {
@@ -43,14 +58,19 @@ p {
 ul {
     margin-left: 20px;
     margin-bottom: 30px;
+    padding-left: 0;
 }
 
 li {
     margin-bottom: 8px;
+    list-style-position: inside; /* Holder punktene pent på linje */
 }
 
-/* Øverste random kvadrat */
+/* --------------------------------------------------------
+   DESIGN-ELEMENTER
+   -------------------------------------------------------- */
 
+/* Øverste random kvadrat */
 #random-square {
     position: fixed;
     top: 20px;
@@ -59,10 +79,12 @@ li {
     height: 14px;
     border-radius: 2px;
     box-shadow: 0 0 4px rgba(0,0,0,0.35);
-    cursor: pointer;
+    z-index: 100; /* Sikrer at den ligger over innhold */
 }
 
-/* Portrait (About page only) */
+/* --------------------------------------------------------
+   PORTRETT (Bilde)
+   -------------------------------------------------------- */
 
 .portrait-wrapper {
     float: right;
@@ -76,16 +98,17 @@ li {
     border-radius: 4px;
     opacity: 0.92;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    display: block; /* Fjerner evt. rar spacing under bilde */
 }
 
 /* --------------------------------------------------------
-   KONTAKTSEKSJON: nytt kvadrat med samme farge som random-square
+   KONTAKTSEKSJON
    -------------------------------------------------------- */
 
 /* CSS-variabel som JS oppdaterer automatisk */
 :root {
-    --square-color: #ff6600;  /* Blir overskrevet av randomColor() */
-    --square-size: 14px;      /* Bruk samme størrelse som #random-square */
+    --square-color: #ff6600;  /* Default, overskrives av JS */
+    --square-size: 14px;      
 }
 
 /* Container for kvadrat + tekst */
@@ -93,33 +116,43 @@ li {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 50px;
+    margin-top: 60px;
 }
 
-/* Tomt kvadrat med samme størrelse og farge */
+/* Tomt kvadrat med ramme */
 .contact-square {
     width: calc(var(--square-size) + 4px);
     height: calc(var(--square-size) + 4px);
     border: 2px solid var(--square-color);
     border-radius: 2px;
-    box-sizing: border-box;
+    flex-shrink: 0; /* Hindrer at boksen krymper på små skjermer */
 }
 
-/* Kontakttekst */
-.contact-text {
+/* Kontakttekst (Button Reset) */
+/* Her sørger vi for at <button> ser ut som ren tekst */
+button.contact-text {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
     color: inherit;
+    cursor: pointer;
     text-decoration: none;
     font-size: 1.1rem;
+    text-align: left;
 }
 
-.contact-text:hover {
+button.contact-text:hover {
     opacity: 0.7;
+    text-decoration: underline; /* Valgfritt: gir god feedback at det er klikkbart */
 }
 
+/* Nedtrekksmeny */
 .contact-menu {
-    display: none;
+    display: none; /* Styres av JS (block/none) */
     margin-top: 10px;
-    padding-left: calc(var(--square-size) + 12px);
+    padding-left: calc(var(--square-size) + 16px); /* Justert for gap + border */
     font-size: 1rem;
     line-height: 1.8;
 }
@@ -129,8 +162,39 @@ li {
     text-decoration: none;
     color: inherit;
     opacity: 0.85;
+    transition: opacity 0.2s ease;
 }
 
 .contact-option:hover {
     opacity: 1;
+}
+
+/* --------------------------------------------------------
+   MOBILTILPASNING (Media Query)
+   -------------------------------------------------------- */
+
+/* Når skjermen er smalere enn 600px */
+@media (max-width: 600px) {
+    
+    main {
+        margin-top: 40px; /* Mindre luft i toppen på mobil */
+    }
+
+    h1 {
+        font-size: 32px; /* Litt mindre overskrift */
+    }
+
+    /* Fjern float på bildet og sentrer det i stedet */
+    .portrait-wrapper {
+        float: none;
+        margin: 0 auto 30px auto; /* Sentrerer wrapperen */
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .portrait {
+        width: 100%;
+        max-width: 250px; /* Bildet blir litt større på mobil, men ikke enormt */
+    }
 }
