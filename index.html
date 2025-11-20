@@ -81,7 +81,7 @@ Komponist · Lyddesigner · Resonansutvikler og lydforsker</h2>
 </p>
     </main>
 
-   <script>
+<script>
     function randomColor() {
         const hue = Math.floor(Math.random() * 360);
         const saturation = 70 + Math.random() * 30;
@@ -91,10 +91,10 @@ Komponist · Lyddesigner · Resonansutvikler og lydforsker</h2>
 
     const color = randomColor();
 
-    // Sett fargen på kvadratet
+    // Sett fargen på øverste kvadrat
     document.getElementById("random-square").style.backgroundColor = color;
 
-    // Oppdater CSS-variabelen --square-color
+    // Oppdater CSS-variabel for det tomme kontakt-kvadratet
     document.documentElement.style.setProperty('--square-color', color);
 </script>
 
