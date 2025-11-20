@@ -108,35 +108,33 @@
         
     </main>
 
-    <script>
-        /* --- Fargegenerator --- */
-        function randomColor() {
-            const hue = Math.floor(Math.random() * 360);
-            const saturation = 70 + Math.random() * 30;
-            const lightness = 40 + Math.random() * 20;
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        }
+  <script>
+    /* --- Fargegenerator --- */
+    function randomColor() {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 70 + Math.random() * 30;
+        const lightness = 40 + Math.random() * 20;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
 
-        const color = randomColor();
+    const color = randomColor();
 
-        // Sett fargen på øverste kvadrat
-        const randomSquare = document.getElementById("random-square");
-        if (randomSquare) {
-            randomSquare.style.backgroundColor = color;
-        }
+    // Sett fargen på øverste kvadrat
+    const randomSquare = document.getElementById("random-square");
+    if (randomSquare) {
+        randomSquare.style.backgroundColor = color;
+    }
 
-        // Oppdater CSS-variabel for det tomme kontakt-kvadratet
-        document.documentElement.style.setProperty('--square-color', color);
+    // Oppdater CSS-variabel for det tomme kontakt-kvadratet
+    document.documentElement.style.setProperty('--square-color', color);
 
-        /* --- Kontaktmeny Toggle --- */
-        function toggleContactMenu() {
-            const menu = document.getElementById("contact-menu");
-            if (menu.style.display === "none" || menu.style.display === "") {
-                menu.style.display = "block";
-            } else {
-                menu.style.display = "none";
-            }
-             /* --- UX: Lukk kontaktmenyen når man klikker utenfor --- */
+    /* --- Kontaktmeny Toggle --- */
+    function toggleContactMenu() {
+        const menu = document.getElementById("contact-menu");
+        menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    }
+
+    /* --- UX: Lukk kontaktmenyen når man klikker utenfor --- */
     document.addEventListener("click", function(event) {
         const menu = document.getElementById("contact-menu");
         const button = document.querySelector(".contact-text");
@@ -147,10 +145,8 @@
             !button.contains(event.target)) {
             menu.style.display = "none";
         }
-
-             }
     });
-    </script>
+</script>
 
 </body>
 </html>
