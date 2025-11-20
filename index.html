@@ -80,16 +80,22 @@ Komponist · Lyddesigner · Resonansutvikler og lydforsker</h2>
 </p>
     </main>
 
-    <script>
-        // Dissonerende random farge for kvadratet
-        function randomColor() {
-            const hue = Math.floor(Math.random() * 360);
-            const saturation = 70 + Math.random() * 30;
-            const lightness = 40 + Math.random() * 20;
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        }
-        document.getElementById("random-square").style.backgroundColor = randomColor();
-    </script>
+   <script>
+    function randomColor() {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 70 + Math.random() * 30;
+        const lightness = 40 + Math.random() * 20;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    const color = randomColor();
+
+    // Sett fargen på kvadratet
+    document.getElementById("random-square").style.backgroundColor = color;
+
+    // Oppdater CSS-variabelen --square-color
+    document.documentElement.style.setProperty('--square-color', color);
+</script>
 
 </body>
 </html>
