@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Øyvind Blikstad</title>
-    <link rel="stylesheet" href="/oyvindblikstad/style.css">
+    
+    <title>Øyvind Blikstad – Komponist & Lydforsker</title>
+
+    <meta name="description" content="Øyvind Blikstad: Komponist, lyddesigner, resonansutvikler og lydforsker. Utforsker møtepunktet mellom nervesystem, biologi og musikk.">
+    <meta property="og:title" content="Øyvind Blikstad">
+    <meta property="og:description" content="Komponist · Lyddesigner / Resonansutvikler · Lydforsker">
+    <meta property="og:image" content="images/OyvindProfil.jpg"> <meta property="og:type" content="website">
+
+    <link rel="icon" href="images/OyvindProfil.jpg" type="image/jpeg">
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        button.contact-text {
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            color: inherit; /* Arver farge fra CSS-en din */
+            text-decoration: underline; /* Eller fjern hvis du ikke vil ha understrek */
+        }
+    </style>
 </head>
 <body>
 
@@ -15,7 +36,7 @@
         <h2>Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
 
         <div class="portrait-wrapper">
-            <img src="images/OyvindProfil.jpg" alt="Øyvind Blikstad" class="portrait">
+            <img src="images/OyvindProfil.jpg" alt="Portrett av Øyvind Blikstad" class="portrait">
         </div>
 
         <p>
@@ -75,43 +96,47 @@
             som ennå ikke er fullt forstått.
         </p>
 
-        <!-- RIKTIG KONTAKTSEKSJON (uten p rundt div) -->
-       <div class="contact-container">
-    <div class="contact-square"></div>
-    <a href="#" class="contact-text" onclick="toggleContactMenu(event)">Ta kontakt</a>
-</div>
+        <div class="contact-container">
+            <div class="contact-square"></div>
+            <button type="button" class="contact-text" onclick="toggleContactMenu()">Ta kontakt</button>
+        </div>
 
-<div id="contact-menu" class="contact-menu">
-    <a href="tel:+4794307677" class="contact-option">📞 snakk </a>
-    <a href="mailto:oyvindblikstad@gmail.com" class="contact-option">✉️ skriv
-    </a>
-</div>
+        <div id="contact-menu" class="contact-menu" style="display: none;">
+            <a href="tel:+4794307677" class="contact-option">📞 snakk </a>
+            <a href="mailto:oyvindblikstad@gmail.com" class="contact-option">✉️ skriv</a>
+        </div>
     </main>
 
-<script>
-    function randomColor() {
-        const hue = Math.floor(Math.random() * 360);
-        const saturation = 70 + Math.random() * 30;
-        const lightness = 40 + Math.random() * 20;
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    }
+    <script>
+        /* --- Fargegenerator --- */
+        function randomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            const saturation = 70 + Math.random() * 30;
+            const lightness = 40 + Math.random() * 20;
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
 
-    const color = randomColor();
+        const color = randomColor();
 
-    // Sett fargen på øverste kvadrat
-    document.getElementById("random-square").style.backgroundColor = color;
+        // Sett fargen på øverste kvadrat
+        const randomSquare = document.getElementById("random-square");
+        if (randomSquare) {
+            randomSquare.style.backgroundColor = color;
+        }
 
-    // Oppdater CSS-variabel for det tomme kontakt-kvadratet
-    document.documentElement.style.setProperty('--square-color', color);
-</script>
-    
-<script>
-function toggleContactMenu(e) {
-    e.preventDefault();
-    const menu = document.getElementById("contact-menu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-}
-</script>
-    
+        // Oppdater CSS-variabel for det tomme kontakt-kvadratet
+        document.documentElement.style.setProperty('--square-color', color);
+
+        /* --- Kontaktmeny Toggle --- */
+        function toggleContactMenu() {
+            const menu = document.getElementById("contact-menu");
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block";
+            } else {
+                menu.style.display = "none";
+            }
+        }
+    </script>
+
 </body>
 </html>
