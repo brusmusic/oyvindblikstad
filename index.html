@@ -36,7 +36,7 @@
         <h2>Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
 
         <div class="portrait-wrapper">
-            <img src="images/OyvindProfil.jpg" alt="Portrett av Øyvind Blikstad" class="portrait">
+            <img src="images/oyvindprofil.jpg" alt="Portrett av Øyvind Blikstad" class="portrait">
         </div>
 
         <p>
@@ -105,6 +105,7 @@
             <a href="tel:+4794307677" class="contact-option">📞 snakk </a>
             <a href="mailto:oyvindblikstad@gmail.com" class="contact-option">✉️ skriv</a>
         </div>
+        
     </main>
 
     <script>
@@ -135,6 +136,18 @@
             } else {
                 menu.style.display = "none";
             }
+             /* --- UX: Lukk kontaktmenyen når man klikker utenfor --- */
+    document.addEventListener("click", function(event) {
+        const menu = document.getElementById("contact-menu");
+        const button = document.querySelector(".contact-text");
+
+        // Hvis menyen er åpen + klikk ikke på menyen + ikke på knappen → lukk
+        if (menu.style.display === "block" &&
+            !menu.contains(event.target) &&
+            !button.contains(event.target)) {
+            menu.style.display = "none";
+        }
+
         }
     </script>
 
