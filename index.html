@@ -152,30 +152,21 @@
     });
 </script>
 <script>
-document.addEventListener("click", function(e){
+document.addEventListener("DOMContentLoaded", function () {
+  const square = document.getElementById("random-square");
+  const menu = document.getElementById("square-menu");
 
-    const square = document.getElementById("random-square");
-    const menu = document.getElementById("square-menu");
+  if (!square || !menu) {
+    console.error("Finner ikke #random-square eller #square-menu");
+    return;
+  }
 
-    if (!square || !menu) return;
-
-    // Hvis vi klikker på firkanten
-    if (e.target === square) {
-        if (menu.style.display === "block") {
-            menu.style.display = "none";
-        } else {
-            menu.style.left = e.pageX + "px";
-            menu.style.top = e.pageY + "px";
-            menu.style.display = "block";
-        }
-        return;
-    }
-
-    // Hvis vi klikker utenfor menyen
-    if (!menu.contains(e.target)) {
-        menu.style.display = "none";
-    }
-
+  square.addEventListener("click", function (e) {
+    menu.style.position = "absolute";
+    menu.style.left = e.pageX + "px";
+    menu.style.top = e.pageY + "px";
+    menu.style.display = "block";
+  });
 });
 </script>
 </body>
