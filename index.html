@@ -30,11 +30,10 @@
 <body>
 
     <div id="random-square"></div>
-   <div id="square-menu" class="contact-menu" style="display:none;">
+ <div id="square-menu" class="contact-menu" style="display:none;">
     <a href="/breathingcycles" class="contact-option">Breathing Cycles</a>
     <a href="/rehuman" class="contact-option">ReHuman</a>
-
-   </div>
+</div>
 </div>
     <main>
         <h1>Øyvind Blikstad</h1>
@@ -153,33 +152,41 @@
     });
 </script>
 <script>
-const square = document.getElementById("random-square");
-const squareMenu = document.getElementById("square-menu");
+document.addEventListener("DOMContentLoaded", function () {
 
-square.addEventListener("click", (e) => {
-    const isOpen = squareMenu.style.display === "block";
+  const square = document.getElementById("random-square");
+  const squareMenu = document.getElementById("square-menu");
 
-    if (isOpen) {
-        squareMenu.style.display = "none";
-        return;
-    }
+  if (!square || !squareMenu) {
+    console.error("Finner ikke #random-square eller #square-menu");
+    return;
+  }
 
-    const x = e.pageX;
-    const y = e.pageY;
+  square.addEventListener("click", function(e) {
+      const isOpen = squareMenu.style.display === "block";
 
-    squareMenu.style.left = `${x}px`;
-    squareMenu.style.top = `${y}px`;
-    squareMenu.style.position = "absolute";
-    squareMenu.style.display = "block";
+      if (isOpen) {
+          squareMenu.style.display = "none";
+          return;
+      }
 
-    e.stopPropagation();
-});
+      const x = e.pageX;
+      const y = e.pageY;
 
-// Klikk utenfor lukker menyen
-document.addEventListener("click", (e) => {
-    if (!squareMenu.contains(e.target) && e.target !== square) {
-        squareMenu.style.display = "none";
-    }
+      squareMenu.style.left = `${x}px`;
+      squareMenu.style.top = `${y}px`;
+      squareMenu.style.position = "absolute";
+      squareMenu.style.display = "block";
+
+      e.stopPropagation();
+  });
+
+  document.addEventListener("click", function(e) {
+      if (!squareMenu.contains(e.target) && e.target !== square) {
+          squareMenu.style.display = "none";
+      }
+  });
+
 });
 </script>
 </body>
