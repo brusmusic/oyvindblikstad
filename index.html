@@ -152,6 +152,13 @@
         }
     });
 </script>
+<script>
+  const square = document.getElementById("random-square");
+  const menu = document.getElementById("hidden-menu");
 
+  square.addEventListener("click", () => {
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+  });
+</script>
 </body>
 </html>
