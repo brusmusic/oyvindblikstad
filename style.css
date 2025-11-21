@@ -1,8 +1,7 @@
 /* --------------------------------------------------------
-   GLOBAL STYLE & RESET
+   GLOBALT
    -------------------------------------------------------- */
 
-/* Sikrer at padding og border er inkludert i bredden på elementer */
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -14,13 +13,13 @@ body {
     color: #1e1e1e;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.65;
-    -webkit-font-smoothing: antialiased; /* Gjør fonter skarpere på Mac/iOS */
+    -webkit-font-smoothing: antialiased;
 }
 
 main {
     max-width: 720px;
     margin: 80px auto;
-    padding: 0 20px 60px 20px; /* Litt ekstra padding i bunn */
+    padding: 0 20px 60px 20px;
 }
 
 /* --------------------------------------------------------
@@ -39,7 +38,7 @@ h2 {
     font-size: 20px;
     font-weight: 300;
     margin-bottom: 40px;
-    color: #555; /* Litt mykere kontrast på undertittel */
+    color: #555;
 }
 
 h3 {
@@ -63,14 +62,13 @@ ul {
 
 li {
     margin-bottom: 8px;
-    list-style-position: inside; /* Holder punktene pent på linje */
+    list-style-position: inside;
 }
 
 /* --------------------------------------------------------
-   DESIGN-ELEMENTER
+   ØVERSTE KVADRAT
    -------------------------------------------------------- */
 
-/* Øverste random kvadrat */
 #random-square {
     position: fixed;
     top: 20px;
@@ -79,11 +77,12 @@ li {
     height: 14px;
     border-radius: 2px;
     box-shadow: 0 0 4px rgba(0,0,0,0.35);
-    z-index: 100; /* Sikrer at den ligger over innhold */
+    z-index: 200;
+    cursor: pointer;
 }
 
 /* --------------------------------------------------------
-   PORTRETT (Bilde)
+   PORTRETT
    -------------------------------------------------------- */
 
 .portrait-wrapper {
@@ -98,20 +97,18 @@ li {
     border-radius: 4px;
     opacity: 0.92;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    display: block; /* Fjerner evt. rar spacing under bilde */
+    display: block;
 }
 
 /* --------------------------------------------------------
-   KONTAKTSEKSJON
+   KONTAKT / INLINE MENY
    -------------------------------------------------------- */
 
-/* CSS-variabel som JS oppdaterer automatisk */
 :root {
-    --square-color: #ff6600;  /* Default, overskrives av JS */
-    --square-size: 14px;      
+    --square-color: #ff6600;
+    --square-size: 14px;
 }
 
-/* Container for kvadrat + tekst */
 .contact-container {
     display: flex;
     align-items: center;
@@ -119,17 +116,14 @@ li {
     margin-top: 60px;
 }
 
-/* Tomt kvadrat med ramme */
 .contact-square {
     width: calc(var(--square-size) + 4px);
     height: calc(var(--square-size) + 4px);
     border: 2px solid var(--square-color);
     border-radius: 2px;
-    flex-shrink: 0; /* Hindrer at boksen krymper på små skjermer */
+    flex-shrink: 0;
 }
 
-/* Kontakttekst (Button Reset) */
-/* Her sørger vi for at <button> ser ut som ren tekst */
 button.contact-text {
     background: none;
     border: none;
@@ -145,19 +139,19 @@ button.contact-text {
 
 button.contact-text:hover {
     opacity: 0.7;
-    text-decoration: underline; /* Valgfritt: gir god feedback at det er klikkbart */
+    text-decoration: underline;
 }
 
-/* Nedtrekksmeny */
-.contact-menu {
-    display: none; /* Styres av JS (block/none) */
+/* Meny under "Ta kontakt" */
+.inline-menu {
+    display: none;
     margin-top: 10px;
-    padding-left: calc(var(--square-size) + 16px); /* Justert for gap + border */
+    padding-left: calc(var(--square-size) + 16px);
     font-size: 1rem;
     line-height: 1.8;
 }
 
-.contact-option {
+.inline-option {
     display: block;
     text-decoration: none;
     color: inherit;
@@ -165,29 +159,58 @@ button.contact-text:hover {
     transition: opacity 0.2s ease;
 }
 
-.contact-option:hover {
+.inline-option:hover {
     opacity: 1;
 }
 
 /* --------------------------------------------------------
-   MOBILTILPASNING (Media Query)
+   POPUP-MENY FRA KVADRAT
    -------------------------------------------------------- */
 
-/* Når skjermen er smalere enn 600px */
+.popup-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    min-width: 160px;
+    background: #f4f1ec;
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    padding: 8px 10px;
+    z-index: 250;
+}
+
+.popup-option {
+    display: block;
+    padding: 4px 6px;
+    text-decoration: none;
+    color: #1e1e1e;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.popup-option:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.04);
+}
+
+/* --------------------------------------------------------
+   MOBIL
+   -------------------------------------------------------- */
+
 @media (max-width: 600px) {
-    
     main {
-        margin-top: 40px; /* Mindre luft i toppen på mobil */
+        margin-top: 40px;
     }
 
     h1 {
-        font-size: 32px; /* Litt mindre overskrift */
+        font-size: 32px;
     }
 
-    /* Fjern float på bildet og sentrer det i stedet */
     .portrait-wrapper {
         float: none;
-        margin: 0 auto 30px auto; /* Sentrerer wrapperen */
+        margin: 0 auto 30px auto;
         display: flex;
         justify-content: center;
         width: 100%;
@@ -195,39 +218,6 @@ button.contact-text:hover {
 
     .portrait {
         width: 100%;
-        max-width: 250px; /* Bildet blir litt større på mobil, men ikke enormt */
+        max-width: 250px;
     }
-}
-#random-square {
-  cursor: pointer;
-}
-
-#hidden-menu {
-  position: fixed;
-  top: 80px;
-  left: 40px;
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-  background: rgba(255,255,255,0.9);
-  padding: 16px 20px;
-  border-radius: 4px;
-  backdrop-filter: blur(6px);
-}
-
-#hidden-menu a {
-  color: #000;
-  text-decoration: none;
-  font-size: 1.2rem;
-}
-
-#hidden-menu a:hover {
-  text-decoration: underline;
-}
-#square-menu {
-  position: absolute;  /* ← DENNE er kritisk */
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #000;
-  padding: 10px 14px;
-  z-index: 9999;
 }
