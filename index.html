@@ -152,40 +152,29 @@
     });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("click", function(e){
 
-  const square = document.getElementById("random-square");
-  const squareMenu = document.getElementById("square-menu");
+    const square = document.getElementById("random-square");
+    const menu = document.getElementById("square-menu");
 
-  if (!square || !squareMenu) {
-    console.error("Finner ikke #random-square eller #square-menu");
-    return;
-  }
+    if (!square || !menu) return;
 
-  square.addEventListener("click", function(e) {
-      const isOpen = squareMenu.style.display === "block";
+    // Hvis vi klikker på firkanten
+    if (e.target === square) {
+        if (menu.style.display === "block") {
+            menu.style.display = "none";
+        } else {
+            menu.style.left = e.pageX + "px";
+            menu.style.top = e.pageY + "px";
+            menu.style.display = "block";
+        }
+        return;
+    }
 
-      if (isOpen) {
-          squareMenu.style.display = "none";
-          return;
-      }
-
-      const x = e.pageX;
-      const y = e.pageY;
-
-      squareMenu.style.left = `${x}px`;
-      squareMenu.style.top = `${y}px`;
-      squareMenu.style.position = "absolute";
-      squareMenu.style.display = "block";
-
-      e.stopPropagation();
-  });
-
-  document.addEventListener("click", function(e) {
-      if (!squareMenu.contains(e.target) && e.target !== square) {
-          squareMenu.style.display = "none";
-      }
-  });
+    // Hvis vi klikker utenfor menyen
+    if (!menu.contains(e.target)) {
+        menu.style.display = "none";
+    }
 
 });
 </script>
