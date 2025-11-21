@@ -225,6 +225,7 @@ button.contact-text:hover {
   text-decoration: underline;
 }
 #square-menu {
+  position: absolute;  /* ← DENNE er kritisk */
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #000;
   padding: 10px 14px;
