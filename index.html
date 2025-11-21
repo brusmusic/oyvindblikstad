@@ -30,11 +30,11 @@
 <body>
 
     <div id="random-square"></div>
-    <div id="hidden-menu">
-    <a href="/breathingcycles">Breathing Cycles</a>
-    <a href="/rehuman">ReHuman</a>
-  <!-- flere senere -->
-  <!-- <a href="/projects">Projects</a> -->
+   <div id="square-menu" class="contact-menu" style="display:none;">
+    <a href="/breathingcycles" class="contact-option">Breathing Cycles</a>
+    <a href="/rehuman" class="contact-option">ReHuman</a>
+
+   </div>
 </div>
     <main>
         <h1>Øyvind Blikstad</h1>
@@ -153,12 +153,34 @@
     });
 </script>
 <script>
-  const square = document.getElementById("random-square");
-  const menu = document.getElementById("hidden-menu");
+const square = document.getElementById("random-square");
+const squareMenu = document.getElementById("square-menu");
 
-  square.addEventListener("click", () => {
-    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-  });
+square.addEventListener("click", (e) => {
+    const isOpen = squareMenu.style.display === "block";
+
+    if (isOpen) {
+        squareMenu.style.display = "none";
+        return;
+    }
+
+    const x = e.pageX;
+    const y = e.pageY;
+
+    squareMenu.style.left = `${x}px`;
+    squareMenu.style.top = `${y}px`;
+    squareMenu.style.position = "absolute";
+    squareMenu.style.display = "block";
+
+    e.stopPropagation();
+});
+
+// Klikk utenfor lukker menyen
+document.addEventListener("click", (e) => {
+    if (!squareMenu.contains(e.target) && e.target !== square) {
+        squareMenu.style.display = "none";
+    }
+});
 </script>
 </body>
 </html>
