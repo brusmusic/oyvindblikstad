@@ -198,3 +198,29 @@ button.contact-text:hover {
         max-width: 250px; /* Bildet blir litt større på mobil, men ikke enormt */
     }
 }
+#random-square {
+  cursor: pointer;
+}
+
+#hidden-menu {
+  position: fixed;
+  top: 80px;
+  left: 40px;
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(255,255,255,0.9);
+  padding: 16px 20px;
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+}
+
+#hidden-menu a {
+  color: #000;
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+
+#hidden-menu a:hover {
+  text-decoration: underline;
+}
