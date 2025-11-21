@@ -157,32 +157,46 @@
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
   const square = document.getElementById("random-square");
   const menu = document.getElementById("square-menu");
 
   if (!square || !menu) {
-    console.error("square or menu not found");
+    console.error("random-square eller square-menu mangler");
     return;
   }
 
-  square.addEventListener("click", function (e) {
-    const isOpen = menu.style.display === "block";
-
-    if (isOpen) {
-      menu.style.display = "none";
-      return;
-    }
-
-    menu.style.left = (e.pageX + 10) + "px";
-    menu.style.top = (e.pageY + 10) + "px";
+  function openSquareMenu(x, y) {
     menu.style.display = "block";
+    menu.style.position = "absolute";
+    menu.style.zIndex = "9999";
+    menu.style.left = (x + 10) + "px";
+    menu.style.top = (y + 10) + "px";
+  }
 
-    e.stopPropagation();
+  function closeSquareMenu() {
+    menu.style.display = "none";
+  }
+
+  // KUN for kvadratet
+  square.addEventListener("click", function (e) {
+    e.stopPropagation(); // stopper ALL annen klikk-lytting
+
+    if (menu.style.display === "block") {
+      closeSquareMenu();
+    } else {
+      openSquareMenu(e.pageX, e.pageY);
+    }
   });
 
+  // KUN for EKTE "utenfor klikk"
   document.addEventListener("click", function (e) {
-    if (!menu.contains(e.target) && e.target !== square) {
-      menu.style.display = "none";
+    if (
+      !menu.contains(e.target) &&
+      e.target !== square &&
+      !e.target.classList.contains("contact-text")
+    ) {
+      closeSquareMenu();
     }
   });
 });
