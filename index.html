@@ -161,41 +161,48 @@ document.addEventListener("DOMContentLoaded", function () {
   const square = document.getElementById("random-square");
   const menu = document.getElementById("square-menu");
 
-  if (!square || !menu) {
-    console.error("random-square eller square-menu mangler");
-    return;
-  }
+  if (!square || !menu) return;
 
   function openSquareMenu(x, y) {
+
+    const menuWidth = menu.offsetWidth;
+    const menuHeight = menu.offsetHeight;
+    const padding = 20;
+
+    let posX = x + 10;
+    let posY = y + 10;
+
+    // Hvis menyen går utenfor høyre kant
+    if (posX + menuWidth > window.innerWidth - padding) {
+      posX = window.innerWidth - menuWidth - padding;
+    }
+
+    // Hvis menyen går utenfor bunnen
+    if (posY + menuHeight > window.innerHeight - padding) {
+      posY = window.innerHeight - menuHeight - padding;
+    }
+
+    menu.style.left = posX + "px";
+    menu.style.top = posY + "px";
     menu.style.display = "block";
-    menu.style.position = "absolute";
-    menu.style.zIndex = "9999";
-    menu.style.left = (x + 10) + "px";
-    menu.style.top = (y + 10) + "px";
   }
 
   function closeSquareMenu() {
     menu.style.display = "none";
   }
 
-  // KUN for kvadratet
   square.addEventListener("click", function (e) {
-    e.stopPropagation(); // stopper ALL annen klikk-lytting
+    e.stopPropagation();
 
     if (menu.style.display === "block") {
       closeSquareMenu();
     } else {
-      openSquareMenu(e.pageX, e.pageY);
+      openSquareMenu(e.clientX, e.clientY);
     }
   });
 
-  // KUN for EKTE "utenfor klikk"
   document.addEventListener("click", function (e) {
-    if (
-      !menu.contains(e.target) &&
-      e.target !== square &&
-      !e.target.classList.contains("contact-text")
-    ) {
+    if (!menu.contains(e.target) && e.target !== square) {
       closeSquareMenu();
     }
   });
