@@ -166,9 +166,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   square.addEventListener("click", function (e) {
+    const isOpen = menu.style.display === "block";
+
+    if (isOpen) {
+      menu.style.display = "none";
+      return;
+    }
+
     menu.style.left = (e.pageX + 10) + "px";
     menu.style.top = (e.pageY + 10) + "px";
     menu.style.display = "block";
+
+    e.stopPropagation();
   });
 
   document.addEventListener("click", function (e) {
