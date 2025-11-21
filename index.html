@@ -9,36 +9,23 @@
     <meta name="description" content="Øyvind Blikstad: Komponist, lyddesigner, resonansutvikler og lydforsker. Utforsker møtepunktet mellom nervesystem, biologi og musikk.">
     <meta property="og:title" content="Øyvind Blikstad">
     <meta property="og:description" content="Komponist · Lyddesigner / Resonansutvikler · Lydforsker">
-    <meta property="og:image" content="images/oyvindprofil.jpg"> <meta property="og:type" content="website">
+    <meta property="og:image" content="images/oyvindprofil.jpg">
+    <meta property="og:type" content="website">
 
     <link rel="icon" href="images/oyvindprofil.jpg" type="image/jpeg">
 
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        button.contact-text {
-            background: none;
-            border: none;
-            padding: 0;
-            font: inherit;
-            cursor: pointer;
-            color: inherit; /* Arver farge fra CSS-en din */
-            text-decoration: underline; /* Eller fjern hvis du ikke vil ha understrek */
-        }
-        #square-menu {
-    position: absolute;
-    z-index: 9999;
-}
-    </style>
 </head>
 <body>
 
+    <!-- Øverste kvadrat / portal -->
     <div id="random-square"></div>
- <div id="square-menu" class="contact-menu" style="display:none;">
-    <a href="/breathingcycles" class="contact-option">Breathing Cycles</a>
-    <a href="/rehuman" class="contact-option">ReHuman</a>
-</div>
-</div>
+    <!-- Meny for prosjekter (åpnes av kvadratet) -->
+    <div id="square-menu" class="popup-menu">
+        <a href="/breathingcycles" class="popup-option">Breathing Cycles</a>
+        <a href="/rehuman" class="popup-option">ReHuman</a>
+    </div>
+
     <main>
         <h1>Øyvind Blikstad</h1>
         <h2>Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
@@ -104,20 +91,21 @@
             som ennå ikke er fullt forstått.
         </p>
 
+        <!-- Kontaktseksjon -->
         <div class="contact-container">
             <div class="contact-square"></div>
-            <button type="button" class="contact-text" onclick="toggleContactMenu()">Ta kontakt</button>
+            <button type="button" class="contact-text">Ta kontakt</button>
         </div>
 
-        <div id="contact-menu" class="contact-menu" style="display: none;">
-            <a href="tel:+4794307677" class="contact-option">📞 snakk </a>
-            <a href="mailto:oyvindblikstad@gmail.com" class="contact-option">✉️ skriv</a>
+        <div id="contact-menu" class="inline-menu">
+            <a href="tel:+4794307677" class="inline-option">📞 snakk</a>
+            <a href="mailto:oyvindblikstad@gmail.com" class="inline-option">✉️ skriv</a>
         </div>
         
     </main>
 
-  <script>
-    /* --- Fargegenerator --- */
+    <script>
+    // --- Fargegenerator for kvadratene ---
     function randomColor() {
         const hue = Math.floor(Math.random() * 360);
         const saturation = 70 + Math.random() * 30;
@@ -125,88 +113,81 @@
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
 
-    const color = randomColor();
+    document.addEventListener("DOMContentLoaded", function () {
+        const color = randomColor();
 
-    // Sett fargen på øverste kvadrat
-    const randomSquare = document.getElementById("random-square");
-    if (randomSquare) {
-        randomSquare.style.backgroundColor = color;
-    }
-
-    // Oppdater CSS-variabel for det tomme kontakt-kvadratet
-    document.documentElement.style.setProperty('--square-color', color);
-
-    /* --- Kontaktmeny Toggle --- */
-    function toggleContactMenu() {
-        const menu = document.getElementById("contact-menu");
-        menu.style.display = (menu.style.display === "block") ? "none" : "block";
-    }
-
-    /* --- UX: Lukk kontaktmenyen når man klikker utenfor --- */
-    document.addEventListener("click", function(event) {
-        const menu = document.getElementById("contact-menu");
-        const button = document.querySelector(".contact-text");
-
-        // Hvis menyen er åpen + klikk ikke på menyen + ikke på knappen → lukk
-        if (menu.style.display === "block" &&
-            !menu.contains(event.target) &&
-            !button.contains(event.target)) {
-            menu.style.display = "none";
+        // Farget kvadrat øverst
+        const randomSquare = document.getElementById("random-square");
+        if (randomSquare) {
+            randomSquare.style.backgroundColor = color;
         }
+
+        // Kontaktramme
+        document.documentElement.style.setProperty('--square-color', color);
+
+        const contactButton = document.querySelector(".contact-text");
+        const contactMenu = document.getElementById("contact-menu");
+        const square = document.getElementById("random-square");
+        const squareMenu = document.getElementById("square-menu");
+
+        // Skjul begge menyer ved start
+        contactMenu.style.display = "none";
+        squareMenu.style.display = "none";
+
+        // Toggle kontaktmeny
+        contactButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+
+            const isOpen = contactMenu.style.display === "block";
+            contactMenu.style.display = isOpen ? "none" : "block";
+
+            // Lukk kvadratmeny hvis åpen
+            squareMenu.style.display = "none";
+        });
+
+        // Toggle kvadrat-meny (prosjekter)
+        square.addEventListener("click", function (event) {
+            event.stopPropagation();
+
+            const isOpen = squareMenu.style.display === "block";
+
+            if (isOpen) {
+                squareMenu.style.display = "none";
+                return;
+            }
+
+            // Plasser menyen ved siden av kvadratet
+            const rect = square.getBoundingClientRect();
+            const menuWidth = squareMenu.offsetWidth || 140;
+            const padding = 12;
+
+            let left = rect.right - menuWidth;
+            if (left < padding) left = padding;
+
+            const top = rect.bottom + 8;
+
+            squareMenu.style.left = left + "px";
+            squareMenu.style.top = top + "px";
+            squareMenu.style.display = "block";
+
+            // Lukk kontaktmeny hvis åpen
+            contactMenu.style.display = "none";
+        });
+
+        // Klikk utenfor: lukk begge menyer
+        document.addEventListener("click", function (event) {
+            if (!contactMenu.contains(event.target) &&
+                !event.target.classList.contains("contact-text")) {
+                contactMenu.style.display = "none";
+            }
+
+            if (!squareMenu.contains(event.target) &&
+                event.target !== square) {
+                squareMenu.style.display = "none";
+            }
+        });
     });
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    </script>
 
-  const square = document.getElementById("random-square");
-  const menu = document.getElementById("square-menu");
-
-  if (!square || !menu) return;
-
-  function openSquareMenu(x, y) {
-
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.offsetHeight;
-    const padding = 20;
-
-    let posX = x + 10;
-    let posY = y + 10;
-
-    // Hvis menyen går utenfor høyre kant
-    if (posX + menuWidth > window.innerWidth - padding) {
-      posX = window.innerWidth - menuWidth - padding;
-    }
-
-    // Hvis menyen går utenfor bunnen
-    if (posY + menuHeight > window.innerHeight - padding) {
-      posY = window.innerHeight - menuHeight - padding;
-    }
-
-    menu.style.left = posX + "px";
-    menu.style.top = posY + "px";
-    menu.style.display = "block";
-  }
-
-  function closeSquareMenu() {
-    menu.style.display = "none";
-  }
-
-  square.addEventListener("click", function (e) {
-    e.stopPropagation();
-
-    if (menu.style.display === "block") {
-      closeSquareMenu();
-    } else {
-      openSquareMenu(e.clientX, e.clientY);
-    }
-  });
-
-  document.addEventListener("click", function (e) {
-    if (!menu.contains(e.target) && e.target !== square) {
-      closeSquareMenu();
-    }
-  });
-});
-</script>
 </body>
 </html>
