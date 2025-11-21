@@ -580,17 +580,5 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<script>
-(function() {
-  const userLang = navigator.language || navigator.userLanguage;
-  const isNorwegian = userLang.startsWith('no') || userLang.startsWith('nb') || userLang.startsWith('nn');
-  const currentPath = window.location.pathname;
-
-  if (!isNorwegian && !currentPath.startsWith('/breathingcycles/en')) {
-    window.location.href = '/breathingcycles/en/';
-  }
-})();
-</script>
-
 </body>
 </html>
