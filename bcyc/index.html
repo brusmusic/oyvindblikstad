@@ -227,19 +227,27 @@ function draw(p){
 animate();
 
 // 🔥 universell start/stop (mobil + desktop)
-function toggleAudio(e){
-  e.preventDefault();
+let isPlaying = false;
+
+function toggleAudio(){
 
   if(!isPlaying){
-    audio.play();
-    isPlaying = true;
+    audio.play().then(()=>{
+      isPlaying = true;
+    }).catch(err=>{
+      console.log("Autoplay blocked:", err);
+    });
   } else {
     audio.pause();
     isPlaying = false;
   }
 }
 
-document.addEventListener("pointerdown", toggleAudio);
+// 🔥 bruk CLICK (mest stabilt for lyd)
+document.addEventListener("click", toggleAudio);
+  }
+}
+
 
 </script>
 
