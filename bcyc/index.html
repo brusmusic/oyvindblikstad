@@ -8,14 +8,6 @@
   body { margin:0; background:black; overflow:hidden; }
   canvas { display:block; }
 
-  #play {
-    position:absolute; top:20px; left:20px;
-    padding:10px 20px;
-    background:rgba(255,255,255,0.1);
-    color:white; border:1px solid rgba(255,255,255,0.3);
-    cursor:pointer;
-  }
-
   #phaseText {
     position:absolute; top:50%; width:100%;
     text-align:center; transform:translateY(-50%);
@@ -26,8 +18,7 @@
 </head>
 <body>
 
-<button id="play">Start</button>
-<div id="phaseText">INHALE</div>
+<div id="phaseText">TAP TO START</div>
 
 <canvas id="canvas"></canvas>
 <audio id="audio" src="oyvindblikstad/bcyc/audio.mp3"></audio>
@@ -46,8 +37,9 @@ const cy = canvas.height/2;
 const lungRadius = 100;
 
 let particles = [];
+let isPlaying = false;
 
-// 🔹 spawn venstre side (rolig start)
+// 🔹 spawn venstre side
 function spawn(){
   return {
     x: Math.random()*cx*0.9,
@@ -78,10 +70,10 @@ function animate(){
   ctx.fillStyle="black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  let t=audio.currentTime;
-  let b=getBreath(t);
+  let t = audio.currentTime || 0;
+  let b = getBreath(t);
 
-  phaseText.innerText=b.phase.toUpperCase();
+  phaseText.innerText = isPlaying ? b.phase.toUpperCase() : "TAP TO START";
 
   // 🔥 kontinuerlig påfyll venstre side
   let targetCount = 300;
@@ -94,18 +86,16 @@ function animate(){
 
   particles.forEach(p=>{
 
-// 🔥 sikkerhetsfilter – ingen partikler får eksistere på høyre side ved inhale
-if(b.phase === "inhale" && p.x > cx){
-  p.dead = true;
-  return;
-}
-    // 🫁 INHALE
-if(b.phase==="inhale"){
-  p.releaseOffset = null;
-}
-    if(b.phase==="inhale"){
+    // 🔥 ingen partikler på høyre side under inhale
+    if(b.phase === "inhale" && p.x > cx){
+      p.dead = true;
+      return;
+    }
 
+    // 🫁 INHALE
+    if(b.phase==="inhale"){
       p.active=false;
+      p.releaseOffset = null;
 
       if(p.x < cx){
 
@@ -119,9 +109,7 @@ if(b.phase==="inhale"){
         let ddy=ty-p.y;
 
         let wave=Math.sin(b.p*Math.PI);
-
         let endPhase = Math.max(0, (b.p - 0.8) / 0.2);
-
         let depthFactor = 0.5 + p.depth;
 
         p.vx += ddx * 0.004 * wave * depthFactor;
@@ -131,7 +119,7 @@ if(b.phase==="inhale"){
         p.vx *= friction;
         p.vy *= friction;
 
-        // 🔥 subtil sluttbevegelse (ikke stopp)
+        // subtil sluttbevegelse
         if(endPhase > 0){
           p.vx *= (1 - endPhase * 0.004);
           p.vy *= (1 - endPhase * 0.003);
@@ -148,29 +136,26 @@ if(b.phase==="inhale"){
     // 🌊 EXHALE
     if(b.phase==="exhale"){
 
-      // 🔥 recoil venstre side (samlet respons)
+      // recoil venstre side
       if(p.x < cx){
 
-  let recoil = 1 - Math.exp(-b.p * 6);
+        let recoil = 1 - Math.exp(-b.p * 6);
 
-  let dx = cx - p.x;
-  let dy = cy - p.y;
-  let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+        let dx = cx - p.x;
+        let dy = cy - p.y;
+        let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
 
-  // hovedrespons
-  p.vx -= (dx/dist) * recoil * 0.002;
-  p.vy -= (dy/dist) * recoil * 0.004;
+        p.vx -= (dx/dist) * recoil * 0.002;
+        p.vy -= (dy/dist) * recoil * 0.004;
 
-  // 🔥 mikro "levende" bevegelse
-  let jitter = (Math.random()-0.5) * 0.15 * recoil;
+        // mikro bevegelse
+        let jitter = (Math.random()-0.5) * 0.15 * recoil;
+        p.vx += jitter;
+        p.vy += jitter * 0.5;
 
-  p.vx += jitter;
-  p.vy += jitter * 0.5;
-
-  // mild demping (ikke for sterk)
-  p.vx *= 0.8;
-  p.vy *= 0.95;
-}
+        p.vx *= 0.8;
+        p.vy *= 0.95;
+      }
 
       let dx=p.x-cx;
       let dy=p.y-cy;
@@ -190,9 +175,7 @@ if(b.phase==="inhale"){
           angle += (Math.random()-0.5)*2.2;
 
           let baseForce=2+Math.random()*5;
-
           let forceWave = 0.2 + Math.sin(localP*Math.PI)*0.8;
-
           let force=baseForce*forceWave;
 
           let mass = 0.7 + Math.random()*0.008;
@@ -212,7 +195,7 @@ if(b.phase==="inhale"){
         p.y += p.vy;
       }
 
-      // 🔥 fjern kun når helt ute
+      // fjern når ute
       if(p.x > canvas.width){
         p.dead = true;
       }
@@ -224,7 +207,7 @@ if(b.phase==="inhale"){
 
   });
 
-  // 🔥 rydder døde
+  // rydder døde
   particles = particles.filter(p => !p.dead);
 
   // lungemarkering
@@ -243,7 +226,21 @@ function draw(p){
 
 animate();
 
-document.getElementById("play").onclick=()=>audio.play();
+// 🔥 universell start/stop (mobil + desktop)
+function toggleAudio(e){
+  e.preventDefault();
+
+  if(!isPlaying){
+    audio.play();
+    isPlaying = true;
+  } else {
+    audio.pause();
+    isPlaying = false;
+  }
+}
+
+document.addEventListener("pointerdown", toggleAudio);
+
 </script>
 
 </body>
