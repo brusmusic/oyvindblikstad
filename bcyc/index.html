@@ -21,7 +21,7 @@
 <div id="phaseText">TAP TO START</div>
 
 <canvas id="canvas"></canvas>
-<audio id="audio" src="audio.mp3"></audio>
+<audio id="audio" src="audio.mp3" preload="auto" playsinline></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -37,6 +37,7 @@ const cy = canvas.height/2;
 const lungRadius = 100;
 
 let particles = [];
+let isPlaying = false;
 
 // 🔹 spawn venstre side
 function spawn(){
@@ -74,7 +75,7 @@ function animate(){
 
   phaseText.innerText = isPlaying ? b.phase.toUpperCase() : "TAP TO START";
 
-  // 🔥 kontinuerlig påfyll venstre side
+  // påfyll venstre side
   let targetCount = 300;
   if(particles.length < targetCount){
     let needed = targetCount - particles.length;
@@ -85,7 +86,7 @@ function animate(){
 
   particles.forEach(p=>{
 
-    // 🔥 ingen partikler på høyre side under inhale
+    // ingen partikler på høyre side under inhale
     if(b.phase === "inhale" && p.x > cx){
       p.dead = true;
       return;
@@ -118,7 +119,6 @@ function animate(){
         p.vx *= friction;
         p.vy *= friction;
 
-        // subtil sluttbevegelse
         if(endPhase > 0){
           p.vx *= (1 - endPhase * 0.004);
           p.vy *= (1 - endPhase * 0.003);
@@ -135,7 +135,6 @@ function animate(){
     // 🌊 EXHALE
     if(b.phase==="exhale"){
 
-      // recoil venstre side
       if(p.x < cx){
 
         let recoil = 1 - Math.exp(-b.p * 6);
@@ -147,7 +146,6 @@ function animate(){
         p.vx -= (dx/dist) * recoil * 0.002;
         p.vy -= (dy/dist) * recoil * 0.004;
 
-        // mikro bevegelse
         let jitter = (Math.random()-0.5) * 0.15 * recoil;
         p.vx += jitter;
         p.vy += jitter * 0.5;
@@ -194,22 +192,18 @@ function animate(){
         p.y += p.vy;
       }
 
-      // fjern når ute
       if(p.x > canvas.width){
         p.dead = true;
       }
     }
 
-    // tegn
     if(b.phase==="inhale" && p.x<cx) draw(p);
     if(b.phase==="exhale") draw(p);
 
   });
 
-  // rydder døde
   particles = particles.filter(p => !p.dead);
 
-  // lungemarkering
   ctx.beginPath();
   ctx.arc(cx,cy,lungRadius,0,Math.PI*2);
   ctx.strokeStyle="rgba(255,255,255,0.03)";
@@ -225,15 +219,22 @@ function draw(p){
 
 animate();
 
-let isPlaying = false;
+// 🔥 AUDIO FIX (viktig)
+audio.addEventListener("play", () => console.log("PLAYING"));
+audio.addEventListener("error", () => console.log("AUDIO ERROR", audio.src));
 
 function toggleAudio(){
+
+  // sørg for at audio er "aktivert"
+  if(audio.currentTime === 0){
+    audio.load();
+  }
 
   if(!isPlaying){
     audio.play().then(()=>{
       isPlaying = true;
     }).catch(err=>{
-      console.log("Autoplay blocked:", err);
+      console.log("PLAY BLOCKED", err);
     });
   } else {
     audio.pause();
@@ -241,9 +242,8 @@ function toggleAudio(){
   }
 }
 
-// 🔥 bruk CLICK (mest stabilt for lyd)
+// 🔥 CLICK = mest stabilt
 document.addEventListener("click", toggleAudio);
-
 
 </script>
 
