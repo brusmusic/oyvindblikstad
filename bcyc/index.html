@@ -165,13 +165,10 @@ animate();
 // 🔥 SUPER STABIL AUDIO START
 function startAudio(){
 
-  // viktig for mobil
-  audio.muted = false;
+  audio.currentTime = 0; // 🔥 reset hver gang
 
   audio.play().then(()=>{
     console.log("PLAY OK");
-  }).catch(e=>{
-    console.log("PLAY BLOCKED", e);
   });
 }
 
