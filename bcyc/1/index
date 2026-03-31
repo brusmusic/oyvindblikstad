@@ -227,10 +227,11 @@ function animate(){
 // ------------------ DRAW ------------------
 
 function draw(p){
-  ctx.beginPath();
-  ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-  ctx.fillStyle=`rgba(255,255,255,${p.alpha})`;
-  ctx.fill();
+  let r = p.x < cx ? 100 : 255;
+let g = p.x < cx ? 200 : 120;
+let b = 255;
+
+ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha})`;
 }
 
 animate();
