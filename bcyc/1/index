@@ -1,1 +1,284 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Pustemusikk Prototype</title>
 
+<style>
+  body { margin:0; background:black; overflow:hidden; }
+  canvas { display:block; }
+
+  #phaseText {
+    position:absolute;
+    top:50%;
+    width:100%;
+    text-align:center;
+    transform:translateY(-50%);
+    color:rgba(255,255,255,0.5);
+    font-size:5vw;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="phaseText">TAP TO START</div>
+<canvas id="canvas"></canvas>
+
+<audio id="audio" src="audio1.mp3" preload="auto" playsinline webkit-playsinline></audio>
+
+<script>
+
+// ------------------ SETUP ------------------
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const audio = document.getElementById("audio");
+const phaseText = document.getElementById("phaseText");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+const lungRadius = 100;
+
+let particles = [];
+
+// ------------------ PARTICLES ------------------
+
+function spawn(){
+  return {
+    x: Math.random()*cx*0.9,
+    y: Math.random()*canvas.height,
+    vx: 0,
+    vy: 0,
+    size: Math.random()*2+1,
+    alpha: 0.8,
+    depth: Math.random(),
+    active:false
+  };
+}
+
+for(let i=0;i<300;i++) particles.push(spawn());
+
+// ------------------ BREATH ------------------
+
+function getBreath(t){
+  let cycle = 10;
+  let l = t % cycle;
+
+  if(l < 5) return {phase:"inhale", p:l/5};
+  return {phase:"exhale", p:(l-5)/5};
+}
+
+// ------------------ MAIN LOOP ------------------
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  ctx.fillStyle="black";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  let t = audio.currentTime || 0;
+  let isPaused = audio.paused;
+  let b = isPaused ? null : getBreath(t);
+
+  phaseText.innerText = isPaused ? "TAP TO START" : b.phase.toUpperCase();
+
+  // fyll opp partikler
+  while(particles.length < 300){
+    particles.push(spawn());
+  }
+
+  particles.forEach(p=>{
+
+    // ------------------ PAUSE ------------------
+    if(isPaused){
+      p.vx *= 0.95;
+      p.vy *= 0.95;
+      p.vx += (Math.random()-0.5)*0.05;
+      p.vy += (Math.random()-0.5)*0.05;
+      p.x += p.vx;
+      p.y += p.vy;
+      draw(p);
+      return;
+    }
+
+    // ------------------ INHALE ------------------
+
+    if(b.phase === "inhale" && p.x > cx){
+      p.dead = true;
+      return;
+    }
+
+    if(b.phase==="inhale"){
+      p.releaseOffset = null;
+      p.active = false;
+
+      if(p.x < cx){
+
+        let angle = Math.random()*Math.PI*2;
+        let r = Math.random()*lungRadius;
+
+        let tx = cx + Math.cos(angle)*r;
+        let ty = cy + Math.sin(angle)*r;
+
+        let ddx = tx - p.x;
+        let ddy = ty - p.y;
+
+        let wave = Math.sin(b.p*Math.PI);
+        let depthFactor = 0.5 + p.depth;
+
+        p.vx += ddx * 0.004 * wave * depthFactor;
+        p.vy += ddy * 0.004 * wave * depthFactor;
+
+        p.vx *= 0.79;
+        p.vy *= 0.79;
+
+        p.x += p.vx;
+        p.y += p.vy;
+      }
+
+      p.alpha = 0.8;
+    }
+
+    // ------------------ EXHALE ------------------
+
+    if(b.phase==="exhale"){
+
+      if(p.x < cx){
+        let recoil = 1 - Math.exp(-b.p * 6);
+
+        let dx = cx - p.x;
+        let dy = cy - p.y;
+        let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+
+        p.vx -= (dx/dist) * recoil * 0.002;
+        p.vy -= (dy/dist) * recoil * 0.004;
+
+        p.vx *= 0.8;
+        p.vy *= 0.95;
+      }
+
+      let dx = p.x - cx;
+      let dy = p.y - cy;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+
+      if(dist < lungRadius){
+
+        if(!p.releaseOffset){
+          p.releaseOffset = Math.random()*0.4;
+        }
+
+        let localP = Math.max(0, (b.p - p.releaseOffset)/(1 - p.releaseOffset));
+
+        if(localP > 0){
+
+          let angle = Math.atan2(dy,dx) + (Math.random()-0.5)*2;
+          let force = (2 + Math.random()*5) * Math.sin(localP*Math.PI);
+
+          p.vx += Math.cos(angle)*force + 1.5;
+          p.vy += Math.sin(angle)*force;
+
+          p.active = true;
+        }
+      }
+
+      if(p.active){
+        p.vx *= 0.985;
+        p.vy *= 0.985;
+        p.x += p.vx;
+        p.y += p.vy;
+      }
+
+      if(p.x > canvas.width){
+        p.dead = true;
+      }
+
+      // 🎨 FADE (kun høyre side)
+      if(p.x > cx && p.active){
+
+        let fadeStart = 0.8;
+
+        if(b.p > fadeStart){
+          let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
+          p.alpha = 0.8 * (1 - fadeProgress);
+        } else {
+          p.alpha = 0.8;
+        }
+
+      } else {
+        p.alpha = 0.8;
+      }
+    }
+
+    draw(p);
+  });
+
+  particles = particles.filter(p => !p.dead);
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,lungRadius,0,Math.PI*2);
+  ctx.strokeStyle="rgba(255,255,255,0.03)";
+  ctx.stroke();
+}
+
+// ------------------ DRAW ------------------
+
+function draw(p){
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+  ctx.fillStyle=`rgba(255,255,255,${p.alpha})`;
+  ctx.fill();
+}
+
+animate();
+
+// ------------------ AUDIO START FIX ------------------
+
+document.body.addEventListener("touchstart", () => {
+  audio.muted = false;
+}, { once:true });
+
+// ------------------ TAP CONTROL ------------------
+
+let hasStarted = false;
+let lastTap = 0;
+
+document.body.addEventListener("pointerdown", () => {
+
+  audio.muted = false;
+
+  // første trykk
+  if(!hasStarted){
+    audio.play().catch(()=>{});
+    hasStarted = true;
+    lastTap = Date.now();
+    return;
+  }
+
+  let now = Date.now();
+
+  // dobbeltrykk = restart
+  if(now - lastTap < 300){
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+    lastTap = 0;
+    return;
+  }
+
+  // enkel trykk = pause/play
+  if(audio.paused){
+    audio.play().catch(()=>{});
+  } else {
+    audio.pause();
+  }
+
+  lastTap = now;
+});
+
+</script>
+</body>
+</html>
