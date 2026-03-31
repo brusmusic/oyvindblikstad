@@ -209,15 +209,23 @@ function animate(){
       }
 
       // 🎨 FADE SISTE 20%
-      let fadeStart = 0.8;
+    let fadeStart = 0.8;
 
-      if(b.p > fadeStart){
-        let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
-        let fade = 1 - fadeProgress;
-        p.alpha = 0.8 * fade;
-      } else {
-        p.alpha = 0.8;
-      }
+// 🔥 KUN høyre side skal fades
+if(p.x > cx){
+
+  if(b.p > fadeStart){
+    let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
+    let fade = 1 - fadeProgress;
+    p.alpha = 0.8 * fade;
+  } else {
+    p.alpha = 0.8;
+  }
+
+} else {
+  // 🔒 venstre side alltid stabil
+  p.alpha = 0.8;
+}
     }
 
     if(b.phase==="inhale" && p.x<cx) draw(p);
