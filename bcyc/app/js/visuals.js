@@ -7,33 +7,43 @@
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
   const state = {
-    phase: "free",
-    track: null,
-    particles: [],
     width: 0,
     height: 0,
-    centerX: 0,
-    centerY: 0,
-    phaseEnergy: 0.5,
-    targetRadius: 120,
-    visualRadius: 120,
-    hueShift: 0
+    cx: 0,
+    cy: 0,
+    fieldRadius: 110,
+    particles: [],
+    phase: "free",
+    prevPhase: "free",
+    track: null,
+    currentExhaleColor: { r: 255, g: 170, b: 90 },
+    inhaleColor: { r: 220, g: 240, b: 255 },
+    sparklePool: []
   };
 
-  const PARTICLE_COUNT = 110;
+  const PARTICLE_COUNT = 260;
+  const SPARKLE_COUNT = 40;
+
+  const EXHALE_PALETTE = [
+    { r: 255, g: 170, b: 90 },   // varm amber
+    { r: 255, g: 120, b: 90 },   // varm rød/oransje
+    { r: 255, g: 205, b: 120 },  // gull
+    { r: 220, g: 110, b: 170 },  // varm magenta
+    { r: 170, g: 120, b: 255 }   // varm lilla
+  ];
 
   function resize() {
     const rect = stage.getBoundingClientRect();
     state.width = rect.width;
     state.height = rect.height;
-    state.centerX = rect.width / 2;
-    state.centerY = rect.height / 2;
+    state.cx = rect.width * 0.5;
+    state.cy = rect.height * 0.5;
+    state.fieldRadius = Math.min(rect.width, rect.height) * 0.18;
 
     canvas.width = rect.width * DPR;
     canvas.height = rect.height * DPR;
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
-
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
 
@@ -41,16 +51,52 @@
     return Math.random() * (max - min) + min;
   }
 
+  function pickExhaleColor() {
+    return EXHALE_PALETTE[Math.floor(Math.random() * EXHALE_PALETTE.length)];
+  }
+
+  function rgba(c, a = 1) {
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+  }
+
+  function spawnLeftParticle() {
+    return {
+      x: rand(0, state.cx * 0.85),
+      y: rand(0, state.height),
+      vx: 0,
+      vy: 0,
+      size: rand(1.2, 3.4),
+      alpha: rand(0.35, 0.9),
+      depth: rand(0.5, 1.4),
+      active: false,
+      dead: false,
+      colorMode: "inhale",
+      color: state.inhaleColor,
+      releaseOffset: null,
+      glow: 0,
+      driftSeed: rand(0, 1000),
+      returnToCenter: false
+    };
+  }
+
+  function spawnSparkle(x, y, color) {
+    return {
+      x,
+      y,
+      vx: rand(-0.35, -0.05),
+      vy: rand(-0.2, 0.2),
+      size: rand(1.0, 2.0),
+      alpha: rand(0.3, 0.8),
+      color,
+      life: rand(40, 80)
+    };
+  }
+
   function createParticles() {
-    state.particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-      angle: rand(0, Math.PI * 2),
-      radius: rand(50, 160),
-      orbitSpeed: rand(0.0008, 0.003),
-      size: rand(1.2, 4.2),
-      drift: rand(0.1, 0.6),
-      alpha: rand(0.08, 0.45),
-      seed: rand(0, 1000)
-    }));
+    state.particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      state.particles.push(spawnLeftParticle());
+    }
   }
 
   function setTrack(track) {
@@ -58,158 +104,283 @@
   }
 
   function setPhase(phase) {
+    state.prevPhase = state.phase;
     state.phase = phase || "free";
 
-    switch (state.phase) {
-      case "inhale":
-        state.targetRadius = 145;
-        state.phaseEnergy = 1.0;
-        break;
-      case "exhale":
-        state.targetRadius = 92;
-        state.phaseEnergy = 0.45;
-        break;
-      case "holdIn":
-        state.targetRadius = 145;
-        state.phaseEnergy = 0.78;
-        break;
-      case "holdOut":
-        state.targetRadius = 92;
-        state.phaseEnergy = 0.22;
-        break;
-      default:
-        state.targetRadius = 118;
-        state.phaseEnergy = 0.55;
+    if (state.phase === "exhale" && state.prevPhase !== "exhale") {
+      state.currentExhaleColor = pickExhaleColor();
+      // nullstill release-egenskaper ved hver nye utpust
+      state.particles.forEach(p => {
+        p.releaseOffset = null;
+        p.returnToCenter = false;
+      });
     }
   }
 
-  function phaseColor(alpha = 1) {
-    switch (state.phase) {
-      case "inhale":
-        return `rgba(110, 210, 255, ${alpha})`;
-      case "exhale":
-        return `rgba(110, 170, 220, ${alpha})`;
-      case "holdIn":
-        return `rgba(150, 220, 255, ${alpha})`;
-      case "holdOut":
-        return `rgba(90, 135, 180, ${alpha})`;
-      default:
-        return `rgba(180, 210, 235, ${alpha})`;
+  function refillParticles() {
+    while (state.particles.length < PARTICLE_COUNT) {
+      state.particles.push(spawnLeftParticle());
     }
   }
 
-  function update(time) {
-    state.visualRadius += (state.targetRadius - state.visualRadius) * 0.06;
+  function updateInhale(p, time) {
+    p.colorMode = "inhale";
+    p.color = state.inhaleColor;
+    p.returnToCenter = false;
+    p.releaseOffset = null;
+    p.active = false;
+
+    if (p.x > state.cx + state.fieldRadius * 1.6) {
+      p.dead = true;
+      return;
+    }
+
+    const angle = rand(0, Math.PI * 2);
+    const r = rand(0, state.fieldRadius);
+    const tx = state.cx + Math.cos(angle) * r;
+    const ty = state.cy + Math.sin(angle) * r;
+
+    const ddx = tx - p.x;
+    const ddy = ty - p.y;
+
+    p.vx += ddx * 0.0036 * p.depth;
+    p.vy += ddy * 0.0036 * p.depth;
+
+    p.vx *= 0.83;
+    p.vy *= 0.83;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.glow = 0.08;
+  }
+
+  function updateHoldIn(p, time) {
+    p.colorMode = "inhale";
+    p.color = state.inhaleColor;
+
+    const wave = (Math.sin(time * 0.002 + p.driftSeed) + 1) * 0.5;
+    const glowEnvelope = 0.25 + 0.35 * wave;
+
+    p.vx *= 0.92;
+    p.vy *= 0.92;
+    p.vx += Math.sin(time * 0.001 + p.driftSeed) * 0.004;
+    p.vy += Math.cos(time * 0.0013 + p.driftSeed) * 0.004;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.glow = glowEnvelope;
+    p.alpha = Math.max(p.alpha, 0.5);
+  }
+
+  function updateExhale(p, time) {
+    p.colorMode = "exhale";
+    p.color = state.currentExhaleColor;
+
+    const dx = p.x - state.cx;
+    const dy = p.y - state.cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < state.fieldRadius * 1.05) {
+      if (p.releaseOffset == null) {
+        p.releaseOffset = Math.random() * 0.45;
+      }
+
+      const localP = rand(0.55, 1.0) - p.releaseOffset;
+
+      if (localP > 0) {
+        const angle = Math.atan2(dy, dx) + rand(-0.7, 0.7);
+        const force = rand(1.2, 4.8);
+
+        p.vx += Math.cos(angle) * force + rand(1.0, 2.2);
+        p.vy += Math.sin(angle) * force;
+        p.active = true;
+      }
+    } else if (p.x < state.cx) {
+      // skubb venstre-sidige partikler ut av sentrum før de slippes
+      p.vx += 0.03;
+    }
+
+    if (p.active) {
+      p.vx *= 0.987;
+      p.vy *= 0.987;
+      p.x += p.vx;
+      p.y += p.vy;
+    }
+
+    if (p.x > state.width + 20) {
+      p.dead = true;
+      return;
+    }
+
+    // Fade bare ute mot høyre
+    const fadeStartX = state.cx + state.width * 0.18;
+    const fadeEndX = state.width * 0.98;
+    if (p.x > fadeStartX) {
+      const fade = 1 - Math.min(1, (p.x - fadeStartX) / (fadeEndX - fadeStartX));
+      p.alpha = Math.max(0, fade * 0.85);
+    } else {
+      p.alpha = 0.82;
+    }
+
+    p.glow = 0.12;
+  }
+
+  function updateHoldOut(p, time) {
+    if (p.colorMode !== "exhale") {
+      p.colorMode = "exhale";
+      p.color = state.currentExhaleColor;
+    }
+
+    const dx = state.cx - p.x;
+    const dy = state.cy - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+
+    // bare noen få vender rolig tilbake
+    if (!p.returnToCenter && Math.random() < 0.008) {
+      p.returnToCenter = true;
+    }
+
+    if (p.returnToCenter) {
+      p.vx += (dx / dist) * 0.018;
+      p.vy += (dy / dist) * 0.018;
+
+      // sparkle-spor
+      if (Math.random() < 0.06) {
+        state.sparklePool.push(spawnSparkle(p.x, p.y, p.color));
+      }
+    } else {
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+      p.vx += Math.sin(time * 0.001 + p.driftSeed) * 0.003;
+      p.vy += Math.cos(time * 0.0012 + p.driftSeed) * 0.003;
+    }
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    const glowWave = (Math.sin(time * 0.002 + p.driftSeed) + 1) * 0.5;
+    p.glow = 0.2 + glowWave * 0.35;
+    p.alpha = Math.max(p.alpha, 0.38);
+
+    // hvis partikkel er nesten tilbake i sentrum, respawn den
+    if (dist < state.fieldRadius * 0.45 && p.returnToCenter) {
+      p.dead = true;
+    }
+  }
+
+  function updateFree(p, time) {
+    p.vx *= 0.96;
+    p.vy *= 0.96;
+    p.vx += (Math.random() - 0.5) * 0.02;
+    p.vy += (Math.random() - 0.5) * 0.02;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.glow = 0.04;
+    p.alpha = 0.45;
+    p.color = state.inhaleColor;
+  }
+
+  function updateParticles(time) {
+    refillParticles();
 
     for (const p of state.particles) {
-      let orbitFactor = 1;
-      let radialDrift = 0;
-
-      if (state.phase === "inhale") {
-        orbitFactor = 0.9;
-        radialDrift = 0.25;
-      } else if (state.phase === "exhale") {
-        orbitFactor = 0.65;
-        radialDrift = -0.22;
-      } else if (state.phase === "holdIn") {
-        orbitFactor = 0.35;
-        radialDrift = 0.02;
-      } else if (state.phase === "holdOut") {
-        orbitFactor = 0.18;
-        radialDrift = -0.015;
-      } else {
-        orbitFactor = 0.5;
-        radialDrift = 0.01;
-      }
-
-      p.angle += p.orbitSpeed * orbitFactor * 16;
-      p.radius += radialDrift * p.drift;
-
-      const minR = state.visualRadius * 0.55;
-      const maxR = state.visualRadius * 1.7;
-
-      if (p.radius < minR) p.radius = minR + rand(0, 8);
-      if (p.radius > maxR) p.radius = maxR - rand(0, 8);
-
-      // Mikrodrift på hold
-      if (state.phase === "holdIn" || state.phase === "holdOut") {
-        p.radius += Math.sin((time * 0.001) + p.seed) * 0.03;
-      }
+      if (state.phase === "inhale") updateInhale(p, time);
+      else if (state.phase === "holdIn") updateHoldIn(p, time);
+      else if (state.phase === "exhale") updateExhale(p, time);
+      else if (state.phase === "holdOut") updateHoldOut(p, time);
+      else updateFree(p, time);
     }
+
+    state.particles = state.particles.filter(p => !p.dead);
   }
 
-  function drawCoreGlow() {
-    const r = state.visualRadius;
+  function updateSparkles() {
+    for (const s of state.sparklePool) {
+      s.x += s.vx;
+      s.y += s.vy;
+      s.alpha *= 0.97;
+      s.life -= 1;
+    }
+    state.sparklePool = state.sparklePool.filter(s => s.life > 0 && s.alpha > 0.03);
+    while (state.sparklePool.length > SPARKLE_COUNT) state.sparklePool.shift();
+  }
 
-    const gradient = ctx.createRadialGradient(
-      state.centerX,
-      state.centerY,
-      r * 0.15,
-      state.centerX,
-      state.centerY,
-      r * 1.45
-    );
+  function drawBackgroundGlow() {
+    const grad = ctx.createLinearGradient(0, 0, state.width, 0);
 
-    if (state.phase === "holdOut") {
-      gradient.addColorStop(0, "rgba(120,180,255,0.10)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-    } else if (state.phase === "holdIn") {
-      gradient.addColorStop(0, "rgba(170,225,255,0.22)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-    } else if (state.phase === "inhale") {
-      gradient.addColorStop(0, "rgba(120,220,255,0.18)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-    } else if (state.phase === "exhale") {
-      gradient.addColorStop(0, "rgba(90,160,220,0.12)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
+    if (state.phase === "inhale" || state.phase === "holdIn") {
+      grad.addColorStop(0, "rgba(170, 220, 255, 0.08)");
+      grad.addColorStop(0.5, "rgba(40, 70, 110, 0.03)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    } else if (state.phase === "exhale" || state.phase === "holdOut") {
+      const c = state.currentExhaleColor;
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(0.5, `rgba(${c.r}, ${c.g}, ${c.b}, 0.04)`);
+      grad.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0.09)`);
     } else {
-      gradient.addColorStop(0, "rgba(140,200,235,0.14)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
+      grad.addColorStop(0, "rgba(255,255,255,0.02)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
     }
 
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, state.width, state.height);
+  }
+
+  function drawFieldHint() {
     ctx.beginPath();
-    ctx.arc(state.centerX, state.centerY, r * 1.45, 0, Math.PI * 2);
+    ctx.ellipse(state.cx, state.cy, state.fieldRadius, state.fieldRadius * 0.72, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,255,255,0.03)";
+    ctx.stroke();
+  }
+
+  function drawParticle(p) {
+    const glowAlpha = Math.min(0.35, p.glow);
+    if (glowAlpha > 0.01) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (2.8 + p.glow * 2), 0, Math.PI * 2);
+      ctx.fillStyle = rgba(p.color, glowAlpha * 0.45);
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(p.color, p.alpha);
     ctx.fill();
   }
 
-  function drawParticles(time) {
-    for (const p of state.particles) {
-      const wobble = Math.sin((time * 0.0015) + p.seed) * 4;
-      const x = state.centerX + Math.cos(p.angle) * (p.radius + wobble);
-      const y = state.centerY + Math.sin(p.angle) * (p.radius + wobble);
+  function drawSparkle(s) {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size * 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(s.color, s.alpha * 0.25);
+    ctx.fill();
 
-      let alpha = p.alpha;
-
-      if (state.phase === "holdOut") alpha *= 0.45;
-      if (state.phase === "holdIn") alpha *= 0.9;
-      if (state.phase === "inhale") alpha *= 1.1;
-
-      ctx.fillStyle = phaseColor(alpha);
-      ctx.beginPath();
-      ctx.arc(x, y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(s.color, s.alpha);
+    ctx.fill();
   }
 
   function draw(time) {
     ctx.clearRect(0, 0, state.width, state.height);
+    drawBackgroundGlow();
+    drawFieldHint();
 
-    drawCoreGlow();
-    drawParticles(time);
+    for (const p of state.particles) drawParticle(p);
+    for (const s of state.sparklePool) drawSparkle(s);
   }
 
   function animate(time) {
-    update(time);
+    updateParticles(time);
+    updateSparkles();
     draw(time);
     requestAnimationFrame(animate);
   }
 
   resize();
   createParticles();
-  setPhase("free");
   requestAnimationFrame(animate);
-
   window.addEventListener("resize", resize);
 
   window.BcycVisuals = {
