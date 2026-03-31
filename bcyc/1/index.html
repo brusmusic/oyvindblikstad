@@ -45,6 +45,10 @@ const lungRadius = 100;
 
 let particles = [];
 
+// 🎨 fargestyring
+let currentExhaleHue = 20;
+let lastPhase = null;
+
 // ------------------ PARTICLES ------------------
 
 function spawn(){
@@ -86,32 +90,37 @@ function animate(){
 
   phaseText.innerText = isPaused ? "TAP TO START" : b.phase.toUpperCase();
 
-  // fyll opp partikler
+  // 🎨 ny farge ved ny utpust
+  if(!isPaused && b.phase !== lastPhase){
+    if(b.phase === "exhale"){
+      currentExhaleHue = 10 + Math.random() * 50; // varme toner
+    }
+    lastPhase = b.phase;
+  }
+
   while(particles.length < 300){
     particles.push(spawn());
   }
 
   particles.forEach(p=>{
 
-    // ------------------ PAUSE ------------------
+    // PAUSE
     if(isPaused){
       p.vx *= 0.95;
       p.vy *= 0.95;
-      p.vx += (Math.random()-0.5)*0.05;
-      p.vy += (Math.random()-0.5)*0.05;
       p.x += p.vx;
       p.y += p.vy;
       draw(p);
       return;
     }
 
-    // ------------------ INHALE ------------------
-
+    // INHALE cleanup
     if(b.phase === "inhale" && p.x > cx){
       p.dead = true;
       return;
     }
 
+    // INHALE
     if(b.phase==="inhale"){
       p.releaseOffset = null;
       p.active = false;
@@ -143,8 +152,7 @@ function animate(){
       p.alpha = 0.8;
     }
 
-    // ------------------ EXHALE ------------------
-
+    // EXHALE
     if(b.phase==="exhale"){
 
       if(p.x < cx){
@@ -196,9 +204,8 @@ function animate(){
         p.dead = true;
       }
 
-      // 🎨 FADE (kun høyre side)
+      // fade siste del av utpust
       if(p.x > cx && p.active){
-
         let fadeStart = 0.8;
 
         if(b.p > fadeStart){
@@ -207,7 +214,6 @@ function animate(){
         } else {
           p.alpha = 0.8;
         }
-
       } else {
         p.alpha = 0.8;
       }
@@ -227,27 +233,24 @@ function animate(){
 // ------------------ DRAW ------------------
 
 function draw(p){
-  let hue = 190;
-
-  if(!audio.paused){
-    let b = getBreath(audio.currentTime);
-
-    if(b.phase === "inhale"){
-      hue = 180 + p.depth * 25; // kald variasjon
-    } else if(b.phase === "exhale"){
-      hue = 10 + p.depth * 25; // varm variasjon
-    }
-  }
 
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-  ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${p.alpha})`;
+
+  if(p.x < cx){
+    // 🤍 venstre side
+    ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+  } else {
+    // 🌈 høyre side
+    ctx.fillStyle = `hsla(${currentExhaleHue}, 80%, 60%, ${p.alpha})`;
+  }
+
   ctx.fill();
 }
 
 animate();
 
-// ------------------ AUDIO START FIX ------------------
+// ------------------ AUDIO FIX ------------------
 
 document.body.addEventListener("touchstart", () => {
   audio.muted = false;
@@ -262,7 +265,6 @@ document.body.addEventListener("pointerdown", () => {
 
   audio.muted = false;
 
-  // første trykk
   if(!hasStarted){
     audio.play().catch(()=>{});
     hasStarted = true;
@@ -272,7 +274,6 @@ document.body.addEventListener("pointerdown", () => {
 
   let now = Date.now();
 
-  // dobbeltrykk = restart
   if(now - lastTap < 300){
     audio.pause();
     audio.currentTime = 0;
@@ -281,7 +282,6 @@ document.body.addEventListener("pointerdown", () => {
     return;
   }
 
-  // enkel trykk = pause/play
   if(audio.paused){
     audio.play().catch(()=>{});
   } else {
