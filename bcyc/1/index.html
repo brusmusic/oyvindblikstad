@@ -227,10 +227,18 @@ function animate(){
 // ------------------ DRAW ------------------
 
 function draw(p){
-let b = getBreath(audio.currentTime);
-let hue = 180 - b.p * 160;
 
-ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${p.alpha})`;
+  let hue = 180;
+
+  if(!audio.paused){
+    let b = getBreath(audio.currentTime);
+    hue = 180 - b.p * 160;
+  }
+
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+  ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${p.alpha})`;
+  ctx.fill();
 }
 
 animate();
