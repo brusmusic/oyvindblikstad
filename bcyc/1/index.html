@@ -227,12 +227,16 @@ function animate(){
 // ------------------ DRAW ------------------
 
 function draw(p){
-
-  let hue = 180;
+  let hue = 190;
 
   if(!audio.paused){
     let b = getBreath(audio.currentTime);
-    hue = 180 - b.p * 160;
+
+    if(b.phase === "inhale"){
+      hue = 180 + p.depth * 25; // kald variasjon
+    } else if(b.phase === "exhale"){
+      hue = 10 + p.depth * 25; // varm variasjon
+    }
   }
 
   ctx.beginPath();
