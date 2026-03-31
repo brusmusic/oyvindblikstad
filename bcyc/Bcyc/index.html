@@ -1,1 +1,347 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BCYC</title>
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/player.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">bcyc</p>
+        <h1>Breathing Cycles</h1>
+      </div>
+      <p class="tagline">in / out</p>
+    </header>
 
+    <main class="main-grid">
+      <section class="player-panel">
+        <div class="visual-card">
+          <div id="breathCircle" class="breath-circle">
+            <div class="breath-inner">
+              <span id="phaseLabel">Velg et spor</span>
+            </div>
+          </div>
+
+          <div class="now-playing">
+            <p class="label">Nå spiller</p>
+            <h2 id="trackTitle">Ingen valgt</h2>
+            <p id="trackMeta">Velg et spor fra biblioteket</p>
+          </div>
+        </div>
+
+        <div class="transport">
+          <audio id="audio" preload="metadata"></audio>
+
+          <div class="transport-buttons">
+            <button id="playPauseBtn" class="primary-btn" disabled>Play</button>
+            <button id="stopBtn" class="secondary-btn" disabled>Stopp</button>
+          </div>
+
+          <div class="progress-wrap">
+            <input id="progress" type="range" min="0" max="100" value="0" />
+            <div class="time-row">
+              <span id="currentTime">0:00</span>
+              <span id="totalTime">0:00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="breath-info">
+          <div class="info-box">
+            <span class="info-label">Startfase</span>
+            <strong id="startPhase">–</strong>
+          </div>
+          <div class="info-box">
+            <span class="info-label">Mønster</span>
+            <strong id="breathPattern">–</strong>
+          </div>
+          <div class="info-box">
+            <span class="info-label">Type</span>
+            <strong id="trackType">–</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="library-panel">
+        <div class="section-head">
+          <h3>Bibliotek</h3>
+          <p id="libraryCount">Laster spor…</p>
+        </div>
+
+        <div id="trackList" class="track-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      tracks: [],
+      currentTrack: null,
+      breathInterval: null,
+      currentPhaseIndex: 0,
+      phaseElapsed: 0
+    };
+
+    const el = {
+      audio: document.getElementById("audio"),
+      trackList: document.getElementById("trackList"),
+      libraryCount: document.getElementById("libraryCount"),
+      trackTitle: document.getElementById("trackTitle"),
+      trackMeta: document.getElementById("trackMeta"),
+      phaseLabel: document.getElementById("phaseLabel"),
+      startPhase: document.getElementById("startPhase"),
+      breathPattern: document.getElementById("breathPattern"),
+      trackType: document.getElementById("trackType"),
+      playPauseBtn: document.getElementById("playPauseBtn"),
+      stopBtn: document.getElementById("stopBtn"),
+      progress: document.getElementById("progress"),
+      currentTime: document.getElementById("currentTime"),
+      totalTime: document.getElementById("totalTime"),
+      breathCircle: document.getElementById("breathCircle")
+    };
+
+    const PHASE_LABELS = {
+      inhale: "Pust inn",
+      exhale: "Pust ut",
+      holdIn: "Hold",
+      holdOut: "Vent",
+      free: "Lytt"
+    };
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
+    }
+
+    function prettyType(type) {
+      if (type === "full_reise") return "Full reise";
+      if (type === "byggekloss") return "Byggekloss";
+      if (type === "pause") return "Pause";
+      return type || "–";
+    }
+
+    function prettyPhase(phase) {
+      return PHASE_LABELS[phase] || phase || "–";
+    }
+
+    function buildPhaseDurations(track) {
+      if (!track.hasBreathLogic || !track.breathPattern?.length) return [];
+
+      return track.breathPattern.map((phase) => {
+        if (phase === "inhale") return { phase, duration: track.inhale || 0 };
+        if (phase === "exhale") return { phase, duration: track.exhale || 0 };
+        if (phase === "holdIn") return { phase, duration: track.holdIn || 0 };
+        if (phase === "holdOut") return { phase, duration: track.holdOut || 0 };
+        return { phase, duration: 0 };
+      }).filter(item => item.duration > 0);
+    }
+
+    function updateBreathVisual(phase) {
+      el.phaseLabel.textContent = prettyPhase(phase);
+
+      el.breathCircle.classList.remove("inhale", "exhale", "holdIn", "holdOut", "free");
+
+      if (!phase) return;
+      el.breathCircle.classList.add(phase);
+    }
+
+    function stopBreathCycle() {
+      if (state.breathInterval) {
+        clearInterval(state.breathInterval);
+        state.breathInterval = null;
+      }
+    }
+
+    function startBreathCycle(track) {
+      stopBreathCycle();
+
+      if (!track.hasBreathLogic) {
+        updateBreathVisual("free");
+        return;
+      }
+
+      const phases = buildPhaseDurations(track);
+      if (!phases.length) {
+        updateBreathVisual(track.startPhase || "free");
+        return;
+      }
+
+      state.currentPhaseIndex = 0;
+      state.phaseElapsed = 0;
+      updateBreathVisual(phases[0].phase);
+
+      state.breathInterval = setInterval(() => {
+        if (el.audio.paused) return;
+
+        state.phaseElapsed += 0.25;
+
+        const current = phases[state.currentPhaseIndex];
+        if (state.phaseElapsed >= current.duration) {
+          state.currentPhaseIndex = (state.currentPhaseIndex + 1) % phases.length;
+          state.phaseElapsed = 0;
+          updateBreathVisual(phases[state.currentPhaseIndex].phase);
+        }
+      }, 250);
+    }
+
+    function renderTrackList() {
+      el.trackList.innerHTML = "";
+
+      state.tracks.forEach(track => {
+        const button = document.createElement("button");
+        button.className = "track-item";
+        button.type = "button";
+
+        if (state.currentTrack?.id === track.id) {
+          button.classList.add("active");
+        }
+
+        const patternText = track.hasBreathLogic
+          ? track.breathPattern.map(prettyPhase).join(" → ")
+          : "Fri lytting";
+
+        button.innerHTML = `
+          <div class="track-top">
+            <strong>${track.title}</strong>
+            <span>${formatTime(track.durationSec)}</span>
+          </div>
+          <div class="track-bottom">
+            <span>${prettyType(track.type)}</span>
+            <span>${patternText}</span>
+          </div>
+        `;
+
+        button.addEventListener("click", () => selectTrack(track.id));
+        el.trackList.appendChild(button);
+      });
+
+      el.libraryCount.textContent = `${state.tracks.length} spor`;
+    }
+
+    function updateTrackInfo(track) {
+      const ratioText = track.hasBreathLogic
+        ? `${track.breathPattern.map(phase => {
+            if (phase === "inhale") return `${track.inhale}s inn`;
+            if (phase === "exhale") return `${track.exhale}s ut`;
+            if (phase === "holdIn") return `${track.holdIn}s hold`;
+            if (phase === "holdOut") return `${track.holdOut}s vent`;
+            return phase;
+          }).join(" · ")}`
+        : "Fri lytting";
+
+      el.trackTitle.textContent = track.title;
+      el.trackMeta.textContent = ratioText;
+      el.startPhase.textContent = prettyPhase(track.startPhase);
+      el.breathPattern.textContent = track.hasBreathLogic
+        ? track.breathPattern.map(prettyPhase).join(" → ")
+        : "Fri";
+      el.trackType.textContent = prettyType(track.type);
+      el.totalTime.textContent = formatTime(track.durationSec);
+    }
+
+    function selectTrack(trackId) {
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track) return;
+
+      state.currentTrack = track;
+
+      // Endre mappe her hvis du legger lydfilene et annet sted
+      el.audio.src = `./audio/demo/${track.filename}`;
+
+      updateTrackInfo(track);
+      renderTrackList();
+
+      el.playPauseBtn.disabled = false;
+      el.stopBtn.disabled = false;
+      el.playPauseBtn.textContent = "Play";
+
+      el.progress.value = 0;
+      el.currentTime.textContent = "0:00";
+
+      stopBreathCycle();
+      updateBreathVisual(track.startPhase || "free");
+    }
+
+    function togglePlayPause() {
+      if (!state.currentTrack) return;
+
+      if (el.audio.paused) {
+        el.audio.play();
+      } else {
+        el.audio.pause();
+      }
+    }
+
+    function stopPlayback() {
+      el.audio.pause();
+      el.audio.currentTime = 0;
+      el.progress.value = 0;
+      el.currentTime.textContent = "0:00";
+
+      stopBreathCycle();
+      updateBreathVisual(state.currentTrack?.startPhase || "free");
+      el.playPauseBtn.textContent = "Play";
+    }
+
+    async function loadTracks() {
+      try {
+        const response = await fetch("./data/tracks.json");
+        if (!response.ok) throw new Error("Kunne ikke laste tracks.json");
+
+        state.tracks = await response.json();
+        renderTrackList();
+        el.libraryCount.textContent = `${state.tracks.length} spor`;
+      } catch (error) {
+        el.libraryCount.textContent = "Kunne ikke laste spor";
+        el.trackList.innerHTML = `<p class="error-text">${error.message}</p>`;
+      }
+    }
+
+    el.playPauseBtn.addEventListener("click", togglePlayPause);
+    el.stopBtn.addEventListener("click", stopPlayback);
+
+    el.audio.addEventListener("play", () => {
+      el.playPauseBtn.textContent = "Pause";
+      if (state.currentTrack) startBreathCycle(state.currentTrack);
+    });
+
+    el.audio.addEventListener("pause", () => {
+      el.playPauseBtn.textContent = "Play";
+    });
+
+    el.audio.addEventListener("timeupdate", () => {
+      const current = el.audio.currentTime || 0;
+      const duration = el.audio.duration || state.currentTrack?.durationSec || 0;
+
+      el.currentTime.textContent = formatTime(current);
+
+      if (duration > 0) {
+        el.progress.value = (current / duration) * 100;
+      }
+    });
+
+    el.audio.addEventListener("loadedmetadata", () => {
+      el.totalTime.textContent = formatTime(el.audio.duration);
+    });
+
+    el.audio.addEventListener("ended", () => {
+      stopPlayback();
+    });
+
+    el.progress.addEventListener("input", () => {
+      if (!el.audio.duration) return;
+      const nextTime = (Number(el.progress.value) / 100) * el.audio.duration;
+      el.audio.currentTime = nextTime;
+    });
+
+    loadTracks();
+  </script>
+</body>
+</html>
