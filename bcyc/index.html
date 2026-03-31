@@ -12,7 +12,7 @@
     position:absolute; top:50%; width:100%;
     text-align:center; transform:translateY(-50%);
     color:rgba(255,255,255,0.5);
-    font-size:48px; letter-spacing:3px;
+    font-size:5vw;
   }
 </style>
 </head>
@@ -218,6 +218,21 @@ if(isPaused){
   ctx.arc(cx,cy,lungRadius,0,Math.PI*2);
   ctx.strokeStyle="rgba(255,255,255,0.03)";
   ctx.stroke();
+  // 🎨 fade ut siste 20% av utpust
+let fadeStart = 0.8;
+
+if(b.p > fadeStart){
+
+  let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
+
+  // inverter så 1 → 0
+  let fade = 1 - fadeProgress;
+
+  p.alpha = 0.8 * fade;
+
+} else {
+  p.alpha = 0.8;
+}
 }
 
 function draw(p){
