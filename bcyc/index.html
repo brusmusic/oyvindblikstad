@@ -253,46 +253,47 @@ function draw(p){
 }
 
 animate();
-
+document.body.addEventListener("touchstart", () => {
+  audio.muted = false;
+}, { once:true });
+  
 // 🔥 TAP LOGIKK
-let tapTimeout = null;
+let hasStarted = false;
+let lastTap = 0;
 
 document.body.addEventListener("pointerdown", () => {
 
-  // 🔥 ekstremt viktig for mobil
   audio.muted = false;
 
-  // DOBBELTTRYKK
-  if(tapTimeout){
-    clearTimeout(tapTimeout);
-
-    audio.pause();
-    audio.currentTime = 0;
-
-    let playPromise = audio.play();
-    if(playPromise !== undefined){
-      playPromise.catch(()=>{});
-    }
-
-    tapTimeout = null;
+  // 🔥 FØRSTE TRYKK – må være helt rent
+  if(!hasStarted){
+    audio.play().catch(()=>{});
+    hasStarted = true;
+    lastTap = Date.now();
     return;
   }
 
-  // ENKELT TRYKK
-  tapTimeout = setTimeout(() => {
+  let now = Date.now();
 
-    if(audio.paused){
-      let playPromise = audio.play();
-      if(playPromise !== undefined){
-        playPromise.catch(()=>{});
-      }
-    } else {
-      audio.pause();
-    }
+  // 🔥 DOBBELTTRYKK = restart
+  if(now - lastTap < 300){
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+    lastTap = 0;
+    return;
+  }
 
-    tapTimeout = null;
+  // 🔥 ENKEL TRYKK = pause/play
+  if(audio.paused){
+    audio.play().catch(()=>{});
+  } else {
+    audio.pause();
+  }
 
-  }, 250);
+  lastTap = now;
+
+  
 
 });
 </script>
