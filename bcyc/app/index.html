@@ -145,13 +145,13 @@
       }).filter(item => item.duration > 0);
     }
 
-    function updateBreathVisual(phase) {
+   function updateBreathVisual(phase) {
   el.phaseLabel.textContent = prettyPhase(phase);
 
-  el.breathCircle.classList.remove("inhale", "exhale", "holdIn", "holdOut", "free");
-
-  if (!phase) return;
-  el.breathCircle.classList.add(phase);
+  if (el.breathCircle) {
+    el.breathCircle.classList.remove("inhale", "exhale", "holdIn", "holdOut", "free");
+    if (phase) el.breathCircle.classList.add(phase);
+  }
 
   if (window.BcycVisuals) {
     window.BcycVisuals.setPhase(phase);
