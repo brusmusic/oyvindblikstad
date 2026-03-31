@@ -342,7 +342,12 @@
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, state.width, state.height);
   }
-
+function createParticles() {
+  state.particles = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    state.particles.push(spawnParticle());
+  }
+}
   function animate(time) {
     requestAnimationFrame(animate);
 
