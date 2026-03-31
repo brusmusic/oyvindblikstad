@@ -210,7 +210,6 @@ if(isPaused){
     if(b.phase==="inhale" && p.x<cx) draw(p);
     if(b.phase==="exhale") draw(p);
 
-  });
 
   particles = particles.filter(p => !p.dead);
 
@@ -234,6 +233,7 @@ if(b.p > fadeStart){
   p.alpha = 0.8;
 }
 }
+  });
 
 function draw(p){
   ctx.beginPath();
