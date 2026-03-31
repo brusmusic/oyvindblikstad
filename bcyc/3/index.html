@@ -45,6 +45,12 @@ const lungRadius = 100;
 
 let particles = [];
 
+  // 🫁 PUST (NY)
+const BREATH = {
+  inhale: 4,
+  exhale: 8
+};
+  
 // 🎨 fargestyring
 let currentExhaleHue = 20;
 let lastPhase = null;
@@ -69,11 +75,31 @@ for(let i=0;i<300;i++) particles.push(spawn());
 // ------------------ BREATH ------------------
 
 function getBreath(t){
-  let cycle = 12;
+
+  let inhale = BREATH.inhale;
+  let exhale = BREATH.exhale;
+
+  let cycle = inhale + exhale;
   let l = t % cycle;
 
-  if(l < 6) return {phase:"inhale", p:l/6};
-  return {phase:"exhale", p:(l-6)/6};
+  // 🫁 INHALE
+  if(l < inhale){
+    return {
+      phase: "inhale",
+      p: l / inhale,      // 0 → 1 progresjon
+      t: l,               // tid inn i fasen
+      duration: inhale    // varighet
+    };
+  }
+
+  // 🌊 EXHALE
+  let exhaleTime = l - inhale;
+
+  return {
+    phase: "exhale",
+    p: exhaleTime / exhale,
+    t: exhaleTime,
+    duration: exhale
   };
 }
 
