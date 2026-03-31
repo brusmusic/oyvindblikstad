@@ -21,8 +21,7 @@
 <div id="phaseText">TAP TO START</div>
 
 <canvas id="canvas"></canvas>
-<audio id="audio" src="audio.mp3" preload="auto" playsinline></audio>
-<script>
+<audio id="audio" src="audio.mp3" preload="auto" playsinline webkit-playsinline></audio><script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
@@ -256,31 +255,44 @@ function draw(p){
 animate();
 
 // 🔥 TAP LOGIKK
-let lastTap = 0;
+let tapTimeout = null;
 
-document.body.addEventListener("pointerdown", (e) => {
+document.body.addEventListener("pointerdown", () => {
 
-  let now = Date.now();
-
-  // 🔥 viktig: “aktiver” audio hver gang
+  // 🔥 ekstremt viktig for mobil
   audio.muted = false;
 
-  // dobbelttrykk = restart
-  if(now - lastTap < 300){
+  // DOBBELTTRYKK
+  if(tapTimeout){
+    clearTimeout(tapTimeout);
+
+    audio.pause();
     audio.currentTime = 0;
-    audio.play().catch(()=>{});
-    lastTap = 0;
+
+    let playPromise = audio.play();
+    if(playPromise !== undefined){
+      playPromise.catch(()=>{});
+    }
+
+    tapTimeout = null;
     return;
   }
 
-  // enkel trykk
-  if(audio.paused){
-    audio.play().catch(()=>{});
-  } else {
-    audio.pause();
-  }
+  // ENKELT TRYKK
+  tapTimeout = setTimeout(() => {
 
-  lastTap = now;
+    if(audio.paused){
+      let playPromise = audio.play();
+      if(playPromise !== undefined){
+        playPromise.catch(()=>{});
+      }
+    } else {
+      audio.pause();
+    }
+
+    tapTimeout = null;
+
+  }, 250);
 
 });
 </script>
