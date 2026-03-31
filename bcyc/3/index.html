@@ -69,19 +69,11 @@ for(let i=0;i<300;i++) particles.push(spawn());
 // ------------------ BREATH ------------------
 
 function getBreath(t){
-  let inhale = 6;
-  let exhale = 6;
-  let cycle = inhale + exhale;
-
+  let cycle = 12;
   let l = t % cycle;
 
-  if(l < inhale){
-    return {phase:"inhale", p:l/inhale};
-  }
-
-  return {
-    phase:"exhale",
-    p:(l - inhale) / exhale
+  if(l < 6) return {phase:"inhale", p:l/6};
+  return {phase:"exhale", p:(l-6)/6};
   };
 }
 
