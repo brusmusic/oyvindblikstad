@@ -22,7 +22,6 @@
 
 <canvas id="canvas"></canvas>
 <audio id="audio" src="audio.mp3" preload="auto" playsinline></audio>
-
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -246,23 +245,30 @@ animate();
 // 🔥 TAP LOGIKK
 let lastTap = 0;
 
-document.body.addEventListener("pointerdown", () => {
+document.body.addEventListener("pointerdown", (e) => {
 
   let now = Date.now();
 
+  // 🔥 viktig: “aktiver” audio hver gang
+  audio.muted = false;
+
+  // dobbelttrykk = restart
   if(now - lastTap < 300){
     audio.currentTime = 0;
-    audio.play();
+    audio.play().catch(()=>{});
+    lastTap = 0;
     return;
   }
 
+  // enkel trykk
   if(audio.paused){
-    audio.play();
+    audio.play().catch(()=>{});
   } else {
     audio.pause();
   }
 
   lastTap = now;
+
 });
 </script>
 
