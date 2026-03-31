@@ -98,8 +98,8 @@ function animate(){
 
       let wave = Math.sin(b.p * Math.PI);
 
-      p.vx += dx * 0.003 * wave;
-      p.vy += dy * 0.003 * wave;
+      p.vx += dx * 0.0003 * wave;
+      p.vy += dy * 0.0003 * wave;
 
       p.vx *= 0.87;
       p.vy *= 0.87;
@@ -126,8 +126,8 @@ function animate(){
       }
 
       if(p.active){
-        p.vx *= 0.95;
-        p.vy *= 0.95;
+        p.vx *= 0.89;
+        p.vy *= 0.89;
 
         p.x += p.vx;
         p.y += p.vy;
