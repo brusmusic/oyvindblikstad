@@ -123,11 +123,11 @@
 
       const depthFactor = 0.5 + p.depth;
 
-      p.vx += ddx * 0.004 * depthFactor;
-      p.vy += ddy * 0.004 * depthFactor;
+      p.vx += ddx * 0.0028 * depthFactor;
+      p.vy += ddy * 0.0028 * depthFactor;
 
-      p.vx *= 0.79;
-      p.vy *= 0.79;
+      p.vx *= 0.72;
+      p.vy *= 0.72;
 
       p.x += p.vx;
       p.y += p.vy;
@@ -161,11 +161,11 @@
       const dy = state.cy - p.y;
       const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-      p.vx -= (dx / dist) * recoil * 0.002;
-      p.vy -= (dy / dist) * recoil * 0.004;
+      p.vx -= (dx / dist) * recoil * 0.0012;
+      p.vy -= (dy / dist) * recoil * 0.0024;
 
-      p.vx *= 0.8;
-      p.vy *= 0.95;
+      p.vx *= 0.72;
+      p.vy *= 0.9;
     }
 
     const dx = p.x - state.cx;
@@ -181,20 +181,20 @@
 
       if (localP > 0) {
         const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2;
-        const force = (2 + Math.random() * 5) * Math.sin(localP * Math.PI);
+        const force = (0.8 + Math.random() * 2.2) * Math.sin(localP * Math.PI);
 
-        p.vx += Math.cos(angle) * force + 1.5;
-        p.vy += Math.sin(angle) * force;
+        p.vx += Math.cos(angle) * force + 0.45;
+        p.vy += Math.sin(angle) * force * 0.65;
 
         p.active = true;
       }
     }
 
     if (p.active) {
-      p.vx *= 0.985;
-      p.vy *= 0.985;
-      p.x += p.vx;
-      p.y += p.vy;
+    p.vx *= 0.94;
+    p.vy *= 0.94;
+    p.x += p.vx;
+    p.y += p.vy;
     }
 
     if (p.x > state.width) {
@@ -289,41 +289,44 @@
   }
 
   function drawParticle(p, time) {
-    let fill;
-    let glow;
-    let glowSize;
+  const isLeftSide = p.x < state.cx;
 
-    if (state.phase === "inhale") {
-      fill = `rgba(255,255,255,${p.alpha})`;
-      glow = `rgba(255,255,255,${Math.max(0, inhaleGlowAlpha(p, time))})`;
-      glowSize = p.size * 2.2;
-    } else if (state.phase === "holdIn") {
+  let fill;
+  let glow;
+  let glowSize;
+
+  if (isLeftSide) {
+    if (state.phase === "holdIn") {
       fill = `rgba(255,255,255,${p.alpha})`;
       glow = `rgba(255,255,255,${Math.max(0, holdInGlowAlpha(p, time))})`;
       glowSize = p.size * 2.8;
-    } else if (state.phase === "exhale") {
-      fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
-      glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, exhaleGlowAlpha(p, time))})`;
-      glowSize = p.size * 2.4;
-    } else if (state.phase === "holdOut") {
+    } else {
+      fill = `rgba(255,255,255,${p.alpha})`;
+      glow = `rgba(255,255,255,${Math.max(0, inhaleGlowAlpha(p, time))})`;
+      glowSize = p.size * 2.2;
+    }
+  } else {
+    if (state.phase === "holdOut") {
       fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
       glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, holdOutGlowAlpha(p, time))})`;
       glowSize = p.size * 3.0;
     } else {
-      fill = `rgba(255,255,255,${p.alpha * 0.6})`;
-      glow = `rgba(255,255,255,0.04)`;
-      glowSize = p.size * 1.8;
+      fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
+      glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, exhaleGlowAlpha(p, time))})`;
+      glowSize = p.size * 2.4;
     }
+  }
 
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
-    ctx.fillStyle = glow;
-    ctx.fill();
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
+  ctx.fillStyle = glow;
+  ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = fill;
-    ctx.fill();
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
   }
 
   function drawSparkle(s) {
