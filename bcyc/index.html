@@ -111,9 +111,15 @@ function animate(){
     // EXHALE
     if(b.phase==="exhale"){
 
-      let dx = p.x - cx;
-      let dy = p.y - cy;
-      let dist = Math.sqrt(dx*dx + dy*dy);
+     let dx = p.x - cx;
+let dy = p.y - cy;
+
+// 🔥 Tving alltid ut mot høyre
+if(dx < 0){
+  dx = Math.abs(dx);
+}
+
+let angle = Math.atan2(dy, dx);
 
       if(dist < radius){
         let angle = Math.atan2(dy,dx);
