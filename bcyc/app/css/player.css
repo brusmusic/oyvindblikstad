@@ -181,4 +181,18 @@
     align-items: flex-start;
     gap: 4px;
   }
+  .phase-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.phase-overlay span {
+  color: rgba(255,255,255,0.34);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  }
 }
