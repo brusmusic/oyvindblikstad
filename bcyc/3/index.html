@@ -86,11 +86,11 @@ function getBreath(t){
   if(l < inhale){
     return {
       phase: "inhale",
-      p: l / inhale,      // 0 → 1 progresjon
-      t: l,               // tid inn i fasen
-      duration: inhale    // varighet
-    
-  }
+      p: l / inhale,
+      t: l,
+      duration: inhale
+    };
+  } 
 
   // 🌊 EXHALE
   let exhaleTime = l - inhale;
