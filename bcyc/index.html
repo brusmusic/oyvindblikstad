@@ -38,7 +38,6 @@ const lungRadius = 100;
 
 let particles = [];
 
-// 🔹 spawn venstre side
 function spawn(){
   return {
     x: Math.random()*cx*0.9,
@@ -54,7 +53,6 @@ function spawn(){
 
 for(let i=0;i<300;i++) particles.push(spawn());
 
-// pust
 function getBreath(t){
   let c=10;
   let l=t%c;
@@ -69,10 +67,10 @@ function animate(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   let t = audio.currentTime || 0;
-let isPaused = audio.paused;
-let b = isPaused ? null : getBreath(t);
+  let isPaused = audio.paused;
+  let b = isPaused ? null : getBreath(t);
 
-phaseText.innerText = audio.paused ? "TAP TO START" : b.phase.toUpperCase();
+  phaseText.innerText = audio.paused ? "TAP TO START" : b.phase.toUpperCase();
 
   let targetCount = 300;
   if(particles.length < targetCount){
@@ -83,27 +81,29 @@ phaseText.innerText = audio.paused ? "TAP TO START" : b.phase.toUpperCase();
   }
 
   particles.forEach(p=>{
-if(isPaused){
 
-  // 🌿 subtil levende stillstand
-  p.vx *= 0.95;
-  p.vy *= 0.95;
+    // 🌿 PAUSE
+    if(isPaused){
+      p.vx *= 0.95;
+      p.vy *= 0.95;
 
-  p.vx += (Math.random()-0.5)*0.05;
-  p.vy += (Math.random()-0.5)*0.05;
+      p.vx += (Math.random()-0.5)*0.05;
+      p.vy += (Math.random()-0.5)*0.05;
 
-  p.x += p.vx;
-  p.y += p.vy;
+      p.x += p.vx;
+      p.y += p.vy;
 
-  draw(p);
-  return;
-}
+      draw(p);
+      return;
+    }
 
+    // INHALE cleanup
     if(b.phase === "inhale" && p.x > cx){
       p.dead = true;
       return;
     }
 
+    // 🫁 INHALE
     if(b.phase==="inhale"){
       p.releaseOffset = null;
       p.active=false;
@@ -141,8 +141,11 @@ if(isPaused){
         p.x += p.vx;
         p.y += p.vy;
       }
+
+      p.alpha = 0.8;
     }
 
+    // 🌊 EXHALE
     if(b.phase==="exhale"){
 
       if(p.x < cx){
@@ -205,11 +208,23 @@ if(isPaused){
       if(p.x > canvas.width){
         p.dead = true;
       }
+
+      // 🎨 FADE SISTE 20%
+      let fadeStart = 0.8;
+
+      if(b.p > fadeStart){
+        let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
+        let fade = 1 - fadeProgress;
+        p.alpha = 0.8 * fade;
+      } else {
+        p.alpha = 0.8;
+      }
     }
 
     if(b.phase==="inhale" && p.x<cx) draw(p);
     if(b.phase==="exhale") draw(p);
-}
+
+  });
 
   particles = particles.filter(p => !p.dead);
 
@@ -217,23 +232,7 @@ if(isPaused){
   ctx.arc(cx,cy,lungRadius,0,Math.PI*2);
   ctx.strokeStyle="rgba(255,255,255,0.03)";
   ctx.stroke();
-  // 🎨 fade ut siste 20% av utpust
-let fadeStart = 0.8;
-
-if(b.p > fadeStart){
-
-  let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
-
-  // inverter så 1 → 0
-  let fade = 1 - fadeProgress;
-
-  p.alpha = 0.8 * fade;
-
-} else {
-  p.alpha = 0.8;
 }
-}
-  });
 
 function draw(p){
   ctx.beginPath();
@@ -244,7 +243,6 @@ function draw(p){
 
 animate();
 
-
 // 🔥 TAP LOGIKK
 let lastTap = 0;
 
@@ -252,14 +250,12 @@ document.body.addEventListener("pointerdown", () => {
 
   let now = Date.now();
 
-  // dobbelttrykk = restart
   if(now - lastTap < 300){
     audio.currentTime = 0;
     audio.play();
     return;
   }
 
-  // enkel trykk = play/pause
   if(audio.paused){
     audio.play();
   } else {
@@ -268,7 +264,6 @@ document.body.addEventListener("pointerdown", () => {
 
   lastTap = now;
 });
-
 </script>
 
 </body>
