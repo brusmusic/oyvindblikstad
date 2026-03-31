@@ -21,11 +21,15 @@
     <main class="main-grid">
       <section class="player-panel">
         <div class="visual-card">
-          <div id="breathCircle" class="breath-circle">
-            <div class="breath-inner">
-              <span id="phaseLabel">Velg et spor</span>
-            </div>
-          </div>
+  <div class="visual-stage" id="visualStage">
+    <canvas id="particleCanvas"></canvas>
+
+    <div id="breathCircle" class="breath-circle">
+      <div class="breath-inner">
+        <span id="phaseLabel">Velg et spor</span>
+      </div>
+    </div>
+  </div>
 
           <div class="now-playing">
             <p class="label">Nå spiller</p>
@@ -77,7 +81,7 @@
       </section>
     </main>
   </div>
-
+<script src="./js/visuals.js"></script>
   <script>
     const state = {
       tracks: [],
@@ -144,13 +148,17 @@
     }
 
     function updateBreathVisual(phase) {
-      el.phaseLabel.textContent = prettyPhase(phase);
+  el.phaseLabel.textContent = prettyPhase(phase);
 
-      el.breathCircle.classList.remove("inhale", "exhale", "holdIn", "holdOut", "free");
+  el.breathCircle.classList.remove("inhale", "exhale", "holdIn", "holdOut", "free");
 
-      if (!phase) return;
-      el.breathCircle.classList.add(phase);
-    }
+  if (!phase) return;
+  el.breathCircle.classList.add(phase);
+
+  if (window.BcycVisuals) {
+    window.BcycVisuals.setPhase(phase);
+  }
+}
 
     function stopBreathCycle() {
       if (state.breathInterval) {
@@ -251,7 +259,9 @@
       if (!track) return;
 
       state.currentTrack = track;
-
+      if (window.BcycVisuals) {
+  window.BcycVisuals.setTrack(track);
+}
       // Endre mappe her hvis du legger lydfilene et annet sted
       el.audio.src = `./audio/demo/${track.filename}`;
 
