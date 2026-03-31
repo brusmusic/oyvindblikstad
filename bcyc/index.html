@@ -2,17 +2,32 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pustemusikk Prototype</title>
 
 <style>
-  body { margin:0; background:black; overflow:hidden; }
-  canvas { display:block; }
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  canvas {
+    display: block;
+  }
 
   #phaseText {
-    position:absolute; top:50%; width:100%;
-    text-align:center; transform:translateY(-50%);
-    color:rgba(255,255,255,0.5);
-    font-size:5vw;
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.5);
+    font-size: 5vw;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -21,72 +36,91 @@
 <div id="phaseText">TAP TO START</div>
 
 <canvas id="canvas"></canvas>
-<audio id="audio" src="audio.mp3" preload="auto" playsinline webkit-playsinline></audio><script>
+<audio id="audio" src="audio.mp3" preload="auto" playsinline webkit-playsinline></audio>
+
+<script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
 const phaseText = document.getElementById("phaseText");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-const cx = canvas.width/2;
-const cy = canvas.height/2;
+function getCenterX() { return canvas.width / 2; }
+function getCenterY() { return canvas.height / 2; }
+
 const lungRadius = 100;
-
 let particles = [];
 
-function spawn(){
+function spawn() {
   return {
-    x: Math.random()*cx*0.9,
-    y: Math.random()*canvas.height,
+    x: Math.random() * getCenterX() * 0.9,
+    y: Math.random() * canvas.height,
     vx: 0,
     vy: 0,
-    size: Math.random()*2+1,
+    size: Math.random() * 2 + 1,
     alpha: 0.8,
     depth: Math.random(),
-    active:false
+    active: false,
+    dead: false,
+    releaseOffset: null
   };
 }
 
-for(let i=0;i<300;i++) particles.push(spawn());
-
-function getBreath(t){
-  let c=10;
-  let l=t%c;
-  if(l<5) return {phase:"inhale",p:l/5};
-  return {phase:"exhale",p:(l-5)/5};
+for (let i = 0; i < 300; i++) {
+  particles.push(spawn());
 }
 
-function animate(){
+function getBreath(t) {
+  const c = 10;
+  const l = t % c;
+  if (l < 5) return { phase: "inhale", p: l / 5 };
+  return { phase: "exhale", p: (l - 5) / 5 };
+}
+
+function draw(p) {
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+  ctx.fill();
+}
+
+function animate() {
   requestAnimationFrame(animate);
 
-  ctx.fillStyle="black";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  const cx = getCenterX();
+  const cy = getCenterY();
 
-  let t = audio.currentTime || 0;
-  let isPaused = audio.paused;
-  let b = isPaused ? null : getBreath(t);
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  phaseText.innerText = audio.paused ? "TAP TO START" : b.phase.toUpperCase();
+  const t = audio.currentTime || 0;
+  const isPaused = audio.paused;
+  const b = isPaused ? null : getBreath(t);
 
-  let targetCount = 300;
-  if(particles.length < targetCount){
-    let needed = targetCount - particles.length;
-    for(let i=0;i<needed;i++){
+  phaseText.innerText = isPaused ? "TAP TO START" : b.phase.toUpperCase();
+
+  const targetCount = 300;
+  if (particles.length < targetCount) {
+    const needed = targetCount - particles.length;
+    for (let i = 0; i < needed; i++) {
       particles.push(spawn());
     }
   }
 
-  particles.forEach(p=>{
-
-    // 🌿 PAUSE
-    if(isPaused){
+  particles.forEach(p => {
+    // PAUSE-TILSTAND
+    if (isPaused) {
       p.vx *= 0.95;
       p.vy *= 0.95;
 
-      p.vx += (Math.random()-0.5)*0.05;
-      p.vy += (Math.random()-0.5)*0.05;
+      p.vx += (Math.random() - 0.5) * 0.05;
+      p.vy += (Math.random() - 0.5) * 0.05;
 
       p.x += p.vx;
       p.y += p.vy;
@@ -95,40 +129,40 @@ function animate(){
       return;
     }
 
-    // INHALE cleanup
-    if(b.phase === "inhale" && p.x > cx){
+    // Fjern partikler som havner på høyre side under innpust
+    if (b.phase === "inhale" && p.x > cx) {
       p.dead = true;
       return;
     }
 
-    // 🫁 INHALE
-    if(b.phase==="inhale"){
+    // INHALE
+    if (b.phase === "inhale") {
       p.releaseOffset = null;
-      p.active=false;
+      p.active = false;
+      p.alpha = 0.8;
 
-      if(p.x < cx){
+      if (p.x < cx) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.random() * lungRadius;
 
-        let angle=Math.random()*Math.PI*2;
-        let r=Math.random()*lungRadius;
+        const tx = cx + Math.cos(angle) * r;
+        const ty = cy + Math.sin(angle) * r;
 
-        let tx=cx+Math.cos(angle)*r;
-        let ty=cy+Math.sin(angle)*r;
+        const ddx = tx - p.x;
+        const ddy = ty - p.y;
 
-        let ddx=tx-p.x;
-        let ddy=ty-p.y;
-
-        let wave=Math.sin(b.p*Math.PI);
-        let endPhase = Math.max(0, (b.p - 0.8) / 0.2);
-        let depthFactor = 0.5 + p.depth;
+        const wave = Math.sin(b.p * Math.PI);
+        const endPhase = Math.max(0, (b.p - 0.8) / 0.2);
+        const depthFactor = 0.5 + p.depth;
 
         p.vx += ddx * 0.004 * wave * depthFactor;
         p.vy += ddy * 0.004 * wave * depthFactor;
 
-        let friction = 0.79 - (wave*0.02);
+        const friction = 0.79 - (wave * 0.02);
         p.vx *= friction;
         p.vy *= friction;
 
-        if(endPhase > 0){
+        if (endPhase > 0) {
           p.vx *= (1 - endPhase * 0.004);
           p.vy *= (1 - endPhase * 0.003);
 
@@ -139,25 +173,21 @@ function animate(){
         p.x += p.vx;
         p.y += p.vy;
       }
-
-      p.alpha = 0.8;
     }
 
-    // 🌊 EXHALE
-    if(b.phase==="exhale"){
+    // EXHALE
+    if (b.phase === "exhale") {
+      if (p.x < cx) {
+        const recoil = 1 - Math.exp(-b.p * 6);
 
-      if(p.x < cx){
+        const dxLeft = cx - p.x;
+        const dyLeft = cy - p.y;
+        const distLeft = Math.sqrt(dxLeft * dxLeft + dyLeft * dyLeft) + 0.001;
 
-        let recoil = 1 - Math.exp(-b.p * 6);
+        p.vx -= (dxLeft / distLeft) * recoil * 0.002;
+        p.vy -= (dyLeft / distLeft) * recoil * 0.004;
 
-        let dx = cx - p.x;
-        let dy = cy - p.y;
-        let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
-
-        p.vx -= (dx/dist) * recoil * 0.002;
-        p.vy -= (dy/dist) * recoil * 0.004;
-
-        let jitter = (Math.random()-0.5) * 0.15 * recoil;
+        const jitter = (Math.random() - 0.5) * 0.15 * recoil;
         p.vx += jitter;
         p.vy += jitter * 0.5;
 
@@ -165,37 +195,32 @@ function animate(){
         p.vy *= 0.95;
       }
 
-      let dx=p.x-cx;
-      let dy=p.y-cy;
-      let dist=Math.sqrt(dx*dx+dy*dy);
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if(dist < lungRadius){
-
-        if(!p.releaseOffset){
-          p.releaseOffset = Math.random()*0.4;
+      if (dist < lungRadius) {
+        if (p.releaseOffset === null) {
+          p.releaseOffset = Math.random() * 0.4;
         }
 
-        let localP = Math.max(0, (b.p - p.releaseOffset)/(1 - p.releaseOffset));
+        const localP = Math.max(0, (b.p - p.releaseOffset) / (1 - p.releaseOffset));
 
-        if(localP > 0){
+        if (localP > 0) {
+          const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2.2;
+          const baseForce = 2 + Math.random() * 5;
+          const forceWave = 0.2 + Math.sin(localP * Math.PI) * 0.8;
+          const force = baseForce * forceWave;
+          const mass = 0.7 + Math.random() * 0.008;
 
-          let angle=Math.atan2(dy,dx);
-          angle += (Math.random()-0.5)*2.2;
+          p.vx += Math.cos(angle) * force * mass + 1.5;
+          p.vy += Math.sin(angle) * force * mass;
 
-          let baseForce=2+Math.random()*5;
-          let forceWave = 0.2 + Math.sin(localP*Math.PI)*0.8;
-          let force=baseForce*forceWave;
-
-          let mass = 0.7 + Math.random()*0.008;
-
-          p.vx += Math.cos(angle)*force*mass + 1.5;
-          p.vy += Math.sin(angle)*force*mass;
-
-          p.active=true;
+          p.active = true;
         }
       }
 
-      if(p.active){
+      if (p.active) {
         p.vx *= 0.985;
         p.vy *= 0.985;
 
@@ -203,98 +228,76 @@ function animate(){
         p.y += p.vy;
       }
 
-      if(p.x > canvas.width){
-        p.dead = true;
+      // Fade kun for aktive utpust-partikler, siste 20%
+      if (p.active) {
+        const fadeStart = 0.8;
+        if (b.p > fadeStart) {
+          const fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
+          const fade = 1 - fadeProgress;
+          p.alpha = 0.8 * fade;
+        } else {
+          p.alpha = 0.8;
+        }
+      } else {
+        p.alpha = 0.8;
       }
 
-      // 🎨 FADE SISTE 20%
-    let fadeStart = 0.8;
-
-// 🔥 KUN høyre side skal fades
-if(p.x > cx){
-
- let fadeStart = 0.8;
-
-// 🔥 KUN partikler som faktisk er i utpust
-if(p.active){
-
-  if(b.p > fadeStart){
-    let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
-    let fade = 1 - fadeProgress;
-    p.alpha = 0.8 * fade;
-  } else {
-    p.alpha = 0.8;
-  }
-
-} else {
-  // 🔒 inhale / venstre side
-  p.alpha = 0.8;
-}
+      if (p.x > canvas.width) {
+        p.dead = true;
+      }
     }
 
-    if(b.phase==="inhale" && p.x<cx) draw(p);
-    if(b.phase==="exhale") draw(p);
-
+    if (b.phase === "inhale" && p.x < cx) draw(p);
+    if (b.phase === "exhale") draw(p);
   });
 
   particles = particles.filter(p => !p.dead);
 
   ctx.beginPath();
-  ctx.arc(cx,cy,lungRadius,0,Math.PI*2);
-  ctx.strokeStyle="rgba(255,255,255,0.03)";
+  ctx.arc(cx, cy, lungRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255,255,255,0.03)";
   ctx.stroke();
 }
 
-function draw(p){
-  ctx.beginPath();
-  ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-  ctx.fillStyle=`rgba(255,255,255,${p.alpha})`;
-  ctx.fill();
-}
-
 animate();
+
+// Audio unlock for touch devices
 document.body.addEventListener("touchstart", () => {
   audio.muted = false;
-}, { once:true });
-  
-// 🔥 TAP LOGIKK
+}, { once: true });
+
 let hasStarted = false;
 let lastTap = 0;
 
 document.body.addEventListener("pointerdown", () => {
-
   audio.muted = false;
 
-  // 🔥 FØRSTE TRYKK – må være helt rent
-  if(!hasStarted){
-    audio.play().catch(()=>{});
+  if (!hasStarted) {
+    audio.play().catch(() => {});
     hasStarted = true;
     lastTap = Date.now();
     return;
   }
 
-  let now = Date.now();
+  const now = Date.now();
 
-  // 🔥 DOBBELTTRYKK = restart
-  if(now - lastTap < 300){
+  // Dobbelttrykk = restart
+  if (now - lastTap < 300) {
     audio.pause();
     audio.currentTime = 0;
-    audio.play().catch(()=>{});
+    audio.play().catch(() => {});
     lastTap = 0;
     return;
   }
 
-  // 🔥 ENKEL TRYKK = pause/play
-  if(audio.paused){
-    audio.play().catch(()=>{});
+  // Enkel trykk = pause/play
+  if (audio.paused) {
+    audio.play().catch(() => {});
   } else {
     audio.pause();
   }
 
   lastTap = now;
-
-  
-
 });
 </script>
 
