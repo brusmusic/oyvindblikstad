@@ -1,1 +1,74 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8aa0b8;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
+.tagline {
+  margin: 0;
+  color: #8aa0b8;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+}
+
+.player-panel,
+.library-panel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-head h3 {
+  margin: 0;
+}
+
+.section-head p {
+  margin: 0;
+  color: #8aa0b8;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
