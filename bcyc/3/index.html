@@ -82,7 +82,6 @@ function getBreath(t){
   let cycle = inhale + exhale;
   let l = t % cycle;
 
-  // 🫁 INHALE
   if(l < inhale){
     return {
       phase: "inhale",
@@ -90,9 +89,8 @@ function getBreath(t){
       t: l,
       duration: inhale
     };
-  } 
+  }
 
-  // 🌊 EXHALE
   let exhaleTime = l - inhale;
 
   return {
@@ -102,7 +100,6 @@ function getBreath(t){
     duration: exhale
   };
 }
-
 // ------------------ MAIN LOOP ------------------
 
 function animate(){
