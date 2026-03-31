@@ -214,6 +214,11 @@ function animate(){
 // 🔥 KUN høyre side skal fades
 if(p.x > cx){
 
+ let fadeStart = 0.8;
+
+// 🔥 KUN partikler som faktisk er i utpust
+if(p.active){
+
   if(b.p > fadeStart){
     let fadeProgress = (b.p - fadeStart) / (1 - fadeStart);
     let fade = 1 - fadeProgress;
@@ -223,7 +228,7 @@ if(p.x > cx){
   }
 
 } else {
-  // 🔒 venstre side alltid stabil
+  // 🔒 inhale / venstre side
   p.alpha = 0.8;
 }
     }
