@@ -227,11 +227,10 @@ function animate(){
 // ------------------ DRAW ------------------
 
 function draw(p){
-  let r = p.x < cx ? 100 : 255;
-let g = p.x < cx ? 200 : 120;
-let b = 255;
+let b = getBreath(audio.currentTime);
+let hue = 180 - b.p * 160;
 
-ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha})`;
+ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${p.alpha})`;
 }
 
 animate();
