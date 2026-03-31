@@ -101,8 +101,8 @@ function animate(){
       p.vx += dx * 0.003 * wave;
       p.vy += dy * 0.003 * wave;
 
-      p.vx *= 0.96;
-      p.vy *= 0.96;
+      p.vx *= 0.90;
+      p.vy *= 0.90;
 
       p.x += p.vx;
       p.y += p.vy;
@@ -132,8 +132,8 @@ let angle = Math.atan2(dy, dx);
       }
 
       if(p.active){
-        p.vx *= 0.98;
-        p.vy *= 0.98;
+        p.vx *= 0.90;
+        p.vy *= 0.90;
 
         p.x += p.vx;
         p.y += p.vy;
