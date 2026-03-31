@@ -1,3 +1,14 @@
+// 🔒 venstre side skal forbli hvit og rolig
+if (p.x < state.cx) {
+  p.vx *= 0.9;
+  p.vy *= 0.9;
+
+  p.x += p.vx;
+  p.y += p.vy;
+
+  p.alpha = 0.8;
+  return;
+}
 (() => {
   const canvas = document.getElementById("particleCanvas");
   const stage = document.getElementById("visualStage");
