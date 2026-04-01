@@ -199,13 +199,13 @@ if (dist < state.fieldRadius * 1.15) {
   }
 }
 
-   if (p.active) {
+if (p.active) {
   // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
   p.vx *= 0.965;
   p.vy *= 0.95;
   p.x += p.vx;
   p.y += p.vy;
-
+}
     if (p.x > state.width) {
       p.dead = true;
       return;
