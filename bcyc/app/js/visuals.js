@@ -179,7 +179,7 @@
 
 if (dist < state.fieldRadius * 1.15) {
   if (p.releaseOffset == null) {
-    p.releaseOffset = Math.random() * 0.4;
+    p.releaseOffset = Math.random() * 0.02;
   }
 
   const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
