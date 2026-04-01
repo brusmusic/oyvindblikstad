@@ -177,7 +177,7 @@
     const dy = p.y - state.cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-if (dist < state.fieldRadius * 1.15) {
+if (dist < state.fieldRadius * 2.15) {
   if (p.releaseOffset == null) {
     p.releaseOffset = Math.random() * 0.2;
   }
@@ -201,8 +201,8 @@ if (dist < state.fieldRadius * 1.15) {
 
 if (p.active) {
   // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
-  p.vx *= 0.91;
-  p.vy *= 0.91;
+  p.vx *= 0.985;
+  p.vy *= 0.985;
   p.x += p.vx;
   p.y += p.vy;
 }
