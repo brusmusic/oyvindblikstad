@@ -72,6 +72,13 @@
     };
   }
 
+  function createParticles() {
+    state.particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      state.particles.push(spawnParticle());
+    }
+  }
+
   function ensureParticles() {
     while (state.particles.length < PARTICLE_COUNT) {
       state.particles.push(spawnParticle());
@@ -91,6 +98,7 @@
       for (const p of state.particles) {
         p.releaseOffset = null;
         p.returnToCenter = false;
+        p.active = false;
       }
     }
   }
@@ -114,30 +122,27 @@
       return;
     }
 
-    if (p.x < state.cx) {
-      const tx = state.cx - 20 + Math.random() * 40;
-      const ty = state.cy + (Math.random() - 0.5) * state.fieldRadius * 1.2;
+    const tx = state.cx - 20 + Math.random() * 40;
+    const ty = state.cy + (Math.random() - 0.5) * state.fieldRadius * 1.2;
 
-      const ddx = tx - p.x;
-      const ddy = ty - p.y;
+    const ddx = tx - p.x;
+    const ddy = ty - p.y;
+    const depthFactor = 0.5 + p.depth;
 
-      const depthFactor = 0.5 + p.depth;
+    // mer motstand / friksjon
+    p.vx += ddx * 0.0028 * depthFactor;
+    p.vy += ddy * 0.0028 * depthFactor;
 
-      p.vx += ddx * 0.0028 * depthFactor;
-      p.vy += ddy * 0.0028 * depthFactor;
+    p.vx *= 0.72;
+    p.vy *= 0.72;
 
-      p.vx *= 0.72;
-      p.vy *= 0.72;
-
-      p.x += p.vx;
-      p.y += p.vy;
-    }
+    p.x += p.vx;
+    p.y += p.vy;
 
     p.alpha = 0.8;
   }
 
   function updateHoldIn(p, time) {
-    // behold hvite partikler i feltet med mikrobevegelse og glød
     p.vx *= 0.92;
     p.vy *= 0.92;
 
@@ -147,28 +152,26 @@
     p.x += p.vx;
     p.y += p.vy;
 
-    // hold partiklene omtrent i venstre/sentrum-feltet
+    // hold partiklene i venstre/sentrum-feltet
     if (p.x > state.cx + state.fieldRadius * 0.25) {
       p.vx -= 0.06;
     }
+
+    p.alpha = 0.8;
   }
 
   function updateExhale(p, breathProgress) {
-  if (p.x < state.cx) {
-    p.vx *= 0.9;
-    p.vy *= 0.9;
+    // venstre side skal alltid forbli hvit og rolig
+    if (p.x < state.cx) {
+      p.vx *= 0.9;
+      p.vy *= 0.9;
 
-    p.x += p.vx;
-    p.y += p.vy;
+      p.x += p.vx;
+      p.y += p.vy;
 
-    p.alpha = 0.8;
-    return;
-  }
-
-  const dx = p.x - state.cx;
-  const dy = p.y - state.cy;
-  ...
-}
+      p.alpha = 0.8;
+      return;
+    }
 
     const dx = p.x - state.cx;
     const dy = p.y - state.cy;
@@ -183,6 +186,8 @@
 
       if (localP > 0) {
         const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2;
+
+        // dempet kraft
         const force = (0.8 + Math.random() * 2.2) * Math.sin(localP * Math.PI);
 
         p.vx += Math.cos(angle) * force + 0.45;
@@ -193,10 +198,11 @@
     }
 
     if (p.active) {
-    p.vx *= 0.94;
-    p.vy *= 0.94;
-    p.x += p.vx;
-    p.y += p.vy;
+      // mer friksjon
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+      p.x += p.vx;
+      p.y += p.vy;
     }
 
     if (p.x > state.width) {
@@ -219,7 +225,6 @@
   }
 
   function updateHoldOut(p, time) {
-    // behold varme partikler, men ikke fade dem ut med en gang
     if (!p.returnToCenter && p.x > state.cx && Math.random() < 0.01) {
       p.returnToCenter = true;
     }
@@ -291,44 +296,43 @@
   }
 
   function drawParticle(p, time) {
-  const isLeftSide = p.x < state.cx;
+    const isLeftSide = p.x < state.cx;
 
-  let fill;
-  let glow;
-  let glowSize;
+    let fill;
+    let glow;
+    let glowSize;
 
-  if (isLeftSide) {
-    if (state.phase === "holdIn") {
-      fill = `rgba(255,255,255,${p.alpha})`;
-      glow = `rgba(255,255,255,${Math.max(0, holdInGlowAlpha(p, time))})`;
-      glowSize = p.size * 2.8;
+    if (isLeftSide) {
+      if (state.phase === "holdIn") {
+        fill = `rgba(255,255,255,${p.alpha})`;
+        glow = `rgba(255,255,255,${Math.max(0, holdInGlowAlpha(p, time))})`;
+        glowSize = p.size * 2.8;
+      } else {
+        fill = `rgba(255,255,255,${p.alpha})`;
+        glow = `rgba(255,255,255,${Math.max(0, inhaleGlowAlpha(p, time))})`;
+        glowSize = p.size * 2.2;
+      }
     } else {
-      fill = `rgba(255,255,255,${p.alpha})`;
-      glow = `rgba(255,255,255,${Math.max(0, inhaleGlowAlpha(p, time))})`;
-      glowSize = p.size * 2.2;
+      if (state.phase === "holdOut") {
+        fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
+        glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, holdOutGlowAlpha(p, time))})`;
+        glowSize = p.size * 3.0;
+      } else {
+        fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
+        glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, exhaleGlowAlpha(p, time))})`;
+        glowSize = p.size * 2.4;
+      }
     }
-  } else {
-    if (state.phase === "holdOut") {
-      fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
-      glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, holdOutGlowAlpha(p, time))})`;
-      glowSize = p.size * 3.0;
-    } else {
-      fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
-      glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, exhaleGlowAlpha(p, time))})`;
-      glowSize = p.size * 2.4;
-    
-  }
 
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
-  ctx.fillStyle = glow;
-  ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
 
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-}
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
   }
 
   function drawSparkle(s) {
@@ -347,22 +351,16 @@
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, state.width, state.height);
   }
-function createParticles() {
-  state.particles = [];
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    state.particles.push(spawnParticle());
-  }
-}
+
   function animate(time) {
     requestAnimationFrame(animate);
 
     drawBackground();
     ensureParticles();
 
-    // grov pustefremdrift fra aktiv fase
-    // selve fasetiden styres i app/index.html, men her bruker vi en myk intern bevegelse
+    // enkel intern fremdrift for exhale release/fade
     const phaseTime = time * 0.001;
-    let breathProgress = (Math.sin(phaseTime) + 1) / 2;
+    const breathProgress = (Math.sin(phaseTime) + 1) / 2;
 
     for (const p of state.particles) {
       if (state.phase === "inhale") updateInhale(p);
