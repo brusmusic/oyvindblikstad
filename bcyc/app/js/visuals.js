@@ -178,8 +178,8 @@
     const dist = Math.sqrt(dx * dx + dy * dy);
 
 if (
-  p.x > state.cx - state.fieldRadius * 10.2 && 
-  p.x < state.cx + state.fieldRadius * 11.6
+  p.x > state.cx - state.fieldRadius * 0.2 && 
+  p.x < state.cx + state.fieldRadius * 1.6
 ) {
 
   const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
@@ -259,10 +259,31 @@ if (p.active) {
       const dx = p.x - state.cx;
       const dy = p.y - state.cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < state.fieldRadius * 1.15) {
-        p.dead = true;
-      }
-    }
+     if (
+  p.x > state.cx - state.fieldRadius * 0.25 &&
+  p.x < state.cx + state.fieldRadius * 1.6
+) {
+  if (p.releaseOffset == null) {
+    p.releaseOffset = Math.random() * 0.05;
+  }
+
+  const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
+
+  if (localP > 0) {
+    const baseAngle = Math.atan2(dy, dx);
+    const angle = baseAngle * 0.22 + (Math.random() - 0.5) * 0.28;
+
+    const force = (1.4 + Math.random() * 2.8) * Math.sin(localP * Math.PI);
+
+    const pullFromCenter = (state.cx - p.x) * 0.02;
+    p.vx += pullFromCenter;
+
+    p.vx += Math.cos(angle) * force + 1.1;
+    p.vy += Math.sin(angle) * force * 0.32;
+
+    p.active = true;
+  }
+
   }
 
   function updateSparkles() {
