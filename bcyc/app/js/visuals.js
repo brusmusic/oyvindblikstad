@@ -189,8 +189,8 @@
         const pullFromCenter = (state.cx - p.x) * 0.03;
         p.vx += pullFromCenter;
 
-        p.vx += Math.cos(angle) * force + 0.14;
-        p.vy += Math.sin(angle) * force * 0.02;
+        p.vx += Math.cos(angle) * force + 0.54;
+        p.vy += Math.sin(angle) * force * 0.82;
 
         p.active = true;
       }
