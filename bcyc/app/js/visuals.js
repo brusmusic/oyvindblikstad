@@ -160,8 +160,8 @@
 
   function updateExhale(p, breathProgress) {
     if (p.x < state.cx - state.fieldRadius * 0.9) {
-      p.vx *= 0.69;
-      p.vy *= 0.69;
+      p.vx *= 0.9;
+      p.vy *= 0.9;
       p.x += p.vx;
       p.y += p.vy;
       p.alpha = 0.8;
@@ -185,7 +185,7 @@
         const baseAngle = Math.atan2(dy, dx);
         const angle = baseAngle * 0.18 + (Math.random() - 0.5) * 0.18;
 
-        const force = (1.8 + Math.random() * 0.02) * Math.sin(localP * Math.PI);
+        const force = (1.8 + Math.random() * 2.0) * Math.sin(localP * Math.PI);
 
         const pullFromCenter = (state.cx - p.x) * 0.03;
         p.vx += pullFromCenter;
