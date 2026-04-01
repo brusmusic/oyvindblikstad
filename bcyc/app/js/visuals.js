@@ -185,12 +185,12 @@
         const baseAngle = Math.atan2(dy, dx);
         const angle = baseAngle * 0.18 + (Math.random() - 0.5) * 0.18;
 
-        const force = (1.8 + Math.random() * 3.0) * Math.sin(localP * Math.PI);
+        const force = (1.8 + Math.random() * 2.0) * Math.sin(localP * Math.PI);
 
         const pullFromCenter = (state.cx - p.x) * 0.03;
         p.vx += pullFromCenter;
 
-        p.vx += Math.cos(angle) * force + 0.4;
+        p.vx += Math.cos(angle) * force + 0.14;
         p.vy += Math.sin(angle) * force * 0.22;
 
         p.active = true;
@@ -198,8 +198,8 @@
     }
 
     if (p.active) {
-      p.vx *= 0.98;
-      p.vy *= 0.96;
+      p.vx *= 0.985;
+      p.vy *= 0.985;
       p.x += p.vx;
       p.y += p.vy;
     }
