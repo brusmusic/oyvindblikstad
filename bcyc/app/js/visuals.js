@@ -1,16 +1,4 @@
 (() => {
-  // 🔒 venstre side skal forbli hvit og rolig
-if (p.x < state.cx) {
-  p.vx *= 0.9;
-  p.vy *= 0.9;
-
-  p.x += p.vx;
-  p.y += p.vy;
-
-  p.alpha = 0.8;
-  return;
-}
-
   const canvas = document.getElementById("particleCanvas");
   const stage = document.getElementById("visualStage");
   if (!canvas || !stage) return;
@@ -166,19 +154,21 @@ if (p.x < state.cx) {
   }
 
   function updateExhale(p, breathProgress) {
-    if (p.x < state.cx) {
-      const recoil = 1 - Math.exp(-breathProgress * 6);
+  if (p.x < state.cx) {
+    p.vx *= 0.9;
+    p.vy *= 0.9;
 
-      const dx = state.cx - p.x;
-      const dy = state.cy - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+    p.x += p.vx;
+    p.y += p.vy;
 
-      p.vx -= (dx / dist) * recoil * 0.0012;
-      p.vy -= (dy / dist) * recoil * 0.0024;
+    p.alpha = 0.8;
+    return;
+  }
 
-      p.vx *= 0.72;
-      p.vy *= 0.9;
-    }
+  const dx = p.x - state.cx;
+  const dy = p.y - state.cy;
+  ...
+}
 
     const dx = p.x - state.cx;
     const dy = p.y - state.cy;
@@ -326,7 +316,7 @@ if (p.x < state.cx) {
       fill = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
       glow = `hsla(${state.currentExhaleHue}, 80%, 60%, ${Math.max(0, exhaleGlowAlpha(p, time))})`;
       glowSize = p.size * 2.4;
-    }
+    
   }
 
   ctx.beginPath();
