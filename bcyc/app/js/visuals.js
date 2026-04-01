@@ -94,14 +94,13 @@
     state.phase = phase || "free";
 
     if (state.phase === "exhale" && state.prevPhase !== "exhale") {
-      state.currentExhaleHue = 10 + Math.random() * 50; // varme toner
+      state.currentExhaleHue = 10 + Math.random() * 50;
       for (const p of state.particles) {
         p.releaseOffset = null;
         p.returnToCenter = false;
         p.active = false;
       }
-     }
-     }
+    }
   }
 
   function updateFree(p) {
@@ -130,7 +129,6 @@
     const ddy = ty - p.y;
     const depthFactor = 0.5 + p.depth;
 
-    // mer motstand / friksjon
     p.vx += ddx * 0.0028 * depthFactor;
     p.vy += ddy * 0.0028 * depthFactor;
 
@@ -153,7 +151,6 @@
     p.x += p.vx;
     p.y += p.vy;
 
-    // hold partiklene i venstre/sentrum-feltet
     if (p.x > state.cx + state.fieldRadius * 0.25) {
       p.vx -= 0.06;
     }
@@ -162,55 +159,51 @@
   }
 
   function updateExhale(p, breathProgress) {
-    // venstre side skal alltid forbli hvit og rolig
- if (p.x < state.cx - state.fieldRadius * 0.9) {
-  p.vx *= 0.9;
-  p.vy *= 0.9;
-
-  p.x += p.vx;
-  p.y += p.vy;
-
-  p.alpha = 0.8;
-  return;
-}
+    if (p.x < state.cx - state.fieldRadius * 0.9) {
+      p.vx *= 0.9;
+      p.vy *= 0.9;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha = 0.8;
+      return;
+    }
 
     const dx = p.x - state.cx;
     const dy = p.y - state.cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
 
-if (
-  p.x > state.cx - state.fieldRadius * 1.05 &&
-  p.x < state.cx + state.fieldRadius * 1.8
-) {
-  if (p.releaseOffset == null) {
-    p.releaseOffset = Math.random() * 0.03;
-  }
+    if (
+      p.x > state.cx - state.fieldRadius * 1.05 &&
+      p.x < state.cx + state.fieldRadius * 1.8
+    ) {
+      if (p.releaseOffset == null) {
+        p.releaseOffset = Math.random() * 0.03;
+      }
 
-  const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
+      const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
 
-  if (localP > 0) {
-    const baseAngle = Math.atan2(dy, dx);
-    const angle = baseAngle * 0.18 + (Math.random() - 0.5) * 0.18;
+      if (localP > 0) {
+        const baseAngle = Math.atan2(dy, dx);
+        const angle = baseAngle * 0.18 + (Math.random() - 0.5) * 0.18;
 
-    const force = (1.8 + Math.random() * 3.0) * Math.sin(localP * Math.PI);
+        const force = (1.8 + Math.random() * 3.0) * Math.sin(localP * Math.PI);
 
-    const pullFromCenter = (state.cx - p.x) * 0.03;
-    p.vx += pullFromCenter;
+        const pullFromCenter = (state.cx - p.x) * 0.03;
+        p.vx += pullFromCenter;
 
-    p.vx += Math.cos(angle) * force + 1.4;
-    p.vy += Math.sin(angle) * force * 0.22;
+        p.vx += Math.cos(angle) * force + 1.4;
+        p.vy += Math.sin(angle) * force * 0.22;
 
-    p.active = true;
-  }
-}
+        p.active = true;
+      }
+    }
 
-if (p.active) {
-  // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
-  p.vx *= 0.98;
-  p.vy *= 0.96;
-  p.x += p.vx;
-  p.y += p.vy;
-}
+    if (p.active) {
+      p.vx *= 0.98;
+      p.vy *= 0.96;
+      p.x += p.vx;
+      p.y += p.vy;
+    }
+
     if (p.x > state.width) {
       p.dead = true;
       return;
@@ -264,31 +257,10 @@ if (p.active) {
       const dx = p.x - state.cx;
       const dy = p.y - state.cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-     if (
-  p.x > state.cx - state.fieldRadius * 0.25 &&
-  p.x < state.cx + state.fieldRadius * 1.6
-) {
-  if (p.releaseOffset == null) {
-    p.releaseOffset = Math.random() * 0.05;
-  }
-
-  const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
-
-  if (localP > 0) {
-    const baseAngle = Math.atan2(dy, dx);
-    const angle = baseAngle * 0.22 + (Math.random() - 0.5) * 0.28;
-
-    const force = (1.4 + Math.random() * 2.8) * Math.sin(localP * Math.PI);
-
-    const pullFromCenter = (state.cx - p.x) * 0.02;
-    p.vx += pullFromCenter;
-
-    p.vx += Math.cos(angle) * force + 1.1;
-    p.vy += Math.sin(angle) * force * 0.32;
-
-    p.active = true;
-  }
-
+      if (dist < state.fieldRadius * 0.45) {
+        p.dead = true;
+      }
+    }
   }
 
   function updateSparkles() {
@@ -385,7 +357,6 @@ if (p.active) {
     drawBackground();
     ensureParticles();
 
-    // enkel intern fremdrift for exhale release/fade
     const phaseTime = time * 0.001;
     const breathProgress = (Math.sin(phaseTime) + 1) / 2;
 
