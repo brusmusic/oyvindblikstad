@@ -177,33 +177,34 @@
     const dy = p.y - state.cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < state.fieldRadius) {
-      if (p.releaseOffset == null) {
-        p.releaseOffset = Math.random() * 0.4;
-      }
+if (dist < state.fieldRadius * 1.15) {
+  if (p.releaseOffset == null) {
+    p.releaseOffset = Math.random() * 0.18;
+  }
 
-      const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
+  const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
 
-      if (localP > 0) {
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2;
+  if (localP > 0) {
+    // mer samlet høyre-retning, mindre tilfeldig eksplosjon
+    const baseAngle = Math.atan2(dy, dx);
+    const angle = baseAngle * 0.35 + (Math.random() - 0.5) * 0.45;
 
-        // dempet kraft
-        const force = (0.8 + Math.random() * 2.2) * Math.sin(localP * Math.PI);
+    // litt mer kraft enn nå, men fortsatt dempet
+    const force = (1.2 + Math.random() * 2.6) * Math.sin(localP * Math.PI);
 
-        p.vx += Math.cos(angle) * force + 0.45;
-        p.vy += Math.sin(angle) * force * 0.65;
+    p.vx += Math.cos(angle) * force + 0.9;
+    p.vy += Math.sin(angle) * force * 0.45;
 
-        p.active = true;
-      }
-    }
+    p.active = true;
+  }
+}
 
-    if (p.active) {
-      // mer friksjon
-      p.vx *= 0.94;
-      p.vy *= 0.94;
-      p.x += p.vx;
-      p.y += p.vy;
-    }
+   if (p.active) {
+  // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
+  p.vx *= 0.965;
+  p.vy *= 0.95;
+  p.x += p.vx;
+  p.y += p.vy;
 
     if (p.x > state.width) {
       p.dead = true;
@@ -258,7 +259,7 @@
       const dx = p.x - state.cx;
       const dy = p.y - state.cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < state.fieldRadius * 0.45) {
+      if (dist < state.fieldRadius * 1.15) {
         p.dead = true;
       }
     }
