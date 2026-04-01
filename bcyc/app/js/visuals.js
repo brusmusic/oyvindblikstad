@@ -104,8 +104,8 @@
   }
 
   function updateFree(p) {
-    p.vx *= 0.95;
-    p.vy *= 0.95;
+    p.vx *= 0.975;
+    p.vy *= 0.955;
     p.vx += (Math.random() - 0.5) * 0.02;
     p.vy += (Math.random() - 0.5) * 0.02;
     p.x += p.vx;
