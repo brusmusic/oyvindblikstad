@@ -183,10 +183,10 @@
 
       if (localP > 0) {
         const baseAngle = Math.atan2(dy, dx);
-        const angle = baseAngle * 0.18 + (Math.random() + 0.5) * 0.18;
+        const angle = baseAngle * 0.18 + (Math.random() + 0.5) * 3.18;
         const force = (1.8 + Math.random() * 2.0) * Math.sin(localP * Math.PI);
 
-        const pullFromCenter = (state.cx - p.x) * 0.002;
+        const pullFromCenter = (state.cx - p.x) * 0.2;
         p.vx += pullFromCenter;
 
         p.vx += Math.cos(angle) * force + 0.14;
