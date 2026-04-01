@@ -11,7 +11,7 @@
     height: 0,
     cx: 0,
     cy: 0,
-    fieldRadius: 100,
+    fieldRadius: 200,
     particles: [],
     sparkles: [],
     phase: "free",
