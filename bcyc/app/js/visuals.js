@@ -198,8 +198,8 @@
     }
 
     if (p.active) {
-      p.vx *= 0.88;
-      p.vy *= 0.86;
+      p.vx *= 0.98;
+      p.vy *= 0.96;
       p.x += p.vx;
       p.y += p.vy;
     }
