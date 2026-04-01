@@ -177,10 +177,10 @@
     const dy = p.y - state.cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-if (dist < state.fieldRadius * 2.15) {
-  if (p.releaseOffset == null) {
-    p.releaseOffset = Math.random() * 0.2;
-  }
+if (
+  p.x > state.cx - state.fieldRadius * 0.2 && 
+  p.x < state.cx + state.fieldRadius * 1.6
+) {
 
   const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
 
