@@ -21,7 +21,7 @@
   };
 
   const PARTICLE_COUNT = 300;
-  const MAX_SPARKLES = 300;
+  const MAX_SPARKLES = 120;
 
   function resize() {
     const rect = stage.getBoundingClientRect();
