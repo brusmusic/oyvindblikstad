@@ -179,7 +179,7 @@
 
 if (dist < state.fieldRadius * 1.15) {
   if (p.releaseOffset == null) {
-    p.releaseOffset = Math.random() * 0.02;
+    p.releaseOffset = Math.random() * 0.2;
   }
 
   const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
@@ -201,8 +201,8 @@ if (dist < state.fieldRadius * 1.15) {
 
 if (p.active) {
   // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
-  p.vx *= 0.965;
-  p.vy *= 0.95;
+  p.vx *= 0.91;
+  p.vy *= 0.91;
   p.x += p.vx;
   p.y += p.vy;
 }
