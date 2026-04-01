@@ -160,8 +160,8 @@
 
   function updateExhale(p, breathProgress) {
     if (p.x < state.cx - state.fieldRadius * 0.9) {
-      p.vx *= 0.9;
-      p.vy *= 0.9;
+      p.vx *= 0.69;
+      p.vy *= 0.69;
       p.x += p.vx;
       p.y += p.vy;
       p.alpha = 0.8;
