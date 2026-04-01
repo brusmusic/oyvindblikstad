@@ -100,7 +100,8 @@
         p.returnToCenter = false;
         p.active = false;
       }
-    
+     }
+     }
   }
 
   function updateFree(p) {
