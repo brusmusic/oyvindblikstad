@@ -106,8 +106,8 @@
   function updateFree(p) {
     p.vx *= 0.975;
     p.vy *= 0.955;
-    p.vx += (Math.random() - 0.5) * 1.02;
-    p.vy += (Math.random() - 0.5) * 1.02;
+    p.vx += (Math.random() - 0.5) * 0.02;
+    p.vy += (Math.random() - 0.5) * 0.02;
     p.x += p.vx;
     p.y += p.vy;
   }
@@ -162,38 +162,42 @@
 
   function updateExhale(p, breathProgress) {
     // venstre side skal alltid forbli hvit og rolig
-    if (p.x < state.cx) {
-      p.vx *= 0.9;
-      p.vy *= 0.9;
+ if (p.x < state.cx - state.fieldRadius * 0.9) {
+  p.vx *= 0.9;
+  p.vy *= 0.9;
 
-      p.x += p.vx;
-      p.y += p.vy;
+  p.x += p.vx;
+  p.y += p.vy;
 
-      p.alpha = 0.8;
-      return;
-    }
+  p.alpha = 0.8;
+  return;
+}
 
     const dx = p.x - state.cx;
     const dy = p.y - state.cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
 if (
-  p.x > state.cx - state.fieldRadius * 0.2 && 
-  p.x < state.cx + state.fieldRadius * 1.6
+  p.x > state.cx - state.fieldRadius * 1.05 &&
+  p.x < state.cx + state.fieldRadius * 1.8
 ) {
+  if (p.releaseOffset == null) {
+    p.releaseOffset = Math.random() * 0.03;
+  }
 
   const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
 
   if (localP > 0) {
-    // mer samlet høyre-retning, mindre tilfeldig eksplosjon
     const baseAngle = Math.atan2(dy, dx);
-    const angle = baseAngle * 0.35 + (Math.random() - 0.5) * 0.45;
+    const angle = baseAngle * 0.18 + (Math.random() - 0.5) * 0.18;
 
-    // litt mer kraft enn nå, men fortsatt dempet
-    const force = (1.2 + Math.random() * 2.6) * Math.sin(localP * Math.PI);
+    const force = (1.8 + Math.random() * 3.0) * Math.sin(localP * Math.PI);
 
-    p.vx += Math.cos(angle) * force + 0.9;
-    p.vy += Math.sin(angle) * force * 0.45;
+    const pullFromCenter = (state.cx - p.x) * 0.03;
+    p.vx += pullFromCenter;
+
+    p.vx += Math.cos(angle) * force + 1.4;
+    p.vy += Math.sin(angle) * force * 0.22;
 
     p.active = true;
   }
@@ -201,8 +205,8 @@ if (
 
 if (p.active) {
   // fortsatt friksjon, men litt mindre så utpusten faktisk bærer med seg feltet
-  p.vx *= 0.985;
-  p.vy *= 0.985;
+  p.vx *= 0.98;
+  p.vy *= 0.96;
   p.x += p.vx;
   p.y += p.vy;
 }
