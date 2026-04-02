@@ -213,7 +213,12 @@
 
   window.addEventListener("resize", resize);
 
-  window.BcycVisuals = {
-    setPhase
-  };
+ function setTrack(track) {
+  state.track = track;
+}
+
+window.BcycVisuals = {
+  setPhase,
+  setTrack
+};
 })();
