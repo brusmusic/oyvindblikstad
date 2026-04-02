@@ -14,7 +14,7 @@
 
     exhaleForce: 0.02,
     exhaleSpread: 0.9,
-    exhaleRightDrift: 1.4,
+    exhaleRightDrift: .4,
     frictionExhaleX: 0.985,
     frictionExhaleY: 0.96,
 
