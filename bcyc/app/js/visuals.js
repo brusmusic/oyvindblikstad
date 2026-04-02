@@ -7,30 +7,47 @@
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
   const config = {
-    ambientCount: 420,
+    particleCount: 320,
 
-    inhaleForce: 0.0038,
-    inhaleFriction: 0.265,
-    inhaleWander: 0.018,
-    inhaleCenterPullY: 0.0018,
+    // størrelse / utseende
+    particleSizeMin: 1,
+    particleSizeMax: 3,
+    baseAlpha: 0.8,
 
-    exhaleSpawnRate: 190,
-    exhaleForce: 0.055,
-    exhaleDriftX: 0.16,
-    exhaleSpreadY: 0.085,
-    exhaleFrictionX: 0.992,
+    // "lungefelt" i sentrum
+    lungRadius: 100,
+
+    // hvor nye ambient-partikler kommer fra
+    ambientSpawnMinX: -0.35,
+    ambientSpawnMaxX: 0.05,
+    ambientSpawnPadY: 40,
+
+    // inhale
+    inhalePull: 0.004,
+    inhaleFriction: 0.79,
+
+    // hold in
+    holdInPull: 0.0022,
+    holdInFriction: 0.9,
+
+    // exhale
+    exhaleRightDrift: 1.5,
+    exhaleForceMin: 2,
+    exhaleForceMax: 5,
+    exhaleSpread: 2.0,
+    exhaleFrictionX: 0.985,
     exhaleFrictionY: 0.985,
-    exhaleCenterJitterX: 10,
-    exhaleCenterJitterY: 26,
+    exhaleReleaseMax: 0.4,
 
-    particleSizeMin: 0.8,
-    particleSizeMax: 2.8,
-    baseAlpha: 0.82,
+    // hold out
+    holdOutPull: 0.01,
+    holdOutFriction: 0.96,
 
-    ambientSpawnMinX: -0.45,
-    ambientSpawnMaxX: -0.05,
-    ambientRespawnPad: 120,
-    exhaleKillPad: 120
+    // glow
+    glowRadius: 1.8,
+    glowAlphaFree: 0.02,
+    glowAlphaHoldIn: 0.05,
+    glowAlphaHoldOut: 0.09
   };
 
   const state = {
@@ -41,9 +58,8 @@
     particles: [],
     phase: "free",
     prevPhase: "free",
-    currentExhaleHue: 28,
-    lastTime: 0,
-    exhaleSpawnAccumulator: 0,
+    phaseProgress: 0,
+    currentExhaleHue: 24,
     track: null
   };
 
@@ -67,59 +83,54 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
 
-  function makeAmbientParticle() {
+  function spawnParticle() {
     return {
-      mode: "ambient",
       x: state.width * rand(config.ambientSpawnMinX, config.ambientSpawnMaxX),
-      y: rand(-40, state.height + 40),
-      vx: rand(0.1, 0.5),
-      vy: rand(-0.15, 0.15),
+      y: rand(-config.ambientSpawnPadY, state.height + config.ambientSpawnPadY),
+      vx: 0,
+      vy: 0,
       size: rand(config.particleSizeMin, config.particleSizeMax),
-      alpha: rand(config.baseAlpha * 0.25, config.baseAlpha),
-      dead: false
-    };
-  }
-
-  function makeExhaleParticle() {
-    return {
-      mode: "exhale",
-      x: state.cx + rand(-config.exhaleCenterJitterX, config.exhaleCenterJitterX),
-      y: state.cy + rand(-config.exhaleCenterJitterY, config.exhaleCenterJitterY),
-      vx: rand(0.4, 1.2),
-      vy: rand(-0.4, 0.4),
-      size: rand(config.particleSizeMin, config.particleSizeMax + 0.6),
-      alpha: rand(config.baseAlpha * 0.75, config.baseAlpha),
-      dead: false
+      alpha: config.baseAlpha,
+      depth: Math.random(),
+      active: false,
+      dead: false,
+      releaseOffset: null
     };
   }
 
   function createParticles() {
     state.particles = [];
-    for (let i = 0; i < config.ambientCount; i++) {
-      state.particles.push(makeAmbientParticle());
+    for (let i = 0; i < config.particleCount; i++) {
+      state.particles.push(spawnParticle());
     }
   }
 
-  function ensureAmbientParticles() {
-    let ambientCount = 0;
-
-    for (const p of state.particles) {
-      if (!p.dead && p.mode === "ambient") ambientCount++;
-    }
-
-    while (ambientCount < config.ambientCount) {
-      state.particles.push(makeAmbientParticle());
-      ambientCount++;
+  function ensureParticles() {
+    while (state.particles.length < config.particleCount) {
+      state.particles.push(spawnParticle());
     }
   }
 
-  function setPhase(phase) {
+  function setPhase(phase, progress = 0) {
     state.prevPhase = state.phase;
     state.phase = phase || "free";
+    state.phaseProgress = Math.max(0, Math.min(1, progress));
 
-    if (state.phase === "exhale" && state.prevPhase !== "exhale") {
-      state.currentExhaleHue = rand(12, 58);
-      state.exhaleSpawnAccumulator = 0;
+    if (state.phase !== state.prevPhase) {
+      if (state.phase === "exhale") {
+        state.currentExhaleHue = 10 + Math.random() * 50;
+
+        for (const p of state.particles) {
+          p.releaseOffset = null;
+        }
+      }
+
+      if (state.phase === "inhale") {
+        for (const p of state.particles) {
+          p.active = false;
+          p.releaseOffset = null;
+        }
+      }
     }
   }
 
@@ -127,92 +138,192 @@
     state.track = track;
   }
 
-  function updateAmbientInhale(p, dt) {
+  function setProgress(progress) {
+    state.phaseProgress = Math.max(0, Math.min(1, progress));
+  }
+
+  function respawnAmbient(p) {
+    p.x = state.width * rand(config.ambientSpawnMinX, config.ambientSpawnMaxX);
+    p.y = rand(-config.ambientSpawnPadY, state.height + config.ambientSpawnPadY);
+    p.vx = 0;
+    p.vy = 0;
+    p.alpha = config.baseAlpha;
+    p.active = false;
+    p.dead = false;
+    p.releaseOffset = null;
+  }
+
+  function updateFree(p) {
+    p.vx *= 0.96;
+    p.vy *= 0.96;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha = config.baseAlpha;
+  }
+
+  function updateInhale(p, progress) {
+    // Partikler som allerede er på høyresiden fjernes og erstattes fra venstre
+    if (p.x > state.cx) {
+      p.dead = true;
+      return;
+    }
+
+    const angle = Math.random() * Math.PI * 2;
+    const r = Math.random() * config.lungRadius;
+
+    const tx = state.cx + Math.cos(angle) * r;
+    const ty = state.cy + Math.sin(angle) * r;
+
+    const dx = tx - p.x;
+    const dy = ty - p.y;
+
+    const wave = Math.sin(progress * Math.PI);
+    const depthFactor = 0.5 + p.depth;
+
+    p.vx += dx * config.inhalePull * wave * depthFactor;
+    p.vy += dy * config.inhalePull * wave * depthFactor;
+
+    p.vx *= config.inhaleFriction;
+    p.vy *= config.inhaleFriction;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.alpha = config.baseAlpha;
+    p.active = false;
+  }
+
+  function updateHoldIn(p) {
     const dx = state.cx - p.x;
     const dy = state.cy - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-    p.vx += dx * config.inhaleForce * dt;
-    p.vy += dy * config.inhaleCenterPullY * dt;
-
-    p.vx += rand(-config.inhaleWander, config.inhaleWander) * dt;
-    p.vy += rand(-config.inhaleWander, config.inhaleWander) * dt;
-
-    p.vx *= Math.pow(config.inhaleFriction, dt);
-    p.vy *= Math.pow(config.inhaleFriction, dt);
-
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-
-    if (
-      p.x > state.cx + 10 ||
-      p.x < -config.ambientRespawnPad - 50 ||
-      p.y < -config.ambientRespawnPad ||
-      p.y > state.height + config.ambientRespawnPad
-    ) {
-      p.dead = true;
+    if (p.x < state.cx + config.lungRadius * 0.25) {
+      p.vx += (dx / dist) * config.holdInPull;
+      p.vy += (dy / dist) * config.holdInPull;
     }
+
+    p.vx *= config.holdInFriction;
+    p.vy *= config.holdInFriction;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.alpha = config.baseAlpha;
   }
 
-  function updateAmbientFree(p, dt) {
-    p.vx += rand(0.002, 0.01) * dt;
-    p.vy += rand(-0.01, 0.01) * dt;
+  function updateExhale(p, progress) {
+    // Partikler på venstresiden trekkes først mot sentrum før utblåsning
+    if (p.x < state.cx) {
+      const recoil = 1 - Math.exp(-progress * 6);
 
-    p.vx *= 0.995;
-    p.vy *= 0.995;
+      const dx = state.cx - p.x;
+      const dy = state.cy - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
+      p.vx -= (dx / dist) * recoil * 0.002;
+      p.vy -= (dy / dist) * recoil * 0.004;
 
-    if (
-      p.x > state.cx * 0.92 ||
-      p.y < -config.ambientRespawnPad ||
-      p.y > state.height + config.ambientRespawnPad
-    ) {
+      p.vx *= 0.8;
+      p.vy *= 0.95;
+    }
+
+    const dx = p.x - state.cx;
+    const dy = p.y - state.cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Bare partikler nær sentrum slippes ut i utpusten
+    if (dist < config.lungRadius) {
+      if (p.releaseOffset == null) {
+        p.releaseOffset = Math.random() * config.exhaleReleaseMax;
+      }
+
+      const localP = Math.max(
+        0,
+        (progress - p.releaseOffset) / (1 - p.releaseOffset)
+      );
+
+      if (localP > 0) {
+        const angle =
+          Math.atan2(dy, dx) +
+          (Math.random() - 0.5) * config.exhaleSpread;
+
+        const force =
+          (config.exhaleForceMin +
+            Math.random() * (config.exhaleForceMax - config.exhaleForceMin)) *
+          Math.sin(localP * Math.PI);
+
+        p.vx += Math.cos(angle) * force + config.exhaleRightDrift;
+        p.vy += Math.sin(angle) * force;
+
+        p.active = true;
+      }
+    }
+
+    if (p.active) {
+      p.vx *= config.exhaleFrictionX;
+      p.vy *= config.exhaleFrictionY;
+
+      p.x += p.vx;
+      p.y += p.vy;
+    }
+
+    if (p.x > state.width + 40) {
       p.dead = true;
     }
+
+    p.alpha = config.baseAlpha;
   }
 
-  function updateExhaleParticle(p, dt) {
-    p.vx += config.exhaleDriftX * dt;
-    p.vx += rand(0, config.exhaleForce) * dt;
-    p.vy += rand(-config.exhaleSpreadY, config.exhaleSpreadY) * dt;
+  function updateHoldOut(p) {
+    const dx = state.cx - p.x;
+    const dy = state.cy - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-    p.vx *= Math.pow(config.exhaleFrictionX, dt);
-    p.vy *= Math.pow(config.exhaleFrictionY, dt);
+    p.vx += (dx / dist) * config.holdOutPull;
+    p.vy += (dy / dist) * config.holdOutPull;
 
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
+    p.vx *= config.holdOutFriction;
+    p.vy *= config.holdOutFriction;
 
-    if (
-      p.x > state.width + config.exhaleKillPad ||
-      p.y < -config.exhaleKillPad ||
-      p.y > state.height + config.exhaleKillPad
-    ) {
-      p.dead = true;
-    }
-  }
+    p.x += p.vx;
+    p.y += p.vy;
 
-  function spawnExhaleFlow(dt) {
-    state.exhaleSpawnAccumulator += config.exhaleSpawnRate * dt / 60;
-
-    while (state.exhaleSpawnAccumulator >= 1) {
-      state.particles.push(makeExhaleParticle());
-      state.exhaleSpawnAccumulator -= 1;
-    }
+    p.alpha = config.baseAlpha;
   }
 
   function drawParticle(p) {
-    const colored = p.x >= state.cx && p.mode === "exhale";
-
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
 
-    if (colored) {
-      ctx.fillStyle = `hsla(${state.currentExhaleHue}, 85%, 62%, ${p.alpha})`;
-    } else {
+    if (p.x < state.cx) {
       ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+    } else {
+      ctx.fillStyle = `hsla(${state.currentExhaleHue}, 80%, 60%, ${p.alpha})`;
     }
 
+    ctx.fill();
+  }
+
+  function drawCenterGlow() {
+    let alpha = config.glowAlphaFree;
+
+    if (state.phase === "holdIn") alpha = config.glowAlphaHoldIn;
+    if (state.phase === "holdOut") alpha = config.glowAlphaHoldOut;
+
+    const radius = config.lungRadius * config.glowRadius;
+    const g = ctx.createRadialGradient(
+      state.cx, state.cy, 0,
+      state.cx, state.cy, radius
+    );
+
+    g.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    g.addColorStop(0.35, `rgba(255,255,255,${alpha * 0.55})`);
+    g.addColorStop(1, "rgba(255,255,255,0)");
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(state.cx, state.cy, radius, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -221,45 +332,53 @@
     ctx.fillRect(0, 0, state.width, state.height);
   }
 
-  function animate(time) {
+  function animate() {
     requestAnimationFrame(animate);
 
-    if (!state.lastTime) state.lastTime = time;
-    let dt = (time - state.lastTime) / (1000 / 60);
-    state.lastTime = time;
-
-    if (dt < 0.25) dt = 0.25;
-    if (dt > 2.5) dt = 2.5;
-
     drawBackground();
-
-    if (state.phase === "exhale") {
-      spawnExhaleFlow(dt);
-    }
+    drawCenterGlow();
+    ensureParticles();
 
     for (const p of state.particles) {
-      if (p.mode === "ambient") {
-        if (state.phase === "inhale") updateAmbientInhale(p, dt);
-        else updateAmbientFree(p, dt);
-      } else if (p.mode === "exhale") {
-        updateExhaleParticle(p, dt);
+      if (state.phase === "inhale") {
+        updateInhale(p, state.phaseProgress);
+      } else if (state.phase === "holdIn") {
+        updateHoldIn(p);
+      } else if (state.phase === "exhale") {
+        updateExhale(p, state.phaseProgress);
+      } else if (state.phase === "holdOut") {
+        updateHoldOut(p);
+      } else {
+        updateFree(p);
       }
 
       drawParticle(p);
     }
 
     state.particles = state.particles.filter(p => !p.dead);
-    ensureAmbientParticles();
   }
 
   resize();
   createParticles();
-  animate(0);
+  animate();
 
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", () => {
+    resize();
+    for (const p of state.particles) {
+      if (
+        p.x < -state.width * 0.6 ||
+        p.x > state.width * 1.4 ||
+        p.y < -200 ||
+        p.y > state.height + 200
+      ) {
+        respawnAmbient(p);
+      }
+    }
+  });
 
   window.BcycVisuals = {
     setPhase,
-    setTrack
+    setTrack,
+    setProgress
   };
 })();
