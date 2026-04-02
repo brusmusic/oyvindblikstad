@@ -12,12 +12,12 @@
     inhaleSpeed: 0.004,
     frictionInhale: 0.72,
 
-    exhaleForceMin: 2.4,
-    exhaleForceMax: 4.8,
+    exhaleForceMin: 1.4,
+    exhaleForceMax: 2.8,
     exhaleSpread: 0.9,
     exhaleRightDrift: 1.4,
-    frictionExhaleX: 0.975,
-    frictionExhaleY: 0.965,
+    frictionExhaleX: 0.75,
+    frictionExhaleY: 0.65,
 
     particleSizeMin: 1,
     particleSizeMax: 3,
