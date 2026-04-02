@@ -204,7 +204,7 @@ p.active = true;
   p.x += p.vx;
   p.y += p.vy;
 }
-    }
+    
 
     if (p.x > state.width) {
       p.dead = true;
