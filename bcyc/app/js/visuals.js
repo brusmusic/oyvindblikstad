@@ -184,8 +184,10 @@
       if (localP > 0) {
         const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.9;
 
+// mer som luftstrøm fra sentrum i alle retninger
 const force = (1.4 + Math.random() * 3.8) * Math.sin(localP * Math.PI);
 
+// svak høyredrift kan beholdes hvis du vil, men mye mindre enn før
 const rightDrift = 0.12;
 
 p.vx += Math.cos(angle) * force + rightDrift;
@@ -201,6 +203,7 @@ p.active = true;
   p.x += p.vx;
   p.y += p.vy;
 }
+    }
 
     if (p.x > state.width) {
       p.dead = true;
