@@ -23,15 +23,15 @@
   const config = {
   particleCount: 400,
   inhaleSpeed: 0.004,
-  exhaleForceMin: 2.4,
-  exhaleForceMax: 4.8,
+  exhaleForceMin: 1.4,
+  exhaleForceMax: 2.8,
   rightDrift: 1.4,
   frictionInhale: 0.72,
   frictionExhaleX: 0.85,
-  frictionExhaleY: 0.965,
+  frictionExhaleY: 0.865,
   particleSizeMin: 1,
   particleSizeMax: 3,
-  fieldRadiusScale: 0.18
+  fieldRadiusScale: 0.28
 };
   function resize() {
     const rect = stage.getBoundingClientRect();
