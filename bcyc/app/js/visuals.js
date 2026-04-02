@@ -23,7 +23,7 @@
     ambientSpawnPadY: 40,
 
     // inhale
-    inhalePull: 0.004,
+    inhalePull: 0.2,
     inhaleFriction: 0.79,
 
     // hold in
