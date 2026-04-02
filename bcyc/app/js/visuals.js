@@ -182,24 +182,25 @@
       const localP = Math.max(0, (breathProgress - p.releaseOffset) / (1 - p.releaseOffset));
 
       if (localP > 0) {
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.9;
+       // 0 radianer = rett mot høyre
+const angle = (Math.random() - 0.5) * 0.9;
 
-// mer som luftstrøm fra sentrum i alle retninger
-const force = (1.4 + Math.random() * 3.8) * Math.sin(localP * Math.PI);
+// sterkere og lengre utpust
+const force = (2.4 + Math.random() * 4.8) * Math.sin(localP * Math.PI);
 
-// svak høyredrift kan beholdes hvis du vil, men mye mindre enn før
-const rightDrift = 0.12;
+// tydelig høyredrift
+const rightDrift = 1.4;
 
 p.vx += Math.cos(angle) * force + rightDrift;
-p.vy += Math.sin(angle) * force;
+p.vy += Math.sin(angle) * force * 0.7;
 
 p.active = true;
       }
     }
 
     if (p.active) {
-  p.vx *= 0.94;
-  p.vy *= 0.94;
+  p.vx *= 0.975;
+  p.vy *= 0.965;
   p.x += p.vx;
   p.y += p.vy;
 }
