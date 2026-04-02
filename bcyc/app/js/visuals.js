@@ -27,7 +27,7 @@
     inhaleFriction: 0.9,
 
     // hold in
-    holdInPull: 0.0022,
+    holdInPull: 0.92,
     holdInFriction: 0.9,
 
     // exhale
