@@ -10,7 +10,7 @@
     ambientCount: 420,
 
     inhaleForce: 0.0038,
-    inhaleFriction: 0.965,
+    inhaleFriction: 0.265,
     inhaleWander: 0.018,
     inhaleCenterPullY: 0.0018,
 
