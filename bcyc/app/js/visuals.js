@@ -75,7 +75,7 @@
       vx: rand(0.1, 0.5),
       vy: rand(-0.15, 0.15),
       size: rand(config.particleSizeMin, config.particleSizeMax),
-      alpha: rand(config.baseAlpha * 0.65, config.baseAlpha),
+      alpha: rand(config.baseAlpha * 0.25, config.baseAlpha),
       dead: false
     };
   }
