@@ -12,12 +12,11 @@
     inhaleSpeed: 0.004,
     frictionInhale: 0.72,
 
-    exhaleForceMin: 1.4,
-    exhaleForceMax: 2.8,
+    exhaleForce: 0.02,
     exhaleSpread: 0.9,
     exhaleRightDrift: 1.4,
-    frictionExhaleX: 0.75,
-    frictionExhaleY: 0.65,
+    frictionExhaleX: 0.985,
+    frictionExhaleY: 0.96,
 
     particleSizeMin: 1,
     particleSizeMax: 3,
@@ -136,20 +135,13 @@
       (breathProgress - p.releaseOffset) / (1 - p.releaseOffset)
     );
 
-    if (localP > 0) {
-      const angle =
-        (Math.random() - 0.5) * config.exhaleSpread;
+   if (localP > 0) {
+  const angle = (Math.random() - 0.5) * config.exhaleSpread * 0.15;
+  const force = config.exhaleForce;
 
-      const force =
-        (config.exhaleForceMin +
-          Math.random() *
-            (config.exhaleForceMax - config.exhaleForceMin)) *
-        Math.sin(localP * Math.PI);
-
-      p.vx += Math.cos(angle) * force + config.exhaleRightDrift;
-      p.vy += Math.sin(angle) * force;
-
-      p.active = true;
+  p.vx += Math.cos(angle) * force + config.exhaleRightDrift;
+  p.vy += Math.sin(angle) * force;
+  p.active = true;
     }
 
     if (p.active) {
