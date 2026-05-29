@@ -277,6 +277,7 @@ figcaption {
 
 .note,
 .method-grid,
+.council-modes,
 .questions,
 .stories,
 .book {
@@ -311,6 +312,40 @@ figcaption {
   color: var(--accent-2);
   font-size: 13px;
   font-weight: 700;
+}
+
+.council-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.council-columns > div,
+.council-rule {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.voice-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+
+.voice-list li {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+  color: #242620;
+  font-size: 16px;
+}
+
+.council-rule {
+  margin-top: 26px;
+}
+
+.council-rule p {
+  margin-bottom: 0;
 }
 
 .section-head {
@@ -543,6 +578,10 @@ body.focus-mode .book {
   }
 
   .model-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .council-columns {
     grid-template-columns: 1fr;
   }
 
