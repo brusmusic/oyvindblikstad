@@ -1,47 +1,7 @@
-const root = document.documentElement;
-const languagePanel = document.getElementById("language-panel");
-const focusToggle = document.getElementById("focusToggle");
-const outlineToggle = document.getElementById("outlineToggle");
-const councilToggle = document.getElementById("councilToggle");
-let bodySize = 18;
+const readerButton = document.querySelector(".reader-button");
 
-document.querySelectorAll("[data-panel-toggle]").forEach((button) => {
-  button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const target = document.getElementById(button.dataset.panelToggle);
-    target.classList.toggle("is-open");
-  });
+readerButton.addEventListener("click", () => {
+  const active = document.body.classList.toggle("reading");
+  readerButton.setAttribute("aria-pressed", String(active));
+  readerButton.textContent = active ? readerButton.dataset.closeLabel : readerButton.dataset.openLabel;
 });
-
-document.addEventListener("click", (event) => {
-  if (languagePanel && !languagePanel.contains(event.target) && !event.target.matches("[data-panel-toggle]")) {
-    languagePanel.classList.remove("is-open");
-  }
-});
-
-document.querySelectorAll("[data-size]").forEach((button) => {
-  button.addEventListener("click", () => {
-    bodySize += button.dataset.size === "up" ? 1 : -1;
-    bodySize = Math.max(16, Math.min(23, bodySize));
-    root.style.setProperty("--body-size", `${bodySize}px`);
-  });
-});
-
-if (focusToggle) {
-  focusToggle.addEventListener("click", () => {
-    const active = document.body.classList.toggle("focus-mode");
-    focusToggle.setAttribute("aria-pressed", String(active));
-  });
-}
-
-if (outlineToggle) {
-  outlineToggle.addEventListener("click", () => {
-    document.body.classList.toggle("show-outline");
-  });
-}
-
-if (councilToggle) {
-  councilToggle.addEventListener("click", () => {
-    document.body.classList.toggle("show-council");
-  });
-}
