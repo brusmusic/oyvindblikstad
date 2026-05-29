@@ -14,7 +14,7 @@ document.querySelectorAll("[data-panel-toggle]").forEach((button) => {
 });
 
 document.addEventListener("click", (event) => {
-  if (!languagePanel.contains(event.target) && !event.target.matches("[data-panel-toggle]")) {
+  if (languagePanel && !languagePanel.contains(event.target) && !event.target.matches("[data-panel-toggle]")) {
     languagePanel.classList.remove("is-open");
   }
 });
@@ -27,15 +27,21 @@ document.querySelectorAll("[data-size]").forEach((button) => {
   });
 });
 
-focusToggle.addEventListener("click", () => {
-  const active = document.body.classList.toggle("focus-mode");
-  focusToggle.setAttribute("aria-pressed", String(active));
-});
+if (focusToggle) {
+  focusToggle.addEventListener("click", () => {
+    const active = document.body.classList.toggle("focus-mode");
+    focusToggle.setAttribute("aria-pressed", String(active));
+  });
+}
 
-outlineToggle.addEventListener("click", () => {
-  document.body.classList.toggle("show-outline");
-});
+if (outlineToggle) {
+  outlineToggle.addEventListener("click", () => {
+    document.body.classList.toggle("show-outline");
+  });
+}
 
-councilToggle.addEventListener("click", () => {
-  document.body.classList.toggle("show-council");
-});
+if (councilToggle) {
+  councilToggle.addEventListener("click", () => {
+    document.body.classList.toggle("show-council");
+  });
+}

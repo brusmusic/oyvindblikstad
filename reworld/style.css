@@ -278,6 +278,7 @@ figcaption {
 .note,
 .method-grid,
 .questions,
+.stories,
 .book {
   max-width: 860px;
   margin: 0 auto 88px;
@@ -340,6 +341,91 @@ figcaption {
 
 .question-list a:hover {
   color: var(--accent);
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.story-card {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 22px;
+  text-decoration: none;
+}
+
+.story-card:hover {
+  border-color: var(--accent);
+}
+
+.story-card span,
+.story-meta {
+  color: var(--accent-2);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.story-card h3 {
+  margin: 10px 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 27px;
+  font-weight: 400;
+}
+
+.story-card p {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 0;
+}
+
+.story-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 70px 0 120px;
+}
+
+.story-page h1 {
+  font-size: clamp(42px, 7vw, 76px);
+}
+
+.story-page article {
+  border-top: 1px solid var(--line);
+  margin-top: 48px;
+  padding-top: 38px;
+}
+
+.story-page article p {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.story-page h2 {
+  margin-top: 58px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.story-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 30px 0 0;
+}
+
+.story-index {
+  padding: 72px 0 120px;
+}
+
+.story-index .story-grid {
+  margin-top: 34px;
 }
 
 .reader-tools {
@@ -457,6 +543,10 @@ body.focus-mode .book {
   }
 
   .model-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .story-grid {
     grid-template-columns: 1fr;
   }
 }
