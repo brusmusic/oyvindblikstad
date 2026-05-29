@@ -326,7 +326,14 @@ p {
 }
 
 .book-summary {
+  width: 100%;
+  border: 0;
+  background: transparent;
   padding: 24px;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
 
 .book-summary span {
@@ -347,6 +354,79 @@ p {
 .book-summary p {
   margin-bottom: 0;
   color: #28251f;
+}
+
+.book-presentation .book-text {
+  display: none;
+}
+
+.book-link-note a {
+  color: var(--accent-dark);
+}
+
+.book-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+}
+
+.book-modal.is-open {
+  display: block;
+}
+
+.book-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(23, 22, 18, 0.42);
+}
+
+.book-modal-dialog {
+  position: absolute;
+  inset: 28px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  max-width: 1180px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+}
+
+.book-modal-close {
+  justify-self: end;
+  margin: 14px 16px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  padding: 7px 11px;
+}
+
+.book-modal-content {
+  overflow: auto;
+  padding: 12px clamp(22px, 5vw, 78px) 72px;
+}
+
+.book-modal-content .book-text {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.book-modal-content .book-text h3 {
+  margin-top: 20px;
+  font-size: clamp(34px, 5vw, 62px);
+}
+
+.book-modal-content .book-text h4 {
+  margin-top: 52px;
+}
+
+body.book-open {
+  overflow: hidden;
 }
 
 .book-text h3 {
@@ -505,6 +585,14 @@ body.reading .series-section {
 
   .book-text {
     padding: 4px 18px 34px;
+  }
+
+  .book-modal-dialog {
+    inset: 10px;
+  }
+
+  .book-modal-content {
+    padding: 6px 18px 42px;
   }
 
   .council-list {

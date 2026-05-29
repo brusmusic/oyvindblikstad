@@ -74,8 +74,8 @@
       </div>
       <div class="book-stack">
         
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Barn</span>
           <strong>Streken i skolegården</strong>
         </summary>
@@ -320,8 +320,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Ungdom</span>
           <strong>Skygger i feeden</strong>
         </summary>
@@ -487,8 +487,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Voksen</span>
           <strong>Voksne rom, barns regning</strong>
         </summary>
@@ -623,8 +623,8 @@
       </div>
       <div class="book-stack">
         
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Barn</span>
           <strong>Den halve hytta</strong>
         </summary>
@@ -730,8 +730,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Ungdom</span>
           <strong>Byen i serverrommet</strong>
         </summary>
@@ -834,8 +834,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Voksen</span>
           <strong>Grunnmuren</strong>
         </summary>
@@ -952,8 +952,8 @@
       </div>
       <div class="book-stack">
         
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Barn</span>
           <strong>Pusten i klasserommet</strong>
         </summary>
@@ -1049,8 +1049,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Ungdom</span>
           <strong>Lufta mellom oss</strong>
         </summary>
@@ -1140,8 +1140,8 @@
       </details>
     
 
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>Voksen</span>
           <strong>Det felles kroppssystemet</strong>
         </summary>
@@ -1314,6 +1314,13 @@
     </section>
   </main>
 
+  <div class="book-modal" id="bookModal" aria-hidden="true">
+    <div class="book-modal-backdrop" data-close-book></div>
+    <section class="book-modal-dialog" role="dialog" aria-modal="true" aria-label="Åpen bok">
+      <button class="book-modal-close" type="button" data-close-book>Close</button>
+      <div class="book-modal-content"></div>
+    </section>
+  </div>
   <button class="reader-button" type="button" aria-pressed="false" data-open-label="Lesemodus" data-close-label="Avslutt lesemodus">Lesemodus</button>
   <script src="../script.js"></script>
 </body>

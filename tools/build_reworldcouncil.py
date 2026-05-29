@@ -167,8 +167,8 @@ def render_book(age: str, path: Path) -> str:
     title = book_title(markdown, path.stem.replace("_", " ").title())
     body = markdown_to_html(markdown)
     return f"""
-      <details class="book-panel">
-        <summary>
+      <details class="book-panel" data-book-panel>
+        <summary data-open-book>
           <span>{escape(age)}</span>
           <strong>{escape(title)}</strong>
         </summary>
@@ -333,6 +333,13 @@ def render_no():
     </section>
   </main>
 
+  <div class="book-modal" id="bookModal" aria-hidden="true">
+    <div class="book-modal-backdrop" data-close-book></div>
+    <section class="book-modal-dialog" role="dialog" aria-modal="true" aria-label="Åpen bok">
+      <button class="book-modal-close" type="button" data-close-book>Close</button>
+      <div class="book-modal-content"></div>
+    </section>
+  </div>
   <button class="reader-button" type="button" aria-pressed="false" data-open-label="Lesemodus" data-close-label="Avslutt lesemodus">Lesemodus</button>
   <script src="script.js"></script>
 </body>
@@ -347,11 +354,17 @@ def render_no():
 def render_en_book(age: str, title: str, summary: str) -> str:
     return f"""
       <article class="book-panel book-presentation">
-        <div class="book-summary">
+        <button class="book-summary" type="button" data-open-book>
           <span>{escape(age)}</span>
           <h3>{escape(title)}</h3>
           <p>{escape(summary)}</p>
-        </div>
+        </button>
+        <article class="book-text">
+          <h3>{escape(title)}</h3>
+          <p>{escape(summary)}</p>
+          <p>This English master page currently presents the series as curated book openings. The Norwegian original contains the full book text and remains available under the Norwegian page while the literary English edition is prepared.</p>
+          <p class="book-link-note"><a href="no/">Open the Norwegian original</a></p>
+        </article>
       </article>
     """
 
@@ -514,6 +527,13 @@ def render_en():
     </section>
   </main>
 
+  <div class="book-modal" id="bookModal" aria-hidden="true">
+    <div class="book-modal-backdrop" data-close-book></div>
+    <section class="book-modal-dialog" role="dialog" aria-modal="true" aria-label="Open book">
+      <button class="book-modal-close" type="button" data-close-book>Close</button>
+      <div class="book-modal-content"></div>
+    </section>
+  </div>
   <button class="reader-button" type="button" aria-pressed="false" data-open-label="Reading mode" data-close-label="Exit reading mode">Reading mode</button>
   <script src="script.js"></script>
 </body>
