@@ -351,7 +351,8 @@ def render_no():
     (no_out / "index.html").write_text(html.replace('href="style.css"', 'href="../style.css"').replace('src="script.js"', 'src="../script.js"'), encoding="utf-8")
 
 
-def render_en_book(age: str, title: str, summary: str) -> str:
+def render_en_book(age: str, title: str, summary: str, source_path: Path) -> str:
+    body = markdown_to_html(source_path.read_text(encoding="utf-8"))
     return f"""
       <article class="book-panel book-presentation">
         <button class="book-summary" type="button" data-open-book>
@@ -362,15 +363,17 @@ def render_en_book(age: str, title: str, summary: str) -> str:
         <article class="book-text">
           <h3>{escape(title)}</h3>
           <p>{escape(summary)}</p>
-          <p>This English master page currently presents the series as curated book openings. The Norwegian original contains the full book text and remains available under the Norwegian page while the literary English edition is prepared.</p>
-          <p class="book-link-note"><a href="no/">Open the Norwegian original</a></p>
+          {body}
         </article>
       </article>
     """
 
 
-def render_en_series(series) -> str:
-    books = "\n".join(render_en_book(*book) for book in series["books"])
+def render_en_series(series, no_series) -> str:
+    books = "\n".join(
+        render_en_book(age, title, summary, source_path)
+        for (age, title, summary), (_, source_path) in zip(series["books"], no_series["books"])
+    )
     return f"""
     <section class="series-section" id="{series['slug']}">
       <div class="series-intro">
@@ -389,7 +392,7 @@ def render_en_series(series) -> str:
 
 def render_en():
     OUT.mkdir(exist_ok=True)
-    series_html = "\n".join(render_en_series(series) for series in SERIES_EN)
+    series_html = "\n".join(render_en_series(series, no_series) for series, no_series in zip(SERIES_EN, SERIES))
     council_items = "\n".join(f"<li>{escape(item)}</li>" for item in COUNCIL_EN)
     language_url = "https://oyvindblikstad.com/reworld/"
 
