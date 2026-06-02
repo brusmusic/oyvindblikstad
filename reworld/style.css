@@ -290,6 +290,30 @@ p {
   margin-top: 22px;
 }
 
+.lab-footer {
+  padding: 18px 0 46px;
+}
+
+.lab-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.lab-footer img {
+  width: 28px;
+  height: 28px;
+  display: block;
+  opacity: 0.82;
+}
+
+.lab-footer a:hover {
+  color: var(--ink);
+}
+
 .series-map {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
