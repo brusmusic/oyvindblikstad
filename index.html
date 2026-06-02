@@ -1,203 +1,236 @@
-<!DOCTYPE html>
-<html lang="no">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>Øyvind Blikstad – Komponist & Lydforsker</title>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JHLZQYTV2H"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReSonance Lab - Øyvind Blikstad</title>
+  <meta name="description" content="ReSonance Lab is the home of Øyvind Blikstad's work with music, resonance, breath, technology and reflective worldbuilding.">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JHLZQYTV2H"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  gtag('config', 'G-JHLZQYTV2H');
-</script>
-
-    <meta name="description" content="Øyvind Blikstad: Komponist, lyddesigner, resonansutvikler og lydforsker. Utforsker møtepunktet mellom nervesystem, biologi og musikk.">
-    <meta property="og:title" content="Øyvind Blikstad">
-    <meta property="og:description" content="Komponist · Lyddesigner / Resonansutvikler · Lydforsker">
-    <meta property="og:image" content="images/oyvindprofil.jpg">
-    <meta property="og:type" content="website">
-
-    <link rel="icon" href="images/oyvindprofil.jpg" type="image/jpeg">
-
-    <link rel="stylesheet" href="style.css">
+    gtag('config', 'G-JHLZQYTV2H');
+  </script>
+  <link rel="icon" href="assets/resonancelab/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Øverste kvadrat / portal -->
-    <div id="random-square"></div>
-    <!-- Meny for prosjekter (åpnes av kvadratet) -->
-    <div id="square-menu" class="popup-menu">
-        <a href="/breathingcycles" class="popup-option">Breathing Cycles</a>
-        <a href="/rehuman" class="popup-option">ReHuman</a>
-        <a href="/reworld" class="popup-option">ReWorld</a>
-    </div>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="./">
+        <img src="assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab mark">
+        <span>ReSonance Lab</span>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#work">Projects</a>
+        <a href="about/">Øyvind</a>
+        <a href="rehuman/">ReHuman</a>
+        <a href="breathingcycles/">Breathing Cycles</a>
+      </nav>
+    </header>
 
     <main>
-        <h1>Øyvind Blikstad</h1>
-        <h2>Komponist · Lyddesigner / Resonansutvikler · Lydforsker</h2>
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="living-logo">
+            <svg
+              class="mark"
+              viewBox="0 0 400 400"
+              role="img"
+              aria-labelledby="mark-title mark-desc"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title id="mark-title">ReSonance Lab animated logo</title>
+              <desc id="mark-desc">
+                Three overlapping circular fields breathe around a shared center where a soft emergence ripple appears.
+              </desc>
+              <defs>
+                <filter id="soft-field" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.1" />
+                </filter>
+                <filter id="emergence-soften" x="-40%" y="-40%" width="180%" height="180%">
+                  <feGaussianBlur stdDeviation="1.8" />
+                </filter>
+                <filter id="irrational-field" x="-45%" y="-45%" width="190%" height="190%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.032" numOctaves="3" seed="17" result="noise" />
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" />
+                  <feGaussianBlur stdDeviation="1.2" />
+                </filter>
+                <clipPath id="clip-left">
+                  <circle cx="166" cy="212" r="134" />
+                </clipPath>
+                <clipPath id="clip-right">
+                  <circle cx="234" cy="212" r="134" />
+                </clipPath>
+                <clipPath id="clip-top">
+                  <circle cx="200" cy="154" r="134" />
+                </clipPath>
+                <radialGradient id="center-glow" cx="50%" cy="50%" r="58%">
+                  <stop offset="0%" stop-color="#fbfff7" stop-opacity="0.96" />
+                  <stop offset="38%" stop-color="#dceee3" stop-opacity="0.82" />
+                  <stop offset="100%" stop-color="#cddfd4" stop-opacity="0.18" />
+                </radialGradient>
+              </defs>
 
-        <div class="portrait-wrapper">
-            <img src="images/oyvindprofil.jpg" alt="Portrett av Øyvind Blikstad" class="portrait">
+              <g aria-hidden="true">
+                <circle class="field field-a" cx="166" cy="212" r="134" />
+                <circle class="field field-b" cx="234" cy="212" r="134" />
+                <circle class="field field-c" cx="200" cy="154" r="134" />
+
+                <circle class="field-ring ring-a inner-ring" cx="166" cy="212" r="58" />
+                <circle class="field-ring ring-a middle-ring" cx="166" cy="212" r="91" />
+                <circle class="field-ring ring-a outer-ring" cx="166" cy="212" r="122" />
+
+                <circle class="field-ring ring-b inner-ring" cx="234" cy="212" r="58" />
+                <circle class="field-ring ring-b middle-ring" cx="234" cy="212" r="91" />
+                <circle class="field-ring ring-b outer-ring" cx="234" cy="212" r="122" />
+
+                <circle class="field-ring ring-c inner-ring" cx="200" cy="154" r="58" />
+                <circle class="field-ring ring-c middle-ring" cx="200" cy="154" r="91" />
+                <circle class="field-ring ring-c outer-ring" cx="200" cy="154" r="122" />
+
+                <g clip-path="url(#clip-left)">
+                  <g clip-path="url(#clip-right)">
+                    <g clip-path="url(#clip-top)">
+                      <path
+                        class="shared-center"
+                        filter="url(#irrational-field)"
+                        d="M158 149
+                          C178 129 208 136 232 145
+                          C260 156 278 184 272 212
+                          C265 242 237 264 207 272
+                          C178 279 144 265 130 239
+                          C116 213 122 180 143 162
+                          C149 157 153 153 158 149Z"
+                      />
+                      <path
+                        class="irrational-line line-one"
+                        d="M143 192 C158 176 178 184 190 203 C202 222 222 226 238 211 C252 198 250 177 266 168"
+                      />
+                      <path
+                        class="irrational-line line-two"
+                        d="M138 221 C157 237 181 229 188 207 C196 184 218 171 239 184 C254 193 259 214 273 225"
+                      />
+                      <path
+                        class="irrational-line line-three"
+                        d="M154 166 C175 158 185 176 179 195 C173 216 190 239 214 236 C236 233 242 207 259 197"
+                      />
+                      <circle class="ripple" cx="200" cy="200" r="48" />
+                      <circle class="ripple two" cx="200" cy="200" r="36" />
+                    </g>
+                  </g>
+                </g>
+
+                <circle class="geometry-line" cx="166" cy="212" r="134" />
+                <circle class="geometry-line" cx="234" cy="212" r="134" />
+                <circle class="geometry-line" cx="200" cy="154" r="134" />
+              </g>
+            </svg>
+          </div>
+          <div>
+          <p class="eyebrow">ReSonance Lab</p>
+          <h1>A laboratory for human experience.</h1>
+          <p class="lead">
+            ReSonance Lab gathers three chapters of the same search: breath, body and thought. What happens when the human being comes into resonance with itself?
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#work">Enter the projects</a>
+            <a class="button secondary" href="about/">About Øyvind</a>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section class="section" id="work">
+        <div class="section-header">
+          <h2>Projects as rooms.</h2>
+          <p>
+            These are not separate projects pretending to belong together. They are different entrances into one investigation: music guiding breath, sound guiding the body, and questions guiding thought.
+          </p>
         </div>
 
-        <p>
-            Jeg er født i 1983 og har arbeidet med lyd i over to tiår. Utdannet i
-            musikkvitenskap og filmkomposisjon, og med erfaring fra film, dokumentar,
-            kunstprosjekter, elektronisk musikk og helserettet lydarbeid.
-        </p>
+        <div class="project-list">
+          <a class="project" href="breathingcycles/">
+            <span class="project-mark"><img src="assets/resonancelab/resonance-lab-mark.svg" alt="Circular resonance symbol"></span>
+            <span>
+              <span class="project-number">01 - breath</span>
+              <h3>Breathing Cycles</h3>
+              <p>Music guiding breath. A decade-long exploration of how sound can gently lead the body back toward its own rhythm.</p>
+            </span>
+            <span class="project-status">Music guiding breath</span>
+          </a>
 
-        <p>
-            Arbeidet mitt har aldri handlet om én form eller sjanger. For meg er lyd både
-            språk, struktur og energi. Alt som lever vibrerer, alt som beveger seg lager lyd,
-            og det er i dette møtepunktet jeg trives best: mellom menneske og lyd, mellom
-            nervesystem og tilstedeværelse, mellom kunst og biologi.
-        </p>
+          <a class="project" href="rehuman/">
+            <span class="project-mark"><img src="images/ReHumanforside.png" alt="The ReHuman resonance chamber"></span>
+            <span>
+              <span class="project-number">02 - body</span>
+              <h3>ReHuman</h3>
+              <p>Sound guiding the body. A physical resonance installation where vibration, breath and listening become an embodied experience.</p>
+            </span>
+            <span class="project-status">Sound guiding body</span>
+          </a>
 
-        <h3>Erfaring og anerkjennelser</h3>
+          <a class="project" href="https://oyvindblikstad.com/reworld/">
+            <span class="project-mark"><img src="assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab symbolic mark"></span>
+            <span>
+              <span class="project-number">03 - thought</span>
+              <h3>ReWorld</h3>
+              <p>Questions guiding thought. A digital book and reflection universe where children's questions are examined by a Council of perspectives.</p>
+            </span>
+            <span class="project-status">Questions guiding thought</span>
+          </a>
 
-        <p>
-            Jeg har komponert for et bredt spekter av produksjoner og prosjekter. Arbeidet har
-            blitt vist internasjonalt og mottatt blant annet:
-        </p>
-
-        <ul>
-            <li>Annecy Film Festival – Off Limits Award (vinner)</li>
-            <li>Animafest Cyprus – Grand Prix Award (vinner)</li>
-            <li>Nordic Docs – Best Short Documentary (vinner)</li>
-            <li>European Film Academy – Young Audience Award (vinner)</li>
-            <li>Gullrutens fagpris – nominasjon for beste musikk</li>
-            <li>Spellemann – nominasjon for beste elektroniske album</li>
-        </ul>
-
-        <h3>To parallelle spor</h3>
-
-        <p>
-            <strong>Lyd for andre:</strong> filmmusikk, TV show, dokumentarer, vignetter, reklamer,
-            remixer, låtskriving og installasjoner.
-        </p>
-
-        <p>
-            <strong>Lyd for meg:</strong> en utforskning av hvordan lyd påvirker kroppen –
-            pust, puls, nervesystem, tilstedeværelse og oppmerksomhet. Dette sporet ligger
-            til grunn for mine mer personlige og eksperimentelle arbeider og søken etter lydens verdi og tverrfaglighet.
-        </p>
-
-        <h3>Kunstnerisk ståsted</h3>
-
-        <p>
-            Arbeidet mitt handler i bunn og grunn om å lytte. Til lyden av historiene, rommene,
-            materialene, menneskene og bidra til historiefortellingen. Lyd er for meg både konkret og gåtefull,
-            fysisk og grenseoverskridende. Jeg søker ikke konklusjoner – jeg følger prosesser,
-            bevegelser og vibrasjoner som helst peker utover musikken selv.
-        </p>
-
-        <p>
-            Jeg tror at lyd kan avsløre noe fundamentalt om oss: hvordan vi bærer spenning,
-            hvordan vi finner ro, og hvordan vi er forbundet med omgivelsene våre på måter
-            som ennå ikke er fullt forstått.
-        </p>
-
-        <!-- Kontaktseksjon -->
-        <div class="contact-container">
-            <div class="contact-square"></div>
-            <button type="button" class="contact-text">Ta kontakt</button>
+          <a class="project" href="about/">
+            <span class="project-mark"><img src="images/oyvindprofil.jpg" alt="Portrait of Øyvind Blikstad"></span>
+            <span>
+              <span class="project-number">04 - maker</span>
+              <h3>Øyvind</h3>
+              <p>The maker behind ReSonance Lab: composer, sound designer and project creator working where listening becomes practice, technology and shared reflection.</p>
+            </span>
+            <span class="project-status">About</span>
+          </a>
         </div>
+      </section>
 
-        <div id="contact-menu" class="inline-menu">
-            <a href="tel:+4794307677" class="inline-option">📞 snakk</a>
-            <a href="mailto:oyvindblikstad@gmail.com" class="inline-option">✉️ skriv</a>
+      <section class="section" id="about">
+        <div class="split">
+          <div class="text-stack">
+            <p class="eyebrow">The maker</p>
+            <h2>Øyvind follows what appears when sound meets something else.</h2>
+            <p>
+              Through film, music, technology, breath, body and reflective worldbuilding, the work keeps returning to one field: the meeting point between the measurable and the experienced.
+            </p>
+            <p>
+              The projects are different rooms in the same laboratory. Breathing Cycles begins with breath. ReHuman moves into the body. ReWorld opens the question of how thought can be guided without being controlled.
+            </p>
+            <p>
+              The fuller introduction belongs on the about page.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="about/">Enter /about</a>
+            </div>
+            <blockquote class="quote">
+              Resonance is not only what sound does in a room. It is also what attention does between people.
+            </blockquote>
+          </div>
+
+          <div class="lab-mark-large">
+            <img src="assets/resonancelab/resonance-lab-mark.svg" alt="Animated ReSonance Lab mark">
+          </div>
         </div>
-        
+      </section>
     </main>
 
-    <script>
-    // --- Fargegenerator for kvadratene ---
-    function randomColor() {
-        const hue = Math.floor(Math.random() * 360);
-        const saturation = 70 + Math.random() * 30;
-        const lightness = 40 + Math.random() * 20;
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const color = randomColor();
-
-        // Farget kvadrat øverst
-        const randomSquare = document.getElementById("random-square");
-        if (randomSquare) {
-            randomSquare.style.backgroundColor = color;
-        }
-
-        // Kontaktramme
-        document.documentElement.style.setProperty('--square-color', color);
-
-        const contactButton = document.querySelector(".contact-text");
-        const contactMenu = document.getElementById("contact-menu");
-        const square = document.getElementById("random-square");
-        const squareMenu = document.getElementById("square-menu");
-
-        // Skjul begge menyer ved start
-        contactMenu.style.display = "none";
-        squareMenu.style.display = "none";
-
-        // Toggle kontaktmeny
-        contactButton.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            const isOpen = contactMenu.style.display === "block";
-            contactMenu.style.display = isOpen ? "none" : "block";
-
-            // Lukk kvadratmeny hvis åpen
-            squareMenu.style.display = "none";
-        });
-
-        // Toggle kvadrat-meny (prosjekter)
-        square.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            const isOpen = squareMenu.style.display === "block";
-
-            if (isOpen) {
-                squareMenu.style.display = "none";
-                return;
-            }
-
-            // Plasser menyen ved siden av kvadratet
-            const rect = square.getBoundingClientRect();
-            const menuWidth = squareMenu.offsetWidth || 140;
-            const padding = 12;
-
-            let left = rect.right - menuWidth;
-            if (left < padding) left = padding;
-
-            const top = rect.bottom + 8;
-
-            squareMenu.style.left = left + "px";
-            squareMenu.style.top = top + "px";
-            squareMenu.style.display = "block";
-
-            // Lukk kontaktmeny hvis åpen
-            contactMenu.style.display = "none";
-        });
-
-        // Klikk utenfor: lukk begge menyer
-        document.addEventListener("click", function (event) {
-            if (!contactMenu.contains(event.target) &&
-                !event.target.classList.contains("contact-text")) {
-                contactMenu.style.display = "none";
-            }
-
-            if (!squareMenu.contains(event.target) &&
-                event.target !== square) {
-                squareMenu.style.display = "none";
-            }
-        });
-    });
-    </script>
-
+    <footer class="footer">
+      <span>Made at ReSonance Lab</span>
+      <span><a href="mailto:oyvind@blikstad.no">oyvind@blikstad.no</a></span>
+    </footer>
+  </div>
 </body>
 </html>

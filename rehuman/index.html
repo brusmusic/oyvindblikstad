@@ -1,206 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>ReHuman – Øyvind Blikstad</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReHuman - ReSonance Lab</title>
+  <meta name="description" content="ReHuman er en fysisk installasjon for lyd, pust, vibrasjon og kroppslig lytting.">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JHLZQYTV2H"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-    <meta name="description" content="ReHuman er en fysisk installasjon der pust, lyd og vibrasjon bringer kroppen tilbake i balanse og ro. Utviklet av Øyvind Blikstad.">
-    <meta property="og:title" content="ReHuman – Øyvind Blikstad">
-    <meta property="og:description" content="En fysisk installasjon hvor pust, lyd og vibrasjon aktiverer kroppens naturlige evne til å roe seg selv.">
-    <meta property="og:image" content="../images/ReHumanforside.png">
-    <meta property="og:type" content="website">
-
-    <link rel="icon" href="../images/ReHumanforside.png" type="image/png">
-    <link rel="stylesheet" href="../style.css">
-    <style>
-/* Myk overgang mellom bilde og bakgrunn */
-
-.soft-image{
-  display:block;
-  margin:60px auto 0 auto;
-  width:100%;
-  max-width:460px;
-  opacity:0.95;
-  border-radius:50%;
-  box-shadow:
-    0 0 40px rgba(0,0,0,0.03),
-    0 0 120px rgba(255,255,255,0.8);
-
-  -webkit-mask-image: radial-gradient(circle, black 55%, transparent 100%);
-  mask-image: radial-gradient(circle, black 55%, transparent 100%);
-}
-}
-</style>
+    gtag('config', 'G-JHLZQYTV2H');
+  </script>
+  <link rel="icon" href="../assets/resonancelab/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="rehuman.css">
 </head>
 <body>
+  <div class="ambient" aria-hidden="true"></div>
 
-<main>
+  <header class="topbar">
+    <a class="brand" href="../">
+      <img src="../assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab mark">
+      <span>ReSonance Lab</span>
+    </a>
+    <nav class="nav" aria-label="Hovednavigasjon">
+      <a href="../">Lab</a>
+      <a href="../about/">Øyvind</a>
+      <a href="../breathingcycles/">Breathing Cycles</a>
+      <a href="https://oyvindblikstad.com/reworld/">ReWorld</a>
+    </nav>
+  </header>
 
-    <!-- Forsidebilde -->
-    <div class="portrait-wrapper" style="float:none; margin: 0 auto 40px auto; text-align:center;">
-        <img src="../images/ReHumanforside.png" alt="ReHuman forside" class="soft-image">
-    </div>
+  <main>
+    <section class="hero">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">ReHuman</p>
+        <h1>Noe skjer når <span>kroppen</span> får <span>lytte</span>.</h1>
+      </div>
+      <div class="hero-image reveal">
+        <img src="../images/ReHumanforside.png" alt="ReHuman-installasjonen i et mørkt og rolig rom">
+      </div>
+    </section>
 
-    <h1>ReHuman</h1>
-    <h2>Et arbeid som vokste ut av <em>Breathing Cycles</em> – og inn i kroppen</h2>
+    <section class="passage narrow">
+      <div class="reveal">
+        <p>Noen beskriver det som stillhet.</p>
+        <p>Andre beskriver det som vibrasjon.</p>
+        <p>Noen sier at <mark>kroppen</mark> plutselig husker noe hodet hadde glemt.</p>
+      </div>
 
-    <p>
-        ReHuman startet ikke i et studio, men i et liv.  
-        Som far til tre. I møte med samfunnets tempo. I møte med sykdom, smerte – og en kropp som til tider ikke ville det samme som hodet.
-    </p>
+      <div class="pause reveal">
+        <p>Vi vet ikke helt hva vi skal kalle det ennå.</p>
+        <p>Men vi vet hvordan det føles.</p>
+      </div>
+    </section>
 
-    <p>
-        Et ønske vokste frem:  
-        Å finne tilbake til en form for ro som ikke måtte læres – men gjenkalles.
-    </p>
+    <section class="experience">
+      <div class="experience-card reveal">
+        <p>Du setter deg ned.</p>
+        <p>Etter noen minutter begynner noe å endre seg.</p>
+        <p><mark>Pusten</mark> blir roligere.</p>
+        <p>Skuldrene senker seg.</p>
+        <p>Tankene mister litt av grepet.</p>
+        <p><mark>Kroppen</mark> lytter.</p>
+        <p>Ikke til musikken.</p>
+        <p>Til seg selv.</p>
+      </div>
+    </section>
 
-    <p>
-        Erfaringen har vært over all forventning – som om kroppen finner tilbake til sin egen grunnresonans, etter å lenge ha vært ustemt.
-    </p>
+    <section class="question reveal">
+      <p class="eyebrow">Et spørsmål</p>
+      <h2>Hva er det kroppen egentlig lytter etter?</h2>
+      <div class="question-grid">
+        <p>Hvorfor responderer kroppen så raskt på enkelte mønstre av lyd og vibrasjon?</p>
+        <p>Hvorfor oppleves noen frekvenser som beroligende, mens andre skaper uro?</p>
+        <p>ReHuman er et forsøk på å utforske disse spørsmålene. Ikke gjennom teori alene. Men gjennom erfaring.</p>
+      </div>
+    </section>
 
-    <h3>Hva er ReHuman?</h3>
+    <section class="story">
+      <div class="story-copy reveal">
+        <p class="eyebrow">Fra idé til opplevelse</p>
+        <h2>Det vokste frem gjennom livet.</h2>
+        <p>Gjennom perioder med høyt tempo.</p>
+        <p>Gjennom smerte.</p>
+        <p>Gjennom sykdom.</p>
+        <p>Gjennom behovet for å finne tilbake til noe som allerede fantes.</p>
+        <blockquote>
+          Som om kroppen kunne finne tilbake til sin egen grunnstemning.
+        </blockquote>
+      </div>
+      <div class="body-image reveal">
+        <img src="../images/ReHumanbody2.jpg" alt="En person hviler i ReHuman-stolen">
+      </div>
+    </section>
 
-    <p>
-        ReHuman er en fysisk installasjon – la oss kalle det en stol – der lyd, pust og vibrasjon arbeider sammen for å bringe kroppen tilbake i en tilstand av balanse.
-    </p>
+    <section class="definition reveal">
+      <p class="eyebrow">Hva er ReHuman?</p>
+      <h2>En stol. Et rom. Et instrument.</h2>
+      <p>
+        Foreløpig er ReHuman bygget som en fysisk installasjon der lyd, pust og vibrasjon arbeider sammen i et forsøk på å skape en opplevelse av trygghet, <mark>tilstedeværelse</mark> og indre balanse.
+      </p>
+      <p>
+        Lyden høres ikke bare. Den kjennes. Vibrasjonene beveger seg gjennom <mark>kroppen</mark>. Kroppen svarer ofte før tanken rekker å forklare det.
+      </p>
+    </section>
 
-    <p>
-        Når man setter seg i stolen, skjer det noe umiddelbart:
-    </p>
+    <section class="signals reveal">
+      <p class="eyebrow">Kroppen lytter</p>
+      <h2>Mange beskriver lignende opplevelser.</h2>
+      <ul>
+        <li>Dypere pust</li>
+        <li>Lavere puls</li>
+        <li>Redusert uro</li>
+        <li>Mindre opplevelse av smerte</li>
+        <li>Følelse av trygghet</li>
+        <li>Økt tilstedeværelse</li>
+        <li>Klarere tanker etterpå</li>
+      </ul>
+      <p class="careful">
+        Opplevelsene varierer. Dette presenteres som erfaringer og mønstre som må undersøkes videre, ikke som dokumenterte medisinske effekter.
+      </p>
+    </section>
 
-    <ul>
-        <li>Du føler deg trygg</li>
-        <li>Spenninger slipper taket</li>
-        <li>Kroppen beveger seg mot det parasympatiske nervesystemet – «hvile og reparasjon»</li>
-        <li>Smerteopplevelse og indre uro dempes</li>
-        <li>Pusten begynner å følge et roligere mønster</li>
-        <li>Tilstedeværelsen øker</li>
-    </ul>
+    <section class="resonance reveal">
+      <p class="eyebrow">Resonans</p>
+      <h2>Breathing Cycles utforsket hvordan musikk kunne påvirke pust. ReHuman går videre.</h2>
+      <p>
+        Her presenteres lyd fysisk. Frekvenser, rytmer og vibrasjoner blir en direkte dialog mellom teknologi og <mark>kroppen</mark>. Mellom bevegelse og nervesystem. Mellom det som høres, og det som kjennes.
+      </p>
+    </section>
 
-    <p>
-        Dette skjer uten anstrengelse.  
-        Kroppen responderer av seg selv.
-    </p>
+    <section class="uses reveal">
+      <p class="eyebrow">Mulige anvendelser</p>
+      <h2>Kanskje er dette bare begynnelsen.</h2>
+      <div class="use-grid">
+        <span>Restitusjon</span>
+        <span>Helse og omsorg</span>
+        <span>Terapi og rehabilitering</span>
+        <span>Spa og wellness</span>
+        <span>Kunst og opplevelser</span>
+        <span>Arbeidsliv og stressmestring</span>
+        <span>Hjemmebruk</span>
+      </div>
+    </section>
 
-    <h3>Fra pust til resonans</h3>
+    <section class="next reveal">
+      <p class="eyebrow">Neste steg</p>
+      <h2>Først: et sted å puste.</h2>
+      <p>
+        ReHuman er fortsatt under utvikling. Neste mål er å bygge en ferdig prototype: et stabilt, trygt og tilgjengelig system som kan brukes uten teknisk kunnskap.
+      </p>
+      <p>
+        Derfra åpner nye muligheter seg: forskning og dokumentasjon, biofeedback-systemer, nye former for lydopplevelser, digitale lydreiser, undervisning og kunnskapsdeling.
+      </p>
+      <div class="closing-list">
+        <p>Men først:</p>
+        <p>En stol.</p>
+        <p>Et rom.</p>
+        <p>Et sted å puste.</p>
+        <p>Et sted å lytte.</p>
+      </div>
+    </section>
 
-    <p>
-        Breathing Cycles utforsket hvordan musikk kunne styre pusten og regulere sinnet.  
-        ReHuman går dypere. Kropp og hode kalibreres og stemmes som et instrument mot selve installasjonen.
-    </p>
+    <section class="final reveal">
+      <p>Kanskje handler ReHuman egentlig ikke om lyd.</p>
+      <h2>Kanskje handler det om å huske hvordan det føles å være <span>menneske</span>.</h2>
+      <p>Resten er bare teknologi.</p>
+    </section>
+  </main>
 
-    <p>
-        ReHuman presenterer lyden fysisk. Den kjennes i kroppen – som en indre, vibrerende kommunikasjon mellom frekvens og vev, mellom rytme og nervesystem.  
-        Vibrasjonene er ikke bare hørbare. De er svært merkbare.
-    </p>
+  <footer class="footer">
+    <span>Made at ReSonance Lab</span>
+    <a href="../">Tilbake til laben</a>
+  </footer>
 
-    <p>
-        Kroppen lytter – og svarer.
-    </p>
-
-    <p><em>Dette skjer før tanken rekker å forklare det.</em></p>
-
-    <h3>Forsøksresultater og erfaringer</h3>
-
-    <p>
-        ReHuman er fortsatt i utforskende fase, men responsen er tydelig:
-    </p>
-
-    <ul>
-        <li>Redusert smerte</li>
-        <li>Dypere pust og lavere puls</li>
-        <li>Følelse av trygghet og ro</li>
-        <li>Opplevelse av å «komme hjem i kroppen»</li>
-        <li>Større mental klarhet etter bruk</li>
-    </ul>
-
-    <p>
-        Opplevelsene er ulike – men mønsteret er det samme:  
-        Kroppen får en pause. En påminnelse. En reset.
-    </p>
-
-    <h3>Flere bruksområder</h3>
-
-    <p>
-        ReHuman kan brukes på mange måter:
-    </p>
-
-    <ul>
-        <li>Et alternativ til tradisjonelle massasjestoler</li>
-        <li>Som et individuelt rom for ro og reset</li>
-        <li>Som del av terapi eller rehabilitering</li>
-        <li>I spa- og wellness-institusjoner</li>
-        <li>I helse- og omsorgsmiljøer</li>
-        <li>I kunst- og opplevelsesrom</li>
-        <li>I idrett og restitusjon</li>
-        <li>I hjemmet – som et personlig stillerom</li>
-    </ul>
-
-    <p>
-        Det er ikke én riktig måte å bruke ReHuman på.  
-        Det er et verktøy som tilpasser seg mennesket.
-    </p>
-
-    <h3>Et rom for å komme tilbake til seg selv</h3>
-
-    <p>
-        I en verden som alltid peker fremover, gir ReHuman en mulighet til å vende tilbake.
-    </p>
-
-    <p>
-        Til kroppen.  
-        Til pusten.  
-        Til stillheten bak støyen.
-    </p>
-
-    <p>
-        Til seg selv.
-    </p>
-
-    <h3>Neste steg</h3>
-
-    <p>
-        Før noe annet kan vokse videre, må ReHuman bli en ferdig, salgbar prototype – versjon 2.0.
-    </p>
-
-    <p>
-        Målet er å videreutvikle installasjonen til et helhetlig, stabilt og estetisk uttrykk som kan tas i bruk av mennesker uten teknisk forkunnskap.
-        En løsning som er trygg, driftssikker og klar til å møte verden.
-    </p>
-
-    <p>
-        Derfra kan alt annet springe ut:
-    </p>
-
-    <ul>
-        <li>Forskning og dokumentasjon</li>
-        <li>Videre teknologisk utvikling</li>
-        <li>Toveis biofeedback-systemer</li>
-        <li>Streamingplattform for lydreiser</li>
-        <li>Lærebøker og kurs</li>
-    </ul>
-
-    <p>
-        <em>Men først – en stol. En boks. Et rom.  
-        Et sted kroppen kan komme hjem.</em>
-    </p>
-    <!-- Kropp / resonans-visual nederst -->
-<div style="margin: 80px auto 40px auto; text-align: center;">
-  <img 
-  src="../images/ReHumanbody2.jpg" 
-  alt="Menneske i resonans med universet" 
-  class="soft-image">
-    
-</div>
-    <p style="margin-top:60px; font-size:0.9rem; opacity:0.7;">
-        <a href="/" style="text-decoration:none; color:inherit;">
-            ← Tilbake til oyvindblikstad.com
-        </a>
-    </p>
-
-</main>
-        
+  <script src="rehuman.js"></script>
 </body>
 </html>
