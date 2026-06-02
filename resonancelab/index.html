@@ -13,8 +13,7 @@
 
       gtag('config', 'G-JHLZQYTV2H');
     </script>
-    <meta name="description" content="ReSonance Lab." />
-    <link rel="icon" href="/assets/resonancelab/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <style>
       :root {
         color-scheme: light;
@@ -23,6 +22,14 @@
         --field-a: #4f8f7b;
         --field-b: #486f9c;
         --field-c: #b18458;
+        --field-a-opacity: 0.55;
+        --field-b-opacity: 0.55;
+        --field-c-opacity: 0.55;
+        --ring-a-opacity: 0.28;
+        --ring-b-opacity: 0.28;
+        --ring-c-opacity: 0.28;
+        --master-strength: 1;
+        --center: #eef4ea;
         --line: rgba(23, 32, 29, 0.2);
       }
 
@@ -39,29 +46,56 @@
         margin: 0;
         display: grid;
         place-items: center;
-        overflow: hidden;
         background:
-          radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.78), transparent 36rem),
+          radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.78), transparent 32rem),
           var(--paper);
         color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
       }
 
-      a {
+      main {
+        width: min(100vw, 980px);
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        align-items: center;
+        padding: clamp(20px, 4vw, 56px);
+      }
+
+      .logo-stage {
         display: grid;
         place-items: center;
-        width: min(88vw, 760px);
-        aspect-ratio: 1;
+        gap: clamp(24px, 4vw, 44px);
       }
 
       .mark {
-        width: 100%;
-        height: auto;
+        width: min(72vw, 420px);
+        aspect-ratio: 1;
         overflow: visible;
+      }
+
+      .logo-system {
+        opacity: var(--master-strength);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 4.2rem);
+        font-weight: 520;
+        letter-spacing: 0;
+      }
+
+      .smallmark {
+        align-self: end;
+        justify-self: center;
+        width: 34px;
+        opacity: 0.62;
       }
 
       .field {
         mix-blend-mode: multiply;
-        opacity: 0.55;
         transform-box: fill-box;
         transform-origin: center;
         animation-duration: 9s;
@@ -83,57 +117,56 @@
         animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
       }
 
-      .field-a,
-      .ring-a {
-        animation-name: breathe-a;
-      }
-
       .field-a {
         fill: var(--field-a);
+        opacity: var(--field-a-opacity);
+        animation-name: breathe-a;
       }
 
       .ring-a {
         stroke: var(--field-a);
-      }
-
-      .field-b,
-      .ring-b {
-        animation-name: breathe-b;
-        animation-delay: -2.2s;
+        opacity: var(--ring-a-opacity);
+        animation-name: breathe-a;
       }
 
       .field-b {
         fill: var(--field-b);
+        opacity: var(--field-b-opacity);
+        animation-name: breathe-b;
+        animation-delay: -2.2s;
       }
 
       .ring-b {
         stroke: var(--field-b);
-      }
-
-      .field-c,
-      .ring-c {
-        animation-name: breathe-c;
-        animation-delay: -4.7s;
+        opacity: var(--ring-b-opacity);
+        animation-name: breathe-b;
+        animation-delay: -2.2s;
       }
 
       .field-c {
         fill: var(--field-c);
+        opacity: var(--field-c-opacity);
+        animation-name: breathe-c;
+        animation-delay: -4.7s;
       }
 
       .ring-c {
         stroke: var(--field-c);
+        opacity: var(--ring-c-opacity);
+        animation-name: breathe-c;
+        animation-delay: -4.7s;
       }
 
       .inner-ring {
-        opacity: 0.2;
+        stroke-width: 1;
       }
 
       .middle-ring {
-        opacity: 0.24;
+        stroke-width: 1.4;
       }
 
       .outer-ring {
-        opacity: 0.18;
+        stroke-width: 1;
       }
 
       .shared-center {
@@ -143,11 +176,23 @@
         animation: center-rise 7.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
       }
 
+      .emergence-cloud {
+        transition:
+          opacity 420ms cubic-bezier(0.45, 0, 0.55, 1),
+          filter 420ms cubic-bezier(0.45, 0, 0.55, 1);
+      }
+
+      .emergence-cloud[data-transitioning="true"] {
+        opacity: 0.38;
+        filter: blur(1.5px);
+      }
+
       .irrational-line {
         fill: none;
-        stroke: rgba(247, 246, 241, 0.34);
+        stroke: rgba(247, 246, 241, 0.58);
         stroke-linecap: round;
-        stroke-width: 1.4;
+        stroke-width: 1.75;
+        filter: url(#string-glow);
         vector-effect: non-scaling-stroke;
         transform-origin: 200px 200px;
         animation-duration: 12s;
@@ -170,6 +215,7 @@
       }
 
       .ripple {
+        display: none;
         fill: none;
         stroke: rgba(247, 246, 241, 0.88);
         stroke-width: 1.6;
@@ -188,6 +234,237 @@
         stroke: var(--line);
         stroke-width: 1.2;
         vector-effect: non-scaling-stroke;
+      }
+
+      .panel-toggle {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 20;
+        min-width: 44px;
+        height: 44px;
+        border: 1px solid rgba(23, 32, 29, 0.2);
+        border-radius: 999px;
+        background: rgba(247, 246, 241, 0.86);
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        backdrop-filter: blur(10px);
+      }
+
+      .mixer-panel {
+        position: fixed;
+        top: 72px;
+        right: 18px;
+        z-index: 19;
+        width: min(92vw, 390px);
+        max-height: calc(100vh - 92px);
+        overflow: auto;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.64);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(252, 251, 247, 0.88), rgba(238, 236, 229, 0.86));
+        box-shadow:
+          0 22px 70px rgba(23, 32, 29, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(18px) saturate(1.15);
+        transform: translateY(-8px);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+      }
+
+      .mixer-panel[data-open="true"] {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .mixer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .mixer-header h2 {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 560;
+        letter-spacing: 0;
+      }
+
+      .close-panel {
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(23, 32, 29, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.44);
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .mixer {
+        display: grid;
+        grid-template-columns: repeat(3, 74px) 74px;
+        justify-content: center;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .channel,
+      .master-strip {
+        min-width: 0;
+        min-height: 312px;
+        padding: 11px 8px;
+        border: 1px solid rgba(23, 32, 29, 0.1);
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          0 1px 2px rgba(23, 32, 29, 0.06);
+      }
+
+      .channel {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+      }
+
+      .channel-name,
+      .master-name {
+        display: block;
+        margin-bottom: 10px;
+        color: rgba(23, 32, 29, 0.72);
+        font-size: 0.72rem;
+        font-weight: 560;
+        text-align: center;
+      }
+
+      .knob-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-content: start;
+        justify-items: center;
+      }
+
+      .knob-control {
+        display: grid;
+        grid-template-columns: 12px 42px;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .knob-control span {
+        color: rgba(23, 32, 29, 0.58);
+        font-size: 0.68rem;
+        min-width: 12px;
+      }
+
+      .knob {
+        --angle: 160deg;
+        --knob-color: #4f8f7b;
+        width: 38px;
+        height: 38px;
+        margin: 0;
+        border-radius: 50%;
+        appearance: none;
+        background:
+          radial-gradient(circle at 50% 50%, #f7f6f1 0 42%, transparent 44%),
+          conic-gradient(var(--knob-color) 0 var(--angle), rgba(23, 32, 29, 0.13) 0 360deg);
+        cursor: pointer;
+      }
+
+      .knob::-webkit-slider-thumb {
+        width: 10px;
+        height: 10px;
+        border: 0;
+        border-radius: 50%;
+        appearance: none;
+        background: var(--ink);
+        box-shadow: 0 -15px 0 var(--ink);
+      }
+
+      .knob::-moz-range-thumb {
+        width: 10px;
+        height: 10px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--ink);
+      }
+
+      .fader-wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        align-self: end;
+      }
+
+      .fader {
+        width: 28px;
+        height: 118px;
+        margin: 0;
+        appearance: none;
+        writing-mode: vertical-lr;
+        direction: rtl;
+        accent-color: var(--ink);
+        cursor: pointer;
+      }
+
+      .master-strip {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        justify-items: center;
+        overflow: hidden;
+      }
+
+      .master-strip .fader-wrap {
+        margin-top: 0;
+        align-self: end;
+      }
+
+      .value-readout {
+        color: rgba(23, 32, 29, 0.55);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.68rem;
+      }
+
+      @media (max-width: 720px) {
+        .mixer {
+          grid-template-columns: repeat(4, 74px);
+          justify-content: start;
+          overflow-x: auto;
+          padding-bottom: 4px;
+        }
+
+        .channel {
+          min-height: 312px;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr auto;
+          align-items: stretch;
+          gap: 0;
+        }
+
+        .master-strip {
+          min-height: 312px;
+        }
+
+        .channel-name {
+          margin-bottom: 10px;
+          text-align: center;
+        }
+
+        .fader-wrap {
+          margin-top: 10px;
+        }
       }
 
       @keyframes breathe-a {
@@ -254,15 +531,15 @@
         0%,
         100% {
           transform: translate(-2px, 1px) rotate(-1deg);
-          opacity: 0.22;
+          opacity: 0.34;
         }
         42% {
           transform: translate(5px, -4px) rotate(1.8deg);
-          opacity: 0.4;
+          opacity: 0.62;
         }
         72% {
           transform: translate(-1px, 5px) rotate(0.6deg);
-          opacity: 0.3;
+          opacity: 0.48;
         }
       }
 
@@ -270,15 +547,15 @@
         0%,
         100% {
           transform: translate(3px, -2px) rotate(1.2deg);
-          opacity: 0.26;
+          opacity: 0.38;
         }
         48% {
           transform: translate(-5px, 4px) rotate(-1.6deg);
-          opacity: 0.38;
+          opacity: 0.58;
         }
         76% {
           transform: translate(2px, 6px) rotate(-0.4deg);
-          opacity: 0.28;
+          opacity: 0.46;
         }
       }
 
@@ -286,15 +563,15 @@
         0%,
         100% {
           transform: translate(1px, 3px) rotate(-0.8deg);
-          opacity: 0.2;
+          opacity: 0.32;
         }
         46% {
           transform: translate(6px, 1px) rotate(1.4deg);
-          opacity: 0.36;
+          opacity: 0.56;
         }
         78% {
           transform: translate(-4px, -5px) rotate(-1.2deg);
-          opacity: 0.3;
+          opacity: 0.46;
         }
       }
 
@@ -310,89 +587,385 @@
     </style>
   </head>
   <body>
-    <a href="/" aria-label="ReSonance Lab home">
-      <svg
-        class="mark"
-        viewBox="0 0 400 400"
-        role="img"
-        aria-labelledby="mark-title mark-desc"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <title id="mark-title">ReSonance Lab animated logo</title>
-        <desc id="mark-desc">Three overlapping circular fields breathe around a shared center.</desc>
-        <defs>
-          <filter id="soft-field" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.1" />
-          </filter>
-          <filter id="irrational-field" x="-45%" y="-45%" width="190%" height="190%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.032" numOctaves="3" seed="17" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" />
-            <feGaussianBlur stdDeviation="1.2" />
-          </filter>
-          <clipPath id="clip-left">
-            <circle cx="166" cy="212" r="134" />
-          </clipPath>
-          <clipPath id="clip-right">
-            <circle cx="234" cy="212" r="134" />
-          </clipPath>
-          <clipPath id="clip-top">
-            <circle cx="200" cy="154" r="134" />
-          </clipPath>
-          <radialGradient id="center-glow" cx="50%" cy="50%" r="58%">
-            <stop offset="0%" stop-color="#fbfff7" stop-opacity="0.96" />
-            <stop offset="38%" stop-color="#dceee3" stop-opacity="0.82" />
-            <stop offset="100%" stop-color="#cddfd4" stop-opacity="0.18" />
-          </radialGradient>
-        </defs>
+    <main aria-labelledby="brand-title">
+      <section class="logo-stage" aria-label="Animated ReSonance Lab logo">
+        <svg
+          class="mark"
+          viewBox="0 0 400 400"
+          role="img"
+          aria-labelledby="mark-title mark-desc"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <title id="mark-title">ReSonance Lab animated logo</title>
+          <desc id="mark-desc">
+            Three overlapping circular fields breathe around a shared center where a soft
+            emergence ripple appears.
+          </desc>
+          <defs>
+            <filter id="soft-field" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.1" />
+            </filter>
+            <filter id="emergence-soften" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.8" />
+            </filter>
+            <filter id="irrational-field" x="-45%" y="-45%" width="190%" height="190%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.032"
+                numOctaves="3"
+                seed="17"
+                result="noise"
+              />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" />
+              <feGaussianBlur stdDeviation="1.2" />
+            </filter>
+            <filter id="string-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="soft-glow" />
+              <feMerge>
+                <feMergeNode in="soft-glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <clipPath id="clip-left">
+              <circle cx="166" cy="212" r="134" />
+            </clipPath>
+            <clipPath id="clip-right">
+              <circle cx="234" cy="212" r="134" />
+            </clipPath>
+            <clipPath id="clip-top">
+              <circle cx="200" cy="154" r="134" />
+            </clipPath>
+            <radialGradient id="center-glow" cx="50%" cy="50%" r="58%">
+              <stop offset="0%" stop-color="#fbfff7" stop-opacity="0.96" />
+              <stop offset="38%" stop-color="#dceee3" stop-opacity="0.82" />
+              <stop offset="100%" stop-color="#cddfd4" stop-opacity="0.18" />
+            </radialGradient>
+          </defs>
 
-        <g aria-hidden="true">
-          <circle class="field field-a" cx="166" cy="212" r="134" />
-          <circle class="field field-b" cx="234" cy="212" r="134" />
-          <circle class="field field-c" cx="200" cy="154" r="134" />
+          <g class="logo-system" aria-hidden="true">
+            <circle class="field field-a" cx="166" cy="212" r="134" />
+            <circle class="field field-b" cx="234" cy="212" r="134" />
+            <circle class="field field-c" cx="200" cy="154" r="134" />
 
-          <circle class="field-ring ring-a inner-ring" cx="166" cy="212" r="58" />
-          <circle class="field-ring ring-a middle-ring" cx="166" cy="212" r="91" />
-          <circle class="field-ring ring-a outer-ring" cx="166" cy="212" r="122" />
+            <circle class="field-ring ring-a inner-ring" cx="166" cy="212" r="58" />
+            <circle class="field-ring ring-a middle-ring" cx="166" cy="212" r="91" />
+            <circle class="field-ring ring-a outer-ring" cx="166" cy="212" r="122" />
 
-          <circle class="field-ring ring-b inner-ring" cx="234" cy="212" r="58" />
-          <circle class="field-ring ring-b middle-ring" cx="234" cy="212" r="91" />
-          <circle class="field-ring ring-b outer-ring" cx="234" cy="212" r="122" />
+            <circle class="field-ring ring-b inner-ring" cx="234" cy="212" r="58" />
+            <circle class="field-ring ring-b middle-ring" cx="234" cy="212" r="91" />
+            <circle class="field-ring ring-b outer-ring" cx="234" cy="212" r="122" />
 
-          <circle class="field-ring ring-c inner-ring" cx="200" cy="154" r="58" />
-          <circle class="field-ring ring-c middle-ring" cx="200" cy="154" r="91" />
-          <circle class="field-ring ring-c outer-ring" cx="200" cy="154" r="122" />
+            <circle class="field-ring ring-c inner-ring" cx="200" cy="154" r="58" />
+            <circle class="field-ring ring-c middle-ring" cx="200" cy="154" r="91" />
+            <circle class="field-ring ring-c outer-ring" cx="200" cy="154" r="122" />
 
-          <g clip-path="url(#clip-left)">
-            <g clip-path="url(#clip-right)">
-              <g clip-path="url(#clip-top)">
-                <path
-                  class="shared-center"
-                  filter="url(#irrational-field)"
-                  d="M158 149 C178 129 208 136 232 145 C260 156 278 184 272 212 C265 242 237 264 207 272 C178 279 144 265 130 239 C116 213 122 180 143 162 C149 157 153 153 158 149Z"
-                />
-                <path
-                  class="irrational-line line-one"
-                  d="M143 192 C158 176 178 184 190 203 C202 222 222 226 238 211 C252 198 250 177 266 168"
-                />
-                <path
-                  class="irrational-line line-two"
-                  d="M138 221 C157 237 181 229 188 207 C196 184 218 171 239 184 C254 193 259 214 273 225"
-                />
-                <path
-                  class="irrational-line line-three"
-                  d="M154 166 C175 158 185 176 179 195 C173 216 190 239 214 236 C236 233 242 207 259 197"
-                />
-                <circle class="ripple" cx="200" cy="200" r="48" />
-                <circle class="ripple two" cx="200" cy="200" r="36" />
+            <g clip-path="url(#clip-left)">
+              <g clip-path="url(#clip-right)">
+                <g clip-path="url(#clip-top)">
+                  <g class="emergence-cloud">
+                    <path
+                      class="shared-center"
+                      filter="url(#irrational-field)"
+                      d="M158 149
+                        C178 129 208 136 232 145
+                        C260 156 278 184 272 212
+                        C265 242 237 264 207 272
+                        C178 279 144 265 130 239
+                        C116 213 122 180 143 162
+                        C149 157 153 153 158 149Z"
+                    />
+                    <path
+                      class="irrational-line line-one"
+                      d="M143 192 C158 176 178 184 190 203 C202 222 222 226 238 211 C252 198 250 177 266 168"
+                    />
+                    <path
+                      class="irrational-line line-two"
+                      d="M138 221 C157 237 181 229 188 207 C196 184 218 171 239 184 C254 193 259 214 273 225"
+                    />
+                    <path
+                      class="irrational-line line-three"
+                      d="M154 166 C175 158 185 176 179 195 C173 216 190 239 214 236 C236 233 242 207 259 197"
+                    />
+                  </g>
+                  <circle class="ripple" cx="200" cy="200" r="48" />
+                  <circle class="ripple two" cx="200" cy="200" r="36" />
+                </g>
               </g>
             </g>
-          </g>
 
-          <circle class="geometry-line" cx="166" cy="212" r="134" />
-          <circle class="geometry-line" cx="234" cy="212" r="134" />
-          <circle class="geometry-line" cx="200" cy="154" r="134" />
-        </g>
-      </svg>
-    </a>
+            <circle class="geometry-line" cx="166" cy="212" r="134" />
+            <circle class="geometry-line" cx="234" cy="212" r="134" />
+            <circle class="geometry-line" cx="200" cy="154" r="134" />
+          </g>
+        </svg>
+
+        <h1 id="brand-title">ReSonance Lab</h1>
+      </section>
+
+      <img class="smallmark" src="./resonance-lab-mark.svg" alt="" />
+    </main>
+
+    <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="mixer-panel">
+      Mix
+    </button>
+
+    <aside class="mixer-panel" id="mixer-panel" data-open="false" aria-label="Logo color mixer">
+      <div class="mixer-header">
+        <h2>Logo Mixer</h2>
+        <button class="close-panel" type="button" aria-label="Close mixer">x</button>
+      </div>
+
+      <div class="mixer">
+        <section class="channel" data-channel="a">
+          <span class="channel-name">Field 1</span>
+          <div class="knob-row">
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="79" data-channel="a" data-color="r" />
+              <span>R</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="143" data-channel="a" data-color="g" />
+              <span>G</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="123" data-channel="a" data-color="b" />
+              <span>B</span>
+            </label>
+          </div>
+          <label class="fader-wrap">
+            <input class="fader" type="range" min="0" max="100" value="55" data-channel="a" data-opacity="true" />
+            <span class="value-readout" data-readout="a">55%</span>
+          </label>
+        </section>
+
+        <section class="channel" data-channel="b">
+          <span class="channel-name">Field 2</span>
+          <div class="knob-row">
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="72" data-channel="b" data-color="r" />
+              <span>R</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="111" data-channel="b" data-color="g" />
+              <span>G</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="156" data-channel="b" data-color="b" />
+              <span>B</span>
+            </label>
+          </div>
+          <label class="fader-wrap">
+            <input class="fader" type="range" min="0" max="100" value="55" data-channel="b" data-opacity="true" />
+            <span class="value-readout" data-readout="b">55%</span>
+          </label>
+        </section>
+
+        <section class="channel" data-channel="c">
+          <span class="channel-name">Field 3</span>
+          <div class="knob-row">
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="177" data-channel="c" data-color="r" />
+              <span>R</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="132" data-channel="c" data-color="g" />
+              <span>G</span>
+            </label>
+            <label class="knob-control">
+              <input class="knob" type="range" min="0" max="255" value="88" data-channel="c" data-color="b" />
+              <span>B</span>
+            </label>
+          </div>
+          <label class="fader-wrap">
+            <input class="fader" type="range" min="0" max="100" value="55" data-channel="c" data-opacity="true" />
+            <span class="value-readout" data-readout="c">55%</span>
+          </label>
+        </section>
+
+        <section class="master-strip">
+          <span class="master-name">Master</span>
+          <label class="fader-wrap">
+            <input class="fader" type="range" min="0" max="100" value="100" data-master="true" />
+            <span class="value-readout" data-readout="master">100%</span>
+          </label>
+        </section>
+      </div>
+    </aside>
+
+    <script>
+      const root = document.documentElement;
+      const panel = document.querySelector("#mixer-panel");
+      const toggle = document.querySelector(".panel-toggle");
+      const closePanel = document.querySelector(".close-panel");
+      const turbulence = document.querySelector("#irrational-field feTurbulence");
+      const displacement = document.querySelector("#irrational-field feDisplacementMap");
+      const cloud = document.querySelector(".emergence-cloud");
+      const center = document.querySelector(".shared-center");
+      const strings = document.querySelectorAll(".irrational-line");
+      const channels = {
+        a: { r: 79, g: 143, b: 123, opacity: 55 },
+        b: { r: 72, g: 111, b: 156, opacity: 55 },
+        c: { r: 177, g: 132, b: 88, opacity: 55 },
+      };
+      let lastSeed = 17;
+      let emergenceTimer;
+
+      function setPanel(open) {
+        panel.dataset.open = String(open);
+        toggle.setAttribute("aria-expanded", String(open));
+      }
+
+      function colorOf(channel) {
+        const color = channels[channel];
+        return `rgb(${color.r}, ${color.g}, ${color.b})`;
+      }
+
+      function syncChannel(channel) {
+        const color = channels[channel];
+        const opacity = color.opacity / 100;
+        root.style.setProperty(`--field-${channel}`, colorOf(channel));
+        root.style.setProperty(`--field-${channel}-opacity`, String(opacity));
+        root.style.setProperty(`--ring-${channel}-opacity`, String(opacity * 0.5));
+        document.querySelector(`[data-readout="${channel}"]`).textContent = `${color.opacity}%`;
+      }
+
+      function syncKnob(input) {
+        const value = Number(input.value);
+        const angle = 32 + (value / 255) * 296;
+        const channel = input.dataset.channel;
+        const preview = channel ? colorOf(channel) : "#17201d";
+        input.style.setProperty("--angle", `${angle}deg`);
+        input.style.setProperty("--knob-color", preview);
+      }
+
+      function point(x, y, amount) {
+        const radius = amount * (0.25 + Math.random());
+        const angle = Math.random() * Math.PI * 2;
+        return [Math.round(x + Math.cos(angle) * radius), Math.round(y + Math.sin(angle) * radius)];
+      }
+
+      function randomCenterPath() {
+        const amount = 6 + Math.random() * 24;
+        const p1 = point(158, 149, amount);
+        const c1 = point(178, 129, amount);
+        const c2 = point(208, 136, amount);
+        const p2 = point(232, 145, amount);
+        const c3 = point(260, 156, amount);
+        const c4 = point(278, 184, amount);
+        const p3 = point(272, 212, amount);
+        const c5 = point(265, 242, amount);
+        const c6 = point(237, 264, amount);
+        const p4 = point(207, 272, amount);
+        const c7 = point(178, 279, amount);
+        const c8 = point(144, 265, amount);
+        const p5 = point(130, 239, amount);
+        const c9 = point(116, 213, amount);
+        const c10 = point(122, 180, amount);
+        const p6 = point(143, 162, amount);
+        const c11 = point(149, 157, amount);
+        const c12 = point(153, 153, amount);
+
+        return `M${p1[0]} ${p1[1]} C${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]} ${p2[0]} ${p2[1]} C${c3[0]} ${c3[1]} ${c4[0]} ${c4[1]} ${p3[0]} ${p3[1]} C${c5[0]} ${c5[1]} ${c6[0]} ${c6[1]} ${p4[0]} ${p4[1]} C${c7[0]} ${c7[1]} ${c8[0]} ${c8[1]} ${p5[0]} ${p5[1]} C${c9[0]} ${c9[1]} ${c10[0]} ${c10[1]} ${p6[0]} ${p6[1]} C${c11[0]} ${c11[1]} ${c12[0]} ${c12[1]} ${p1[0]} ${p1[1]}Z`;
+      }
+
+      function randomStringPath(index) {
+        const templates = [
+          [
+            [143, 192],
+            [158, 176],
+            [178, 184],
+            [190, 203],
+            [202, 222],
+            [222, 226],
+            [238, 211],
+            [252, 198],
+            [250, 177],
+            [266, 168],
+          ],
+          [
+            [138, 221],
+            [157, 237],
+            [181, 229],
+            [188, 207],
+            [196, 184],
+            [218, 171],
+            [239, 184],
+            [254, 193],
+            [259, 214],
+            [273, 225],
+          ],
+          [
+            [154, 166],
+            [175, 158],
+            [185, 176],
+            [179, 195],
+            [173, 216],
+            [190, 239],
+            [214, 236],
+            [236, 233],
+            [242, 207],
+            [259, 197],
+          ],
+        ];
+        const amount = 5 + Math.random() * 18;
+        const p = templates[index].map(([x, y]) => point(x, y, amount));
+        return `M${p[0][0]} ${p[0][1]} C${p[1][0]} ${p[1][1]} ${p[2][0]} ${p[2][1]} ${p[3][0]} ${p[3][1]} C${p[4][0]} ${p[4][1]} ${p[5][0]} ${p[5][1]} ${p[6][0]} ${p[6][1]} C${p[7][0]} ${p[7][1]} ${p[8][0]} ${p[8][1]} ${p[9][0]} ${p[9][1]}`;
+      }
+
+      function mutateEmergence() {
+        let seed = Math.floor(Math.random() * 997) + 1;
+        if (seed === lastSeed) seed += 1;
+        lastSeed = seed;
+
+        turbulence.setAttribute("seed", String(seed));
+        turbulence.setAttribute("baseFrequency", (0.018 + Math.random() * 0.07).toFixed(3));
+        displacement.setAttribute("scale", (4 + Math.random() * 24).toFixed(1));
+        center.setAttribute("d", randomCenterPath());
+        strings.forEach((line, index) => line.setAttribute("d", randomStringPath(index)));
+      }
+
+      function triggerEmergence() {
+        clearTimeout(emergenceTimer);
+        cloud.dataset.transitioning = "true";
+        emergenceTimer = setTimeout(() => {
+          mutateEmergence();
+          requestAnimationFrame(() => {
+            cloud.dataset.transitioning = "false";
+          });
+        }, 180);
+      }
+
+      toggle.addEventListener("click", () => setPanel(panel.dataset.open !== "true"));
+      closePanel.addEventListener("click", () => setPanel(false));
+
+      document.querySelectorAll("[data-color]").forEach((input) => {
+        input.addEventListener("input", () => {
+          channels[input.dataset.channel][input.dataset.color] = Number(input.value);
+          syncChannel(input.dataset.channel);
+          document
+            .querySelectorAll(`[data-channel="${input.dataset.channel}"][data-color]`)
+            .forEach(syncKnob);
+          triggerEmergence();
+        });
+        syncKnob(input);
+      });
+
+      document.querySelectorAll("[data-opacity]").forEach((input) => {
+        input.addEventListener("input", () => {
+          channels[input.dataset.channel].opacity = Number(input.value);
+          syncChannel(input.dataset.channel);
+          triggerEmergence();
+        });
+      });
+
+      document.querySelector("[data-master]").addEventListener("input", (event) => {
+        const value = Number(event.target.value);
+        root.style.setProperty("--master-strength", String(value / 100));
+        document.querySelector('[data-readout="master"]').textContent = `${value}%`;
+        triggerEmergence();
+      });
+
+      Object.keys(channels).forEach(syncChannel);
+    </script>
   </body>
 </html>

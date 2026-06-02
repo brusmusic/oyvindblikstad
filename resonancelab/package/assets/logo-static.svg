@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">ReSonance Lab mark</title>
+  <desc id="desc">Three overlapping circular fields create a soft shared center.</desc>
+  <defs>
+    <filter id="soft-field" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+    <filter id="emergence-soften" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.8"/>
+    </filter>
+    <filter id="irrational-field" x="-45%" y="-45%" width="190%" height="190%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.032" numOctaves="3" seed="17" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="11"/>
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+    <clipPath id="clip-left">
+      <circle cx="166" cy="212" r="134"/>
+    </clipPath>
+    <clipPath id="clip-right">
+      <circle cx="234" cy="212" r="134"/>
+    </clipPath>
+    <clipPath id="clip-top">
+      <circle cx="200" cy="154" r="134"/>
+    </clipPath>
+    <radialGradient id="center-glow" cx="50%" cy="50%" r="58%">
+      <stop offset="0%" stop-color="#fbfff7" stop-opacity="0.96"/>
+      <stop offset="38%" stop-color="#dceee3" stop-opacity="0.82"/>
+      <stop offset="100%" stop-color="#cddfd4" stop-opacity="0.18"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" rx="0" fill="#f7f6f1"/>
+  <g opacity="0.56" filter="url(#soft-field)" style="mix-blend-mode:multiply">
+    <circle cx="166" cy="212" r="134" fill="#4f8f7b"/>
+    <circle cx="234" cy="212" r="134" fill="#486f9c"/>
+    <circle cx="200" cy="154" r="134" fill="#b18458"/>
+  </g>
+  <g fill="none" stroke-width="1.4" style="mix-blend-mode:multiply">
+    <g stroke="#4f8f7b">
+      <circle cx="166" cy="212" r="58" opacity="0.2"/>
+      <circle cx="166" cy="212" r="91" opacity="0.24"/>
+      <circle cx="166" cy="212" r="122" opacity="0.18"/>
+    </g>
+    <g stroke="#486f9c">
+      <circle cx="234" cy="212" r="58" opacity="0.2"/>
+      <circle cx="234" cy="212" r="91" opacity="0.24"/>
+      <circle cx="234" cy="212" r="122" opacity="0.18"/>
+    </g>
+    <g stroke="#b18458">
+      <circle cx="200" cy="154" r="58" opacity="0.2"/>
+      <circle cx="200" cy="154" r="91" opacity="0.24"/>
+      <circle cx="200" cy="154" r="122" opacity="0.18"/>
+    </g>
+  </g>
+  <g clip-path="url(#clip-left)">
+    <g clip-path="url(#clip-right)">
+      <g clip-path="url(#clip-top)">
+        <path
+          d="M158 149 C178 129 208 136 232 145 C260 156 278 184 272 212 C265 242 237 264 207 272 C178 279 144 265 130 239 C116 213 122 180 143 162 C149 157 153 153 158 149Z"
+          fill="url(#center-glow)"
+          opacity="0.94"
+          filter="url(#irrational-field)"
+        />
+        <g fill="none" stroke="rgba(247,246,241,0.34)" stroke-linecap="round" stroke-width="1.4">
+          <path d="M143 192 C158 176 178 184 190 203 C202 222 222 226 238 211 C252 198 250 177 266 168"/>
+          <path d="M138 221 C157 237 181 229 188 207 C196 184 218 171 239 184 C254 193 259 214 273 225"/>
+          <path d="M154 166 C175 158 185 176 179 195 C173 216 190 239 214 236 C236 233 242 207 259 197"/>
+        </g>
+        <circle cx="200" cy="200" r="47" fill="none" stroke="rgba(247,246,241,0.88)" stroke-width="1.6"/>
+      </g>
+    </g>
+  </g>
+  <g fill="none" stroke="rgba(23,32,29,0.2)" stroke-width="1.2">
+    <circle cx="166" cy="212" r="134"/>
+    <circle cx="234" cy="212" r="134"/>
+    <circle cx="200" cy="154" r="134"/>
+  </g>
+</svg>

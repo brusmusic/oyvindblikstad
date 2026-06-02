@@ -1,0 +1,17 @@
+{
+  "name": "@resonance-lab/logo",
+  "version": "1.0.0",
+  "description": "ReSonance Lab animated SVG logo, static mark, and favicon.",
+  "files": [
+    "assets",
+    "examples",
+    "README.md"
+  ],
+  "keywords": [
+    "resonance",
+    "logo",
+    "svg",
+    "favicon"
+  ],
+  "license": "UNLICENSED"
+}
