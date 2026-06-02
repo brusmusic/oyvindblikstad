@@ -5,7 +5,7 @@ const books = [
     series: "Series 01",
     title: "Why Can't Everyone Just Be Friends?",
     subtitle: "The Line That Moved",
-    path: "books/children/01_why_cant_everyone_just_be_friends.md",
+    path: "../../bokserie/reworld_canon_2026_english/children/01_why_cant_everyone_just_be_friends.md",
     teaser: "A crack in the schoolyard becomes an invisible border. Some children get to play. Others wait to be invited.",
   },
   {
@@ -14,7 +14,7 @@ const books = [
     series: "Series 02",
     title: "Why Can't We Build It Together?",
     subtitle: "The Open Hut",
-    path: "books/children/02_why_cant_we_build_it_together.md",
+    path: "../../bokserie/reworld_canon_2026_english/children/02_why_cant_we_build_it_together.md",
     teaser: "A class is given a pile of wood and asked to build something together. The loudest voices shape the first plan.",
   },
   {
@@ -23,7 +23,7 @@ const books = [
     series: "Series 03",
     title: "Why Do We Need Each Other?",
     subtitle: "The Air in the Room",
-    path: "books/children/03_why_do_we_need_each_other.md",
+    path: "../../bokserie/reworld_canon_2026_english/children/03_why_do_we_need_each_other.md",
     teaser: "A glass of water spills when the lights go out. The first question is not who did it, but what is needed now.",
   },
   {
@@ -32,7 +32,7 @@ const books = [
     series: "Series 01",
     title: "Why Can't Everyone Just Be Friends?",
     subtitle: "Shadows in the Feed",
-    path: "books/youth/01_why_cant_everyone_just_be_friends.md",
+    path: "../../bokserie/reworld_canon_2026_english/youth/01_why_cant_everyone_just_be_friends.md",
     teaser: "A seven-second clip turns Samir into a villain before anyone asks what happened before the camera started.",
   },
   {
@@ -41,7 +41,7 @@ const books = [
     series: "Series 02",
     title: "Why Can't We Build It Together?",
     subtitle: "The City in the Server Room",
-    path: "books/youth/02_why_cant_we_build_it_together.md",
+    path: "../../bokserie/reworld_canon_2026_english/youth/02_why_cant_we_build_it_together.md",
     teaser: "A youth group designs a digital city for everyone, until the first testers reveal who was never imagined.",
   },
   {
@@ -50,7 +50,7 @@ const books = [
     series: "Series 03",
     title: "Why Do We Need Each Other?",
     subtitle: "Shared Air",
-    path: "books/youth/03_why_do_we_need_each_other.md",
+    path: "../../bokserie/reworld_canon_2026_english/youth/03_why_do_we_need_each_other.md",
     teaser: "An air-quality warning turns breathing into a shared lesson about risk, dependence, and invisible vulnerability.",
   },
   {
@@ -59,7 +59,7 @@ const books = [
     series: "Series 01",
     title: "Why Can't Everyone Just Be Friends?",
     subtitle: "The Room That Paid for Silence",
-    path: "books/adult/01_why_cant_everyone_just_be_friends.md",
+    path: "../../bokserie/reworld_canon_2026_english/adult/01_why_cant_everyone_just_be_friends.md",
     teaser: "A child's question enters an adult room full of borders, institutions, humiliation, profit, and fear.",
   },
   {
@@ -68,7 +68,7 @@ const books = [
     series: "Series 02",
     title: "Why Can't We Build It Together?",
     subtitle: "The Foundation Room",
-    path: "books/adult/02_why_cant_we_build_it_together.md",
+    path: "../../bokserie/reworld_canon_2026_english/adult/02_why_cant_we_build_it_together.md",
     teaser: "A city plans a public house for everyone, but the process reveals who was invited after the foundations were drawn.",
   },
   {
@@ -77,10 +77,25 @@ const books = [
     series: "Series 03",
     title: "Why Do We Need Each Other?",
     subtitle: "The Shared Body",
-    path: "books/adult/03_why_do_we_need_each_other.md",
+    path: "../../bokserie/reworld_canon_2026_english/adult/03_why_do_we_need_each_other.md",
     teaser: "A city crisis exposes the systems people mistake for normal life: water, heat, care, transport, air, and trust.",
   },
 ];
+
+const seriesAnchors = {
+  "Series 01": {
+    src: "images/series-01-line.jpg",
+    alt: "A thin dark line across a gray surface.",
+  },
+  "Series 02": {
+    src: "images/series-02-structure.jpg",
+    alt: "An unfinished wooden structure beneath an open sky.",
+  },
+  "Series 03": {
+    src: "images/series-03-ripples.jpg",
+    alt: "A single drop forming ripples on water.",
+  },
+};
 
 const bookGrid = document.getElementById("bookGrid");
 const reader = document.getElementById("reader");
@@ -98,11 +113,16 @@ function renderBooks(filter = "all") {
   const visible = filter === "all" ? books : books.filter((book) => book.level === filter);
   bookGrid.innerHTML = visible.map((book) => `
     <article class="book-card" data-level="${book.level}">
-      <div>
+      <div class="book-card-layout">
+        <div class="book-strip">
+          <img src="${seriesAnchors[book.series].src}" alt="${seriesAnchors[book.series].alt}" loading="lazy">
+        </div>
+        <div class="book-copy">
         <p class="book-meta">${book.series} / ${titleCase(book.level)}</p>
         <h3>${book.title}</h3>
         <p><strong>${book.subtitle}</strong></p>
         <p>${book.teaser}</p>
+        </div>
       </div>
       <button type="button" data-open-book="${book.id}">Open book</button>
     </article>
@@ -184,7 +204,13 @@ async function openBook(id) {
     const response = await fetch(book.path);
     if (!response.ok) throw new Error(`Could not load ${book.path}`);
     const markdown = await response.text();
-    readerBody.innerHTML = markdownToHtml(markdown);
+    const anchor = seriesAnchors[book.series];
+    readerBody.innerHTML = `
+      <div class="reader-art">
+        <img src="${anchor.src}" alt="${anchor.alt}" loading="lazy">
+      </div>
+      ${markdownToHtml(markdown)}
+    `;
     readerBody.scrollTop = 0;
   } catch (error) {
     readerBody.innerHTML = `<p>Could not load this book. Start the local server from the project folder and try again.</p><p>${escapeHtml(error.message)}</p>`;

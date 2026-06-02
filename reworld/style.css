@@ -377,6 +377,43 @@ p {
   background: var(--green);
 }
 
+.book-card-layout {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.book-strip {
+  position: relative;
+  overflow: hidden;
+  min-height: 238px;
+  border-radius: 4px;
+  background: var(--wash);
+}
+
+.book-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(251,250,247,0.1), rgba(22,24,22,0.22));
+  pointer-events: none;
+}
+
+.book-strip img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(0.96);
+  opacity: 0;
+  animation: image-reveal 900ms ease forwards;
+}
+
+.book-copy {
+  min-width: 0;
+}
+
 .book-card[data-level="youth"]::before {
   background: var(--blue);
 }
@@ -470,6 +507,25 @@ p {
   line-height: 1.78;
 }
 
+.reader-art {
+  width: min(760px, 100%);
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  margin: 0 0 clamp(34px, 6vw, 68px);
+  border-radius: 6px;
+  background: var(--wash);
+}
+
+.reader-art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.84) contrast(0.97);
+  opacity: 0;
+  animation: image-reveal 1100ms ease forwards;
+}
+
 .reader-body h1,
 .reader-body h2,
 .reader-body h3 {
@@ -511,6 +567,18 @@ body.reader-open {
   overflow: hidden;
 }
 
+@keyframes image-reveal {
+  from {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+
+  to {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 900px) {
   .topbar,
   .section-head,
@@ -538,6 +606,15 @@ body.reader-open {
 
   .book-card {
     min-height: 300px;
+  }
+
+  .book-card-layout {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .book-strip {
+    min-height: 220px;
   }
 
   .reader-panel {
