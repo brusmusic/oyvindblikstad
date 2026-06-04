@@ -316,7 +316,7 @@ p {
 
 .series-map {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   margin: 34px 0 0;
   border: 1px solid var(--line);
@@ -446,6 +446,10 @@ p {
   background: var(--clay);
 }
 
+.book-card[data-level="intro"]::before {
+  background: var(--gold);
+}
+
 .book-card h3 {
   margin-top: 12px;
   font-family: Georgia, "Times New Roman", serif;
@@ -490,9 +494,9 @@ p {
 }
 
 .reader-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) minmax(300px, 460px) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 18px 22px;
   border-bottom: 1px solid var(--line);
@@ -512,9 +516,55 @@ p {
   text-transform: uppercase;
 }
 
+.reader-audio-mount {
+  min-width: 0;
+}
+
+.audio-player {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(239, 238, 232, 0.52);
+  padding: 9px 10px;
+}
+
+.audio-player audio {
+  display: none;
+}
+
+.audio-toggle {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.audio-toggle:hover {
+  background: var(--wash);
+}
+
+.audio-seek {
+  width: 100%;
+  accent-color: var(--green);
+}
+
+.audio-time {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .reader-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
 }
 
@@ -605,10 +655,18 @@ body.reader-open {
 
 @media (max-width: 900px) {
   .topbar,
-  .section-head,
-  .reader-header {
+  .section-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .reader-header {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .reader-actions {
+    justify-content: flex-start;
   }
 
   .topnav {
@@ -639,6 +697,14 @@ body.reader-open {
 
   .book-strip {
     min-height: 220px;
+  }
+
+  .audio-player {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .audio-time {
+    grid-column: 2;
   }
 
   .reader-panel {
