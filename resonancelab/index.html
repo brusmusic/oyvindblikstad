@@ -310,16 +310,15 @@
 
       .mixer {
         display: grid;
-        grid-template-columns: repeat(2, 74px);
+        grid-template-columns: repeat(3, 104px);
         justify-content: center;
         gap: 10px;
         align-items: stretch;
       }
 
-      .control-strip,
-      .master-strip {
+      .channel-strip {
         min-width: 0;
-        min-height: 214px;
+        min-height: 244px;
         padding: 11px 8px;
         border: 1px solid rgba(23, 32, 29, 0.1);
         border-radius: 10px;
@@ -329,16 +328,14 @@
           0 1px 2px rgba(23, 32, 29, 0.06);
       }
 
-      .control-strip,
-      .master-strip {
+      .channel-strip {
         display: grid;
         grid-template-rows: auto 1fr;
         justify-items: center;
         overflow: hidden;
       }
 
-      .control-name,
-      .master-name {
+      .channel-name {
         display: block;
         margin-bottom: 10px;
         color: rgba(23, 32, 29, 0.72);
@@ -347,7 +344,29 @@
         text-align: center;
       }
 
-      .hue-slider {
+      .channel-controls {
+        display: grid;
+        grid-template-columns: repeat(2, 42px);
+        gap: 8px;
+        align-items: end;
+        justify-content: center;
+      }
+
+      .control-stack {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+      }
+
+      .control-label {
+        color: rgba(23, 32, 29, 0.58);
+        font-size: 0.64rem;
+        font-weight: 560;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .color-slider {
         width: 28px;
         height: 118px;
         margin: 0;
@@ -368,7 +387,7 @@
         cursor: pointer;
       }
 
-      .hue-slider::-webkit-slider-thumb {
+      .color-slider::-webkit-slider-thumb {
         width: 20px;
         height: 10px;
         border: 0;
@@ -377,7 +396,7 @@
         background: var(--ink);
       }
 
-      .hue-slider::-moz-range-thumb {
+      .color-slider::-moz-range-thumb {
         width: 20px;
         height: 10px;
         border: 0;
@@ -405,12 +424,6 @@
         cursor: pointer;
       }
 
-      .control-strip .fader-wrap,
-      .master-strip .fader-wrap {
-        margin-top: 0;
-        align-self: end;
-      }
-
       .value-readout {
         color: rgba(23, 32, 29, 0.55);
         font-variant-numeric: tabular-nums;
@@ -419,14 +432,14 @@
 
       @media (max-width: 720px) {
         .mixer {
-          grid-template-columns: repeat(2, 74px);
-          justify-content: center;
+          grid-template-columns: repeat(3, 104px);
+          justify-content: start;
+          overflow-x: auto;
           padding-bottom: 4px;
         }
 
-        .control-strip,
-        .master-strip {
-          min-height: 214px;
+        .channel-strip {
+          min-height: 244px;
         }
 
         .fader-wrap {
@@ -679,20 +692,52 @@
             </div>
 
             <div class="mixer">
-              <section class="control-strip">
-                <span class="control-name">Hue</span>
-                <label class="fader-wrap">
-                  <input class="hue-slider" type="range" min="0" max="360" value="160" data-hue="true" />
-                  <span class="value-readout" data-readout="hue">160°</span>
-                </label>
+              <section class="channel-strip">
+                <span class="channel-name">Circle 1</span>
+                <div class="channel-controls">
+                  <label class="control-stack">
+                    <span class="control-label">Color</span>
+                    <input class="color-slider" type="range" min="0" max="360" value="160" data-channel="a" data-color="true" />
+                    <span class="value-readout" data-readout="a-color">160°</span>
+                  </label>
+                  <label class="control-stack">
+                    <span class="control-label">Opacity</span>
+                    <input class="fader" type="range" min="0" max="100" value="55" data-channel="a" data-opacity="true" />
+                    <span class="value-readout" data-readout="a-opacity">55%</span>
+                  </label>
+                </div>
               </section>
 
-              <section class="master-strip">
-                <span class="master-name">Opacity</span>
-                <label class="fader-wrap">
-                  <input class="fader" type="range" min="0" max="100" value="100" data-master="true" />
-                  <span class="value-readout" data-readout="master">100%</span>
-                </label>
+              <section class="channel-strip">
+                <span class="channel-name">Circle 2</span>
+                <div class="channel-controls">
+                  <label class="control-stack">
+                    <span class="control-label">Color</span>
+                    <input class="color-slider" type="range" min="0" max="360" value="214" data-channel="b" data-color="true" />
+                    <span class="value-readout" data-readout="b-color">214°</span>
+                  </label>
+                  <label class="control-stack">
+                    <span class="control-label">Opacity</span>
+                    <input class="fader" type="range" min="0" max="100" value="55" data-channel="b" data-opacity="true" />
+                    <span class="value-readout" data-readout="b-opacity">55%</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="channel-strip">
+                <span class="channel-name">Circle 3</span>
+                <div class="channel-controls">
+                  <label class="control-stack">
+                    <span class="control-label">Color</span>
+                    <input class="color-slider" type="range" min="0" max="360" value="32" data-channel="c" data-color="true" />
+                    <span class="value-readout" data-readout="c-color">32°</span>
+                  </label>
+                  <label class="control-stack">
+                    <span class="control-label">Opacity</span>
+                    <input class="fader" type="range" min="0" max="100" value="55" data-channel="c" data-opacity="true" />
+                    <span class="value-readout" data-readout="c-opacity">55%</span>
+                  </label>
+                </div>
               </section>
             </div>
           </aside>
@@ -712,8 +757,11 @@
       const cloud = document.querySelector(".emergence-cloud");
       const center = document.querySelector(".shared-center");
       const strings = document.querySelectorAll(".irrational-line");
-      const hueInput = document.querySelector("[data-hue]");
-      const hueReadout = document.querySelector('[data-readout="hue"]');
+      const channels = {
+        a: { hue: 160, saturation: 34, lightness: 44, opacity: 55 },
+        b: { hue: 214, saturation: 32, lightness: 46, opacity: 55 },
+        c: { hue: 32, saturation: 38, lightness: 52, opacity: 55 },
+      };
       let lastSeed = 17;
       let emergenceTimer;
 
@@ -722,12 +770,17 @@
         toggle.setAttribute("aria-expanded", String(open));
       }
 
-      function syncHue(value) {
-        const hue = Number(value);
-        root.style.setProperty("--field-a", `hsl(${hue} 34% 44%)`);
-        root.style.setProperty("--field-b", `hsl(${(hue + 54) % 360} 32% 46%)`);
-        root.style.setProperty("--field-c", `hsl(${(hue + 232) % 360} 38% 52%)`);
-        hueReadout.textContent = `${hue}°`;
+      function syncChannel(channel) {
+        const value = channels[channel];
+        const opacity = value.opacity / 100;
+        root.style.setProperty(
+          `--field-${channel}`,
+          `hsl(${value.hue} ${value.saturation}% ${value.lightness}%)`
+        );
+        root.style.setProperty(`--field-${channel}-opacity`, String(opacity));
+        root.style.setProperty(`--ring-${channel}-opacity`, String(opacity * 0.5));
+        document.querySelector(`[data-readout="${channel}-color"]`).textContent = `${value.hue}°`;
+        document.querySelector(`[data-readout="${channel}-opacity"]`).textContent = `${value.opacity}%`;
       }
 
       function point(x, y, amount) {
@@ -830,19 +883,23 @@
       toggle.addEventListener("click", () => setPanel(panel.dataset.open !== "true"));
       closePanel.addEventListener("click", () => setPanel(false));
 
-      hueInput.addEventListener("input", (event) => {
-        syncHue(event.target.value);
-        triggerEmergence();
+      document.querySelectorAll("[data-color]").forEach((input) => {
+        input.addEventListener("input", () => {
+          channels[input.dataset.channel].hue = Number(input.value);
+          syncChannel(input.dataset.channel);
+          triggerEmergence();
+        });
       });
 
-      document.querySelector("[data-master]").addEventListener("input", (event) => {
-        const value = Number(event.target.value);
-        root.style.setProperty("--master-strength", String(value / 100));
-        document.querySelector('[data-readout="master"]').textContent = `${value}%`;
-        triggerEmergence();
+      document.querySelectorAll("[data-opacity]").forEach((input) => {
+        input.addEventListener("input", () => {
+          channels[input.dataset.channel].opacity = Number(input.value);
+          syncChannel(input.dataset.channel);
+          triggerEmergence();
+        });
       });
 
-      syncHue(hueInput.value);
+      Object.keys(channels).forEach(syncChannel);
     </script>
   </body>
 </html>
