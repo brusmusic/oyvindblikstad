@@ -136,34 +136,465 @@ const books = [
     },
     teaser: "En voksen tekst om trygghet, makt, skam, reparasjon og hva barn trenger fra voksne som ikke alltid får det til.",
   },
+  {
+    id: "no-blank-question",
+    level: "session",
+    series: "Åpningsbok",
+    title: "Det blanke spørsmålet",
+    subtitle: "En åpen ReWorld Council-sesjon",
+    path: "books/no/det_blank_sporsmalet/det_blank_sporsmalet.md",
+    audio: "audio/no/det_blank_sporsmalet/det_blanke_sporsmalet.mp3",
+    art: {
+      src: "images/no/det_blank_sporsmalet/cover.jpg",
+      alt: "Forsidebilde for Det blanke spørsmålet.",
+    },
+    teaser: "Et blankt spørsmål legges på bordet, og rådet undersøker hva som kan åpne menneskers innsikt før ordene blir for raske.",
+  },
+  {
+    id: "no-love-children",
+    level: "children",
+    series: "Serie 02",
+    title: "Hva er kjærlighet egentlig?",
+    subtitle: "Hjertet som ikke var en emoji",
+    path: "books/no/hva_er_kjaerlighet_egentlig/bok_1_hjertet_som_ikke_var_en_emoji_barn.md",
+    art: {
+      src: "images/no/hva_er_kjaerlighet_egentlig/bok_1_hjertet_som_ikke_var_en_emoji_forside.jpg",
+      alt: "Forsidebilde for barneboken om kjærlighet.",
+    },
+    teaser: "En barnebok om hva kjærlighet er når den ikke bare er et tegn, et ord eller noe man får.",
+  },
+  {
+    id: "no-love-youth",
+    level: "youth",
+    series: "Serie 02",
+    title: "Hva er kjærlighet egentlig?",
+    subtitle: "Ikke eie meg",
+    path: "books/no/hva_er_kjaerlighet_egentlig/bok_2_ikke_eie_meg_ungdom.md",
+    art: {
+      src: "images/no/hva_er_kjaerlighet_egentlig/bok_2_ikke_eie_meg_forside.jpg",
+      alt: "Forsidebilde for ungdomsboken om kjærlighet.",
+    },
+    teaser: "En ungdomsbok om kjærlighet, frihet, grenser og forskjellen på nærhet og eierskap.",
+  },
+  {
+    id: "no-love-adult",
+    level: "adult",
+    series: "Serie 02",
+    title: "Hva er kjærlighet egentlig?",
+    subtitle: "Kjærlighet som ansvar",
+    path: "books/no/hva_er_kjaerlighet_egentlig/bok_3_kjaerlighet_som_ansvar_voksne.md",
+    art: {
+      src: "images/no/hva_er_kjaerlighet_egentlig/bok_3_kjaerlighet_som_ansvar_forside.jpg",
+      alt: "Forsidebilde for voksenboken om kjærlighet.",
+    },
+    teaser: "En voksentekst om kjærlighet som handling, ansvar, frihet og sannhet uten eierskap.",
+  },
+  {
+    id: "no-meaning-children",
+    level: "children",
+    series: "Serie 03",
+    title: "Hva er meningen med livet?",
+    subtitle: "Stjernen i lomma",
+    path: "books/no/hva_er_meningen_med_livet/bok_1_stjernen_i_lomma_barn.md",
+    teaser: "En barnebok om mening som noe lite man kan bære, dele og følge.",
+  },
+  {
+    id: "no-meaning-youth",
+    level: "youth",
+    series: "Serie 03",
+    title: "Hva er meningen med livet?",
+    subtitle: "Når fremtiden blir stille",
+    path: "books/no/hva_er_meningen_med_livet/bok_2_nar_fremtiden_blir_stille_ungdom.md",
+    teaser: "En ungdomsbok om stillhet, fremtid, press og hvordan mening kan finnes uten ferdig fasit.",
+  },
+  {
+    id: "no-meaning-adult",
+    level: "adult",
+    series: "Serie 03",
+    title: "Hva er meningen med livet?",
+    subtitle: "Ikke en fasit, men en retning",
+    path: "books/no/hva_er_meningen_med_livet/bok_3_ikke_en_fasit_men_en_retning_voksne.md",
+    teaser: "En voksentekst om mening som retning, ansvar og et liv som ikke kan reduseres til prestasjon.",
+  },
+  {
+    id: "no-safe-self-children",
+    level: "children",
+    series: "Serie 04",
+    title: "Hvordan bli trygg i seg selv?",
+    subtitle: "Den lille stemmen",
+    path: "books/no/hvordan_bli_trygg_i_seg_selv/bok_1_den_lille_stemmen_barn.md",
+    art: {
+      src: "images/no/hvordan_bli_trygg_i_seg_selv/bok_1_den_lille_stemmen_forside.jpg",
+      alt: "Forsidebilde for barneboken om trygghet i seg selv.",
+    },
+    teaser: "En barnebok om den lille stemmen inni oss, og hvordan trygghet kan øves frem.",
+  },
+  {
+    id: "no-safe-self-youth",
+    level: "youth",
+    series: "Serie 04",
+    title: "Hvordan bli trygg i seg selv?",
+    subtitle: "Ansiktet i speilet",
+    path: "books/no/hvordan_bli_trygg_i_seg_selv/bok_2_ansiktet_i_speilet_ungdom.md",
+    art: {
+      src: "images/no/hvordan_bli_trygg_i_seg_selv/bok_2_ansiktet_i_speilet_forside.jpg",
+      alt: "Forsidebilde for ungdomsboken om trygghet i seg selv.",
+    },
+    teaser: "En ungdomsbok om speil, blikk, uro og å bygge et sted inni seg selv som tåler verden.",
+  },
+  {
+    id: "no-safe-self-adult",
+    level: "adult",
+    series: "Serie 04",
+    title: "Hvordan bli trygg i seg selv?",
+    subtitle: "Et hjem i seg selv",
+    path: "books/no/hvordan_bli_trygg_i_seg_selv/bok_3_et_hjem_i_seg_selv_voksne.md",
+    art: {
+      src: "images/no/hvordan_bli_trygg_i_seg_selv/bok_3_et_hjem_i_seg_selv_forside.jpg",
+      alt: "Forsidebilde for voksenboken om trygghet i seg selv.",
+    },
+    teaser: "En voksentekst om indre trygghet, erfaring, grenser og et hjem i seg selv.",
+  },
+  {
+    id: "no-anxiety-children",
+    level: "children",
+    series: "Serie 05",
+    title: "Hva er angst og depresjon?",
+    subtitle: "Monsteret og teppet",
+    path: "books/no/hva_er_angst_og_depresjon/bok_1_monsteret_og_teppet_barn.md",
+    art: {
+      src: "images/no/hva_er_angst_og_depresjon/bok_1_monsteret_og_teppet_forside.jpg",
+      alt: "Forsidebilde for barneboken om angst og depresjon.",
+    },
+    teaser: "En barnebok om redsel, mørke, språk og voksne som ikke later som alt er enkelt.",
+  },
+  {
+    id: "no-anxiety-youth",
+    level: "youth",
+    series: "Serie 05",
+    title: "Hva er angst og depresjon?",
+    subtitle: "Alarm og tåke",
+    path: "books/no/hva_er_angst_og_depresjon/bok_2_alarm_og_taake_ungdom.md",
+    art: {
+      src: "images/no/hva_er_angst_og_depresjon/bok_2_alarm_og_taake_forside.jpg",
+      alt: "Forsidebilde for ungdomsboken om angst og depresjon.",
+    },
+    teaser: "En ungdomsbok om alarm i kroppen, tåke i hodet og hvorfor hjelp ikke er svakhet.",
+  },
+  {
+    id: "no-anxiety-adult",
+    level: "adult",
+    series: "Serie 05",
+    title: "Hva er angst og depresjon?",
+    subtitle: "Når alarm og mørke tar plass",
+    path: "books/no/hva_er_angst_og_depresjon/bok_3_nar_alarm_og_moerke_tar_plass_voksne.md",
+    art: {
+      src: "images/no/hva_er_angst_og_depresjon/bok_3_nar_alarm_og_moerke_tar_plass_forside.jpg",
+      alt: "Forsidebilde for voksenboken om angst og depresjon.",
+    },
+    teaser: "En voksentekst om lidelse, kropp, skam, hjelp og samfunnets språk for det vonde.",
+  },
+  {
+    id: "no-selfworth-children",
+    level: "children",
+    series: "Serie 06",
+    title: "Hva er selvtillit og selvfølelse?",
+    subtitle: "To stemmer i magen",
+    path: "books/no/hva_er_selvtillit_og_selvfoelelse/bok_1_to_stemmer_i_magen_barn.md",
+    art: {
+      src: "images/no/hva_er_selvtillit_og_selvfoelelse/bok_1_to_stemmer_i_magen_forside.jpg",
+      alt: "Forsidebilde for barneboken om selvtillit og selvfølelse.",
+    },
+    teaser: "En barnebok om to stemmer: den som tør noe, og den som vet at du er verdifull uansett.",
+  },
+  {
+    id: "no-selfworth-youth",
+    level: "youth",
+    series: "Serie 06",
+    title: "Hva er selvtillit og selvfølelse?",
+    subtitle: "Ikke bare flink",
+    path: "books/no/hva_er_selvtillit_og_selvfoelelse/bok_2_ikke_bare_flink_ungdom.md",
+    art: {
+      src: "images/no/hva_er_selvtillit_og_selvfoelelse/bok_2_ikke_bare_flink_forside.jpg",
+      alt: "Forsidebilde for ungdomsboken om selvtillit og selvfølelse.",
+    },
+    teaser: "En ungdomsbok om prestasjon, verdi og å være mer enn det man får til.",
+  },
+  {
+    id: "no-selfworth-adult",
+    level: "adult",
+    series: "Serie 06",
+    title: "Hva er selvtillit og selvfølelse?",
+    subtitle: "Verdi uten bevis",
+    path: "books/no/hva_er_selvtillit_og_selvfoelelse/bok_3_verdi_uten_bevis_voksne.md",
+    art: {
+      src: "images/no/hva_er_selvtillit_og_selvfoelelse/bok_3_verdi_uten_bevis_forside.jpg",
+      alt: "Forsidebilde for voksenboken om selvtillit og selvfølelse.",
+    },
+    teaser: "En voksentekst om forskjellen på mestring og menneskeverd.",
+  },
+  {
+    id: "no-selfimage-children",
+    level: "children",
+    series: "Serie 07",
+    title: "Hvordan styrker jeg mitt selvbilde?",
+    subtitle: "Speilet som lurte",
+    path: "books/no/hvordan_styrker_jeg_mitt_selvbilde/bok_1_speilet_som_lurte_barn.md",
+    art: {
+      src: "images/no/hvordan_styrker_jeg_mitt_selvbilde/bok_1_speilet_som_lurte_forside.jpg",
+      alt: "Forsidebilde for barneboken om selvbilde.",
+    },
+    teaser: "En barnebok om speil, sammenligning og å lære at et bilde ikke er hele sannheten.",
+  },
+  {
+    id: "no-selfimage-youth",
+    level: "youth",
+    series: "Serie 07",
+    title: "Hvordan styrker jeg mitt selvbilde?",
+    subtitle: "Filteret",
+    path: "books/no/hvordan_styrker_jeg_mitt_selvbilde/bok_2_filteret_ungdom.md",
+    art: {
+      src: "images/no/hvordan_styrker_jeg_mitt_selvbilde/bok_2_filteret_forside.jpg",
+      alt: "Forsidebilde for ungdomsboken om selvbilde.",
+    },
+    teaser: "En ungdomsbok om filter, blikk, skam og et sannere bilde av seg selv.",
+  },
+  {
+    id: "no-selfimage-adult",
+    level: "adult",
+    series: "Serie 07",
+    title: "Hvordan styrker jeg mitt selvbilde?",
+    subtitle: "Et sannere bilde",
+    path: "books/no/hvordan_styrker_jeg_mitt_selvbilde/bok_3_et_sannere_bilde_voksne.md",
+    art: {
+      src: "images/no/hvordan_styrker_jeg_mitt_selvbilde/bok_3_et_sannere_bilde_forside.jpg",
+      alt: "Forsidebilde for voksenboken om selvbilde.",
+    },
+    teaser: "En voksentekst om identitet, speiling, kropp, minne og å tåle å se seg selv mer sant.",
+  },
+  {
+    id: "no-canon-friends",
+    level: "children",
+    series: "Serie 08",
+    title: "ReWorld barnebøker 2026",
+    subtitle: "Hvorfor kan ikke alle bare være venner?",
+    path: "books/no/reworld_canon_2026/01_hvorfor_kan_ikke_alle_bare_vaere_venner.md",
+    teaser: "En norsk barnebok om konflikt, lek, grenser og spørsmålet som virker enkelt helt til voksne må svare.",
+  },
+  {
+    id: "no-canon-build",
+    level: "children",
+    series: "Serie 08",
+    title: "ReWorld barnebøker 2026",
+    subtitle: "Hvorfor kan vi ikke bygge det sammen?",
+    path: "books/no/reworld_canon_2026/02_hvorfor_kan_vi_ikke_bygge_det_sammen.md",
+    teaser: "En norsk barnebok om samarbeid, deltakelse og hvem som får være med før planen er bestemt.",
+  },
+  {
+    id: "no-canon-need",
+    level: "children",
+    series: "Serie 08",
+    title: "ReWorld barnebøker 2026",
+    subtitle: "Hvorfor trenger vi hverandre?",
+    path: "books/no/reworld_canon_2026/03_hvorfor_trenger_vi_hverandre.md",
+    teaser: "En norsk barnebok om avhengighet, omsorg, luft, vann og det vi deler uten å merke det.",
+  },
 ];
 
 const seriesAnchors = {
   "Series 01": {
-    src: "images/series-01-line.jpg",
-    alt: "A thin dark line across a gray surface.",
+    src: "/images/reworld-triptych-cover.jpg",
+    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
   },
   "Series 02": {
-    src: "images/series-02-structure.jpg",
-    alt: "An unfinished wooden structure beneath an open sky.",
+    src: "/images/reworld-triptych-cover.jpg",
+    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
   },
   "Series 03": {
-    src: "images/series-03-ripples.jpg",
-    alt: "A single drop forming ripples on water.",
+    src: "/images/reworld-triptych-cover.jpg",
+    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
   },
   "Series 04": {
     src: "images/parenting/00_intro.jpg",
     alt: "A quiet symbolic image for the question of good parenting.",
   },
+  "no-blank": {
+    src: "images/no/det_blank_sporsmalet/cover.jpg",
+    alt: "Forsidebilde for Det blanke spørsmålet.",
+  },
+  "no-love": {
+    src: "images/no/hva_er_kjaerlighet_egentlig/hva_er_kjaerlighet_egentlig_inngangsbilde.jpg",
+    alt: "Inngangsbilde for bokserien Hva er kjærlighet egentlig.",
+  },
+  "no-meaning": {
+    src: "images/series-03-ripples.jpg",
+    alt: "Et symbolsk bilde av ringer i vann.",
+  },
+  "no-safe-self": {
+    src: "images/no/hvordan_bli_trygg_i_seg_selv/hvordan_bli_trygg_i_seg_selv_inngangsbilde.jpg",
+    alt: "Inngangsbilde for bokserien Hvordan bli trygg i seg selv.",
+  },
+  "no-anxiety": {
+    src: "images/no/hva_er_angst_og_depresjon/hva_er_angst_og_depresjon_inngangsbilde.jpg",
+    alt: "Inngangsbilde for bokserien Hva er angst og depresjon.",
+  },
+  "no-selfworth": {
+    src: "images/no/hva_er_selvtillit_og_selvfoelelse/hva_er_selvtillit_og_selvfoelelse_inngangsbilde.jpg",
+    alt: "Inngangsbilde for bokserien Hva er selvtillit og selvfølelse.",
+  },
+  "no-selfimage": {
+    src: "images/no/hvordan_styrker_jeg_mitt_selvbilde/hvordan_styrker_jeg_mitt_selvbilde_inngangsbilde.jpg",
+    alt: "Inngangsbilde for bokserien Hvordan styrker jeg mitt selvbilde.",
+  },
 };
 
+const seriesCatalog = [
+  {
+    id: "series-01",
+    locale: "en",
+    series: "Series 01",
+    title: "Why Can't Everyone Just Be Friends?",
+    movement: "Schoolyard -> feed -> civilization.",
+    teaser: "Conflict, dignity, humiliation, power, dehumanization, and the possibility of peace.",
+    bookIds: ["children-01", "youth-01", "adult-01"],
+  },
+  {
+    id: "series-02",
+    locale: "en",
+    series: "Series 02",
+    title: "Why Can't We Build It Together?",
+    movement: "Hut -> digital city -> public house.",
+    teaser: "Participation, design, institutions, access, and the difference between helping and shaping.",
+    bookIds: ["children-02", "youth-02", "adult-02"],
+  },
+  {
+    id: "series-03",
+    locale: "en",
+    series: "Series 03",
+    title: "Why Do We Need Each Other?",
+    movement: "Classroom -> shared air -> shared body.",
+    teaser: "Dependence, care, invisible labor, ecology, infrastructure, and shared consequences.",
+    bookIds: ["children-03", "youth-03", "adult-03"],
+  },
+  {
+    id: "no-blank",
+    locale: "no",
+    series: "Åpningsbok",
+    anchor: "no-blank",
+    title: "Det blanke spørsmålet",
+    movement: "Stillhet -> rådsmøte -> ett sant steg.",
+    teaser: "Et åpent spørsmål til rådet, med lydbok, der tomrommet ikke fylles for raskt.",
+    bookIds: ["no-blank-question"],
+  },
+  {
+    id: "series-04",
+    locale: "no",
+    series: "Serie 01",
+    anchor: "Series 04",
+    title: "Hva er god barneoppdragelse?",
+    movement: "Introduksjon -> barn -> ungdom -> voksne.",
+    teaser: "Trygghet, kontakt, grenser, ansvar, reparasjon og gradvis frihet.",
+    bookIds: ["parenting-intro", "parenting-children", "parenting-youth", "parenting-adult"],
+  },
+  {
+    id: "no-love",
+    locale: "no",
+    series: "Serie 02",
+    anchor: "no-love",
+    title: "Hva er kjærlighet egentlig?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "Kjærlighet undersøkt som følelse, frihet, ansvar og grense.",
+    bookIds: ["no-love-children", "no-love-youth", "no-love-adult"],
+  },
+  {
+    id: "no-meaning",
+    locale: "no",
+    series: "Serie 03",
+    anchor: "no-meaning",
+    title: "Hva er meningen med livet?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "Mening undersøkt uten ferdig fasit, men med retning, ansvar og håp.",
+    bookIds: ["no-meaning-children", "no-meaning-youth", "no-meaning-adult"],
+  },
+  {
+    id: "no-safe-self",
+    locale: "no",
+    series: "Serie 04",
+    anchor: "no-safe-self",
+    title: "Hvordan bli trygg i seg selv?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "En serie om indre trygghet, uro, grenser og et hjem i seg selv.",
+    bookIds: ["no-safe-self-children", "no-safe-self-youth", "no-safe-self-adult"],
+  },
+  {
+    id: "no-anxiety",
+    locale: "no",
+    series: "Serie 05",
+    anchor: "no-anxiety",
+    title: "Hva er angst og depresjon?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "En serie om alarm, mørke, kropp, språk, hjelp og menneskeverd.",
+    bookIds: ["no-anxiety-children", "no-anxiety-youth", "no-anxiety-adult"],
+  },
+  {
+    id: "no-selfworth",
+    locale: "no",
+    series: "Serie 06",
+    anchor: "no-selfworth",
+    title: "Hva er selvtillit og selvfølelse?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "En serie om mestring, verdi og forskjellen på hva vi får til og hvem vi er.",
+    bookIds: ["no-selfworth-children", "no-selfworth-youth", "no-selfworth-adult"],
+  },
+  {
+    id: "no-selfimage",
+    locale: "no",
+    series: "Serie 07",
+    anchor: "no-selfimage",
+    title: "Hvordan styrker jeg mitt selvbilde?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "En serie om speil, filter, skam, kropp og et sannere bilde av seg selv.",
+    bookIds: ["no-selfimage-children", "no-selfimage-youth", "no-selfimage-adult"],
+  },
+  {
+    id: "no-canon-children",
+    locale: "no",
+    series: "Serie 08",
+    anchor: "no-meaning",
+    title: "ReWorld barnebøker 2026",
+    movement: "Venner -> bygge sammen -> trenge hverandre.",
+    teaser: "Tre norske barnebøker fra ReWorld-kanonen, samlet som en egen inngang.",
+    bookIds: ["no-canon-friends", "no-canon-build", "no-canon-need"],
+  },
+];
+
 const bookGrid = document.getElementById("bookGrid");
+const seriesChooser = document.getElementById("seriesChooser");
+const seriesChooserTitle = document.getElementById("seriesChooserTitle");
+const seriesChooserKicker = document.getElementById("seriesChooserKicker");
+const seriesChooserText = document.getElementById("seriesChooserText");
+const seriesChoiceGrid = document.getElementById("seriesChoiceGrid");
 const reader = document.getElementById("reader");
 const readerTitle = document.getElementById("readerTitle");
 const readerKicker = document.getElementById("readerKicker");
 const readerBody = document.getElementById("readerBody");
 const readerAudioMount = document.getElementById("readerAudioMount");
 const languagePanel = document.getElementById("language-panel");
+const pageLocale = document.body.dataset.reworldLocale || "en";
+const assetBase = document.body.dataset.assetBase || "";
+const ui = pageLocale === "no"
+  ? {
+      play: "Spill",
+      pause: "Pause",
+      loading: "Laster bok...",
+      loadError: "Kunne ikke laste denne boken. Start lokal server fra prosjektmappen og prøv igjen.",
+    }
+  : {
+      play: "Play",
+      pause: "Pause",
+      loading: "Loading book...",
+      loadError: "Could not load this book. Start the local server from the project folder and try again.",
+    };
 let readerSize = 19;
 let activeAudio = null;
 
@@ -171,21 +602,102 @@ function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function renderBooks(filter = "all") {
+function resolveAsset(path) {
+  if (!path || path.startsWith("/") || path.startsWith("http")) return path;
+  return `${assetBase}${path}`;
+}
+
+function displaySeries(book) {
+  if (pageLocale === "no" && book.series === "Series 04") return "Serie 01";
+  return book.series;
+}
+
+function levelLabel(level) {
+  if (pageLocale !== "no") return titleCase(level);
+  const labels = {
+    intro: "Intro",
+    children: "Barn",
+    youth: "Ungdom",
+    adult: "Voksne",
+    session: "Rådsmøte",
+  };
+  return labels[level] || titleCase(level);
+}
+
+function anchorForBook(book) {
+  if (book.art) return book.art;
+  const seriesEntry = seriesCatalog.find((item) => item.bookIds.includes(book.id));
+  return seriesAnchors[seriesEntry?.anchor || book.series];
+}
+
+function renderSeries() {
+  const visible = seriesCatalog.filter((item) => item.locale === pageLocale);
+  bookGrid.innerHTML = visible.map((item) => {
+    const anchor = seriesAnchors[item.anchor || item.series];
+    return `
+      <article class="series-card">
+        <button class="series-entry" type="button" data-open-series="${item.id}">
+          <span class="series-image">
+            <img src="${resolveAsset(anchor.src)}" alt="${anchor.alt}" loading="lazy">
+          </span>
+          <span class="series-copy">
+            <span class="book-meta">${item.series}</span>
+            <span class="series-title">${item.title}</span>
+            <span class="series-movement">${item.movement}</span>
+            <span class="series-teaser">${item.teaser}</span>
+          </span>
+        </button>
+      </article>
+    `;
+  }).join("");
+}
+
+function openSeries(id) {
+  const item = seriesCatalog.find((entry) => entry.id === id);
+  if (!item) return;
+
+  seriesChooserKicker.textContent = item.series;
+  seriesChooserTitle.textContent = item.title;
+  seriesChooserText.textContent = item.teaser;
+  seriesChoiceGrid.innerHTML = item.bookIds.map((bookId) => {
+    const book = books.find((entry) => entry.id === bookId);
+    const label = levelLabel(book.level);
+    return `
+      <article class="choice-card" data-level="${book.level}">
+        <p class="book-meta">${label}</p>
+        <h3>${book.subtitle}</h3>
+        <p>${book.teaser}</p>
+        <button type="button" data-open-book="${book.id}">${pageLocale === "no" ? "Åpne bok" : "Open book"}</button>
+      </article>
+    `;
+  }).join("");
+
+  seriesChooser.classList.add("is-open");
+  seriesChooser.setAttribute("aria-hidden", "false");
+  document.body.classList.add("chooser-open");
+}
+
+function closeSeriesChooser() {
+  seriesChooser.classList.remove("is-open");
+  seriesChooser.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("chooser-open");
+}
+
+function renderBookCards(filter = "all") {
   const visible = filter === "all" ? books : books.filter((book) => book.level === filter);
   bookGrid.innerHTML = visible.map((book) => {
-    const anchor = book.art || seriesAnchors[book.series];
+    const anchor = anchorForBook(book);
     return `
       <article class="book-card" data-level="${book.level}">
         <div class="book-card-layout">
           <div class="book-strip">
-            <img src="${anchor.src}" alt="${anchor.alt}" loading="lazy">
+            <img src="${resolveAsset(anchor.src)}" alt="${anchor.alt}" loading="lazy">
           </div>
           <div class="book-copy">
-          <p class="book-meta">${book.series} / ${titleCase(book.level)}</p>
-          <h3>${book.title}</h3>
-          <p><strong>${book.subtitle}</strong></p>
-          <p>${book.teaser}</p>
+            <p class="book-meta">${book.series} / ${titleCase(book.level)}</p>
+            <h3>${book.title}</h3>
+            <p><strong>${book.subtitle}</strong></p>
+            <p>${book.teaser}</p>
           </div>
         </div>
         <button type="button" data-open-book="${book.id}">Open book</button>
@@ -287,8 +799,8 @@ function renderAudioPlayer(book) {
 
   readerAudioMount.innerHTML = `
     <div class="audio-player">
-      <audio preload="metadata" src="${book.audio}"></audio>
-      <button class="audio-toggle" type="button" aria-label="Play audiobook">Play</button>
+      <audio preload="metadata" src="${resolveAsset(book.audio)}"></audio>
+      <button class="audio-toggle" type="button" aria-label="${ui.play} audiobook">${ui.play}</button>
       <input class="audio-seek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Audio position">
       <span class="audio-time">0:00 / 0:00</span>
     </div>
@@ -317,13 +829,13 @@ function renderAudioPlayer(book) {
   });
 
   audio.addEventListener("play", () => {
-    toggle.textContent = "Pause";
+    toggle.textContent = ui.pause;
     toggle.setAttribute("aria-label", "Pause audiobook");
   });
 
   audio.addEventListener("pause", () => {
-    toggle.textContent = "Play";
-    toggle.setAttribute("aria-label", "Play audiobook");
+    toggle.textContent = ui.play;
+    toggle.setAttribute("aria-label", `${ui.play} audiobook`);
   });
 
   audio.addEventListener("loadedmetadata", syncTime);
@@ -352,27 +864,27 @@ async function openBook(id) {
   if (!book) return;
 
   readerTitle.textContent = book.title;
-  readerKicker.textContent = `${book.series} / ${titleCase(book.level)} / ${book.subtitle}`;
+  readerKicker.textContent = `${displaySeries(book)} / ${levelLabel(book.level)} / ${book.subtitle}`;
   renderAudioPlayer(book);
-  readerBody.innerHTML = "<p>Loading book...</p>";
+  readerBody.innerHTML = `<p>${ui.loading}</p>`;
   reader.classList.add("is-open");
   reader.setAttribute("aria-hidden", "false");
   document.body.classList.add("reader-open");
 
   try {
-    const response = await fetch(book.path);
+    const response = await fetch(resolveAsset(book.path));
     if (!response.ok) throw new Error(`Could not load ${book.path}`);
     const markdown = await response.text();
-    const anchor = book.art || seriesAnchors[book.series];
+    const anchor = anchorForBook(book);
     readerBody.innerHTML = `
       <div class="reader-art">
-        <img src="${anchor.src}" alt="${anchor.alt}" loading="lazy">
+        <img src="${resolveAsset(anchor.src)}" alt="${anchor.alt}" loading="lazy">
       </div>
       ${markdownToHtml(markdown)}
     `;
     readerBody.scrollTop = 0;
   } catch (error) {
-    readerBody.innerHTML = `<p>Could not load this book. Start the local server from the project folder and try again.</p><p>${escapeHtml(error.message)}</p>`;
+    readerBody.innerHTML = `<p>${ui.loadError}</p><p>${escapeHtml(error.message)}</p>`;
   }
 }
 
@@ -386,7 +898,17 @@ function closeReader() {
 document.addEventListener("click", (event) => {
   const openButton = event.target.closest("[data-open-book]");
   if (openButton) {
+    closeSeriesChooser();
     openBook(openButton.dataset.openBook);
+  }
+
+  const seriesButton = event.target.closest("[data-open-series]");
+  if (seriesButton) {
+    openSeries(seriesButton.dataset.openSeries);
+  }
+
+  if (event.target.closest("[data-close-series]")) {
+    closeSeriesChooser();
   }
 
   if (event.target.closest("[data-close-reader]")) {
@@ -398,7 +920,7 @@ document.addEventListener("click", (event) => {
     event.stopPropagation();
     document.getElementById(panelButton.dataset.panelToggle).classList.toggle("is-open");
   } else if (!event.target.closest(".language-panel")) {
-    languagePanel.classList.remove("is-open");
+    languagePanel?.classList.remove("is-open");
   }
 });
 
@@ -421,6 +943,7 @@ document.querySelectorAll("[data-size]").forEach((button) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeReader();
+    closeSeriesChooser();
   }
 });
 
@@ -489,6 +1012,6 @@ function drawCouncilField() {
   ctx.fillText("Council", centerX, centerY + 9);
 }
 
-renderBooks();
+renderSeries();
 drawCouncilField();
 window.addEventListener("resize", drawCouncilField);

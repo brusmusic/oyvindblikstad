@@ -17,7 +17,7 @@
   <link rel="icon" href="/assets/resonancelab/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-reworld-locale="en" data-asset-base="">
   <header class="topbar">
     <a class="brand" href="#top" aria-label="ReWorld home">
       <span class="brand-mark" aria-hidden="true"></span>
@@ -28,6 +28,7 @@
       <a href="#books">Books</a>
       <a href="#method">Method</a>
       <a href="#canon">Canon</a>
+      <a href="no/">Norwegian</a>
       <button class="nav-button" type="button" data-panel-toggle="language-panel">Translate</button>
     </nav>
   </header>
@@ -53,9 +54,9 @@
       <div class="hero-copy">
         <p class="eyebrow">A book universe for difficult questions</p>
         <h1 id="hero-title">ReWorld Books</h1>
-        <p class="lead">Four questions. Several ages. A council that protects questions from being answered too quickly.</p>
+        <p class="lead">Three questions. Three ages. A council that protects questions from being answered too quickly.</p>
         <div class="hero-actions">
-          <a class="primary-action" href="#books">Enter the books</a>
+          <a class="primary-action" href="#books">Enter the series</a>
           <button class="secondary-action" type="button" data-open-book="children-01">Start with children</button>
         </div>
       </div>
@@ -74,41 +75,11 @@
       <p>English is the native language of the ReWorld universe. The books are not translation layers; they are written to sound as if they were born in English. Norwegian remains useful for drafting and collaboration, but canonical ReWorld material is English whenever possible.</p>
     </section>
 
-    <section class="series-map" aria-label="Series overview">
-      <article>
-        <span>Series 01</span>
-        <h3>Why Can't Everyone Just Be Friends?</h3>
-        <p>Conflict, dignity, humiliation, power, dehumanization, and the possibility of peace.</p>
-      </article>
-      <article>
-        <span>Series 02</span>
-        <h3>Why Can't We Build It Together?</h3>
-        <p>Participation, design, institutions, access, and the difference between helping and shaping.</p>
-      </article>
-      <article>
-        <span>Series 03</span>
-        <h3>Why Do We Need Each Other?</h3>
-        <p>Dependence, care, invisible labor, ecology, infrastructure, and shared consequences.</p>
-      </article>
-      <article>
-        <span>Series 04</span>
-        <h3>Hva er god barneoppdragelse?</h3>
-        <p>Trygghet, kontakt, grenser, ansvar, reparasjon og gradvis frihet.</p>
-      </article>
-    </section>
-
     <section class="books-section" id="books">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Books</p>
-          <h2>Thirteen entry points.</h2>
-        </div>
-        <div class="filters" role="group" aria-label="Book filters">
-          <button class="filter is-active" type="button" data-filter="all">All</button>
-          <button class="filter" type="button" data-filter="intro">Intro</button>
-          <button class="filter" type="button" data-filter="children">Children</button>
-          <button class="filter" type="button" data-filter="youth">Youth</button>
-          <button class="filter" type="button" data-filter="adult">Adult</button>
+          <p class="eyebrow">Book series</p>
+          <h2>Three entry images.</h2>
         </div>
       </div>
       <div class="book-grid" id="bookGrid" aria-live="polite"></div>
@@ -149,6 +120,21 @@
         </div>
       </header>
       <div class="reader-body" id="readerBody"></div>
+    </article>
+  </section>
+
+  <section class="series-chooser" id="seriesChooser" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="seriesChooserTitle">
+    <div class="reader-backdrop" data-close-series></div>
+    <article class="series-panel">
+      <header class="series-panel-header">
+        <div>
+          <p class="reader-kicker" id="seriesChooserKicker"></p>
+          <h2 id="seriesChooserTitle">Series</h2>
+          <p id="seriesChooserText"></p>
+        </div>
+        <button type="button" data-close-series aria-label="Close series chooser">Esc</button>
+      </header>
+      <div class="series-choice-grid" id="seriesChoiceGrid"></div>
     </article>
   </section>
 
