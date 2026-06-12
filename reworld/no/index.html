@@ -1,126 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReMind lydbøker</title>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JHLZQYTV2H"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-JHLZQYTV2H');
-  </script>
-  <meta name="description" content="ReMind på norsk: lydbøker og tekster der vanskelige spørsmål undersøkes av et råd av perspektiver.">
-  <link rel="icon" href="/assets/resonancelab/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReMind er flyttet</title>
+  <meta http-equiv="refresh" content="0; url=/remind/no/">
+  <link rel="canonical" href="https://oyvindblikstad.com/remind/no/">
 </head>
-<body data-reworld-locale="no" data-asset-base="../">
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="ReMind norsk hjem">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span>ReMind / norsk</span>
-    </a>
-    <nav class="topnav" aria-label="Hovednavigasjon">
-      <a href="/">ReSonance Lab</a>
-      <a href="#books">Bøker</a>
-      <a href="#method">Metode</a>
-      <a href="../">English</a>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero" aria-labelledby="hero-title">
-      <canvas id="councilCanvas" aria-hidden="true"></canvas>
-      <div class="hero-copy">
-        <p class="eyebrow">Norske lydbøker og tekster</p>
-        <h1 id="hero-title">ReMind på norsk</h1>
-        <p class="lead">Spørsmål som trenger tid. Bokserier som kan leses. Lydbøker som kan følges mens kroppen får ro.</p>
-        <div class="hero-actions">
-          <a class="primary-action" href="#books">Gå til bokserien</a>
-          <button class="secondary-action" type="button" data-open-book="parenting-intro">Start med intro</button>
-        </div>
-      </div>
-      <div class="hero-meta" aria-label="Prosjektprinsipper">
-        <span>Ingen stemme er konge.</span>
-        <span>Ingen sannhet er et våpen.</span>
-        <span>Ingen vakre ord skal skjule virkelig skade.</span>
-      </div>
-    </section>
-
-    <section class="intro-band" id="canon">
-      <div>
-        <p class="eyebrow">Norsk rom</p>
-        <h2>Her får de norske lydbøkene ligge i fred.</h2>
-      </div>
-      <p>Den engelske ReMind-siden holdes som internasjonalt hovedrom. Denne siden samler norsk innhold, norske manus og innspilte lydbøker. Formen er den samme, men språket og rytmen får være norsk.</p>
-    </section>
-
-    <section class="books-section" id="books">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Bokserie</p>
-          <h2>Norske innganger.</h2>
-        </div>
-      </div>
-      <div class="book-grid" id="bookGrid" aria-live="polite"></div>
-    </section>
-
-    <section class="method" id="method">
-      <div>
-        <p class="eyebrow">Metode</p>
-        <h2>Rådet finnes ikke for å vinne.</h2>
-      </div>
-      <div class="method-text">
-        <p>Rådet finnes for å undersøke et spørsmål fra flere sider samtidig. Barnet er ikke pynt. Barnet kan stille det enkleste spørsmålet, og nettopp derfor det farligste.</p>
-        <p>Kosmosministeren holder rommet åpent, men stanser ikke nødvendige grenser. Målet er ikke fasit. Målet er klarere tenkning.</p>
-      </div>
-    </section>
-
-    <footer class="lab-footer" aria-label="ReSonance Lab">
-      <a href="/" aria-label="Tilbake til ReSonance Lab">
-        <img src="/assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab mark" loading="lazy">
-        <span>Tilbake til ReSonance Lab</span>
-      </a>
-    </footer>
-  </main>
-
-  <section class="reader" id="reader" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
-    <div class="reader-backdrop" data-close-reader></div>
-    <article class="reader-panel">
-      <header class="reader-header">
-        <div>
-          <p class="reader-kicker" id="readerKicker"></p>
-          <h2 id="readerTitle">Bok</h2>
-        </div>
-        <div class="reader-audio-mount" id="readerAudioMount"></div>
-        <div class="reader-actions">
-          <button type="button" data-size="down" aria-label="Mindre tekst">A-</button>
-          <button type="button" data-size="up" aria-label="Større tekst">A+</button>
-          <button type="button" data-close-reader aria-label="Lukk bok">Esc</button>
-        </div>
-      </header>
-      <div class="reader-body" id="readerBody"></div>
-    </article>
-  </section>
-
-  <section class="series-chooser" id="seriesChooser" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="seriesChooserTitle">
-    <div class="reader-backdrop" data-close-series></div>
-    <article class="series-panel">
-      <header class="series-panel-header">
-        <div>
-          <p class="reader-kicker" id="seriesChooserKicker"></p>
-          <h2 id="seriesChooserTitle">Bokserie</h2>
-          <p id="seriesChooserText"></p>
-        </div>
-        <button type="button" data-close-series aria-label="Lukk bokserie">Esc</button>
-      </header>
-      <div class="series-choice-grid" id="seriesChoiceGrid"></div>
-    </article>
-  </section>
-
-  <script src="../script.js"></script>
+<body>
+  <p>ReMind er flyttet til <a href="/remind/no/">/remind/no/</a>.</p>
 </body>
 </html>

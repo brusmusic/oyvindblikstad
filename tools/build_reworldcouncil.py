@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path("/Users/oyvindblikstad/Documents/reworld_kosmosministeren_prototype/bokserie")
-OUT = ROOT / "reworld"
+OUT = ROOT / "remind"
 
 SERIES = [
     {
@@ -317,11 +317,11 @@ def render_no():
         <p>Dette er norsk originaltekst. Engelsk er standardsiden og brukes som master for videre automatisk oversettelse.</p>
         <div class="language-links">
           <a href="../">English master</a>
-          <a href="https://translate.google.com/translate?sl=en&tl=zh-CN&u=https://oyvindblikstad.com/reworld/" target="_blank" rel="noopener">Chinese</a>
-          <a href="https://translate.google.com/translate?sl=en&tl=es&u=https://oyvindblikstad.com/reworld/" target="_blank" rel="noopener">Spanish</a>
-          <a href="https://translate.google.com/translate?sl=en&tl=hi&u=https://oyvindblikstad.com/reworld/" target="_blank" rel="noopener">Hindi</a>
-          <a href="https://translate.google.com/translate?sl=en&tl=ar&u=https://oyvindblikstad.com/reworld/" target="_blank" rel="noopener">Arabic</a>
-          <a href="https://translate.google.com/translate?sl=en&tl=fr&u=https://oyvindblikstad.com/reworld/" target="_blank" rel="noopener">French</a>
+          <a href="https://translate.google.com/translate?sl=en&tl=zh-CN&u=https://oyvindblikstad.com/remind/" target="_blank" rel="noopener">Chinese</a>
+          <a href="https://translate.google.com/translate?sl=en&tl=es&u=https://oyvindblikstad.com/remind/" target="_blank" rel="noopener">Spanish</a>
+          <a href="https://translate.google.com/translate?sl=en&tl=hi&u=https://oyvindblikstad.com/remind/" target="_blank" rel="noopener">Hindi</a>
+          <a href="https://translate.google.com/translate?sl=en&tl=ar&u=https://oyvindblikstad.com/remind/" target="_blank" rel="noopener">Arabic</a>
+          <a href="https://translate.google.com/translate?sl=en&tl=fr&u=https://oyvindblikstad.com/remind/" target="_blank" rel="noopener">French</a>
         </div>
       </div>
     </section>
@@ -394,7 +394,7 @@ def render_en():
     OUT.mkdir(exist_ok=True)
     series_html = "\n".join(render_en_series(series, no_series) for series, no_series in zip(SERIES_EN, SERIES))
     council_items = "\n".join(f"<li>{escape(item)}</li>" for item in COUNCIL_EN)
-    language_url = "https://oyvindblikstad.com/reworld/"
+    language_url = "https://oyvindblikstad.com/remind/"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
