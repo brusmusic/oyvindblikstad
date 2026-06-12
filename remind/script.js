@@ -373,9 +373,36 @@ const books = [
     teaser: "En voksentekst om identitet, speiling, kropp, minne og å tåle å se seg selv mer sant.",
   },
   {
-    id: "no-canon-friends",
+    id: "no-community-children",
     level: "children",
     series: "Serie 08",
+    title: "Hvordan blir vi mer fellesskapsorienterte igjen?",
+    subtitle: "Bordet som ble større",
+    path: "books/no/hvordan_bli_mer_fellesskapsorienterte_igjen/bok_1_bordet_som_ble_storre_barn.md",
+    teaser: "En barnebok om deling, lek, ansvar og hvordan et bord kan bli større uten at alle må bli like.",
+  },
+  {
+    id: "no-community-youth",
+    level: "youth",
+    series: "Serie 08",
+    title: "Hvordan blir vi mer fellesskapsorienterte igjen?",
+    subtitle: "Ikke bare min profil",
+    path: "books/no/hvordan_bli_mer_fellesskapsorienterte_igjen/bok_2_ikke_bare_min_profil_ungdom.md",
+    teaser: "En ungdomsbok om profil, prestasjon, ensomhet, digitalt ansvar og små handlinger som gjør et vi mulig.",
+  },
+  {
+    id: "no-community-adult",
+    level: "adult",
+    series: "Serie 08",
+    title: "Hvordan blir vi mer fellesskapsorienterte igjen?",
+    subtitle: "Fra jeg til vi",
+    path: "books/no/hvordan_bli_mer_fellesskapsorienterte_igjen/bok_3_fra_jeg_til_vi_voksne.md",
+    teaser: "En voksentekst om individ, fellesskap, foreldre, institusjoner, marked, omsorg, grenser og felles praksis.",
+  },
+  {
+    id: "no-canon-friends",
+    level: "children",
+    series: "Serie 09",
     title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor kan ikke alle bare være venner?",
     path: "books/no/reworld_canon_2026/01_hvorfor_kan_ikke_alle_bare_vaere_venner.md",
@@ -384,7 +411,7 @@ const books = [
   {
     id: "no-canon-build",
     level: "children",
-    series: "Serie 08",
+    series: "Serie 09",
     title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor kan vi ikke bygge det sammen?",
     path: "books/no/reworld_canon_2026/02_hvorfor_kan_vi_ikke_bygge_det_sammen.md",
@@ -393,7 +420,7 @@ const books = [
   {
     id: "no-canon-need",
     level: "children",
-    series: "Serie 08",
+    series: "Serie 09",
     title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor trenger vi hverandre?",
     path: "books/no/reworld_canon_2026/03_hvorfor_trenger_vi_hverandre.md",
@@ -445,6 +472,10 @@ const seriesAnchors = {
   "no-selfimage": {
     src: "images/no/hvordan_styrker_jeg_mitt_selvbilde/hvordan_styrker_jeg_mitt_selvbilde_inngangsbilde.jpg",
     alt: "Inngangsbilde for bokserien Hvordan styrker jeg mitt selvbilde.",
+  },
+  "no-community": {
+    src: "images/series-02-structure.jpg",
+    alt: "Et symbolsk bilde av en uferdig struktur under åpen himmel.",
   },
 };
 
@@ -557,9 +588,19 @@ const seriesCatalog = [
     bookIds: ["no-selfimage-children", "no-selfimage-youth", "no-selfimage-adult"],
   },
   {
-    id: "no-canon-children",
+    id: "no-community",
     locale: "no",
     series: "Serie 08",
+    anchor: "no-community",
+    title: "Hvordan blir vi mer fellesskapsorienterte igjen?",
+    movement: "Barn -> ungdom -> voksne.",
+    teaser: "En serie om fellesskap uten selvutslettelse, frihet med ansvar og små praksiser som gjør at flere hører til.",
+    bookIds: ["no-community-children", "no-community-youth", "no-community-adult"],
+  },
+  {
+    id: "no-canon-children",
+    locale: "no",
+    series: "Serie 09",
     anchor: "no-meaning",
     title: "ReMind barnebøker 2026",
     movement: "Venner -> bygge sammen -> trenge hverandre.",
