@@ -38,9 +38,18 @@
         <p class="eyebrow">Norske lydbøker og tekster</p>
         <h1 id="hero-title">ReMind på norsk</h1>
         <p class="lead">Spørsmål som trenger tid. Bokserier som kan leses. Lydbøker som kan følges mens kroppen får ro.</p>
+        <button class="intro-video-card" type="button" data-open-video aria-label="Åpne introduksjonsvideoen til ReMind">
+          <span class="intro-video-frame">
+            <img src="../media/remind-intro-poster.jpg" alt="Stillbilde fra introduksjonsvideoen til ReMind." loading="eager">
+            <span class="video-play-mark" aria-hidden="true">Play</span>
+          </span>
+          <span class="intro-video-copy">
+            <span class="book-meta">Introduksjon</span>
+            <span>Se introduksjonsvideoen</span>
+          </span>
+        </button>
         <div class="hero-actions">
           <a class="primary-action" href="#books">Gå til bokserien</a>
-          <button class="secondary-action" type="button" data-open-book="parenting-intro">Start med intro</button>
         </div>
       </div>
       <div class="hero-meta" aria-label="Prosjektprinsipper">
@@ -118,6 +127,22 @@
         <button type="button" data-close-series aria-label="Lukk bokserie">Esc</button>
       </header>
       <div class="series-choice-grid" id="seriesChoiceGrid"></div>
+    </article>
+  </section>
+
+  <section class="video-viewer" id="videoViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="videoViewerTitle">
+    <div class="reader-backdrop" data-close-video></div>
+    <article class="video-panel">
+      <header class="video-panel-header">
+        <div>
+          <p class="reader-kicker">Introduksjon</p>
+          <h2 id="videoViewerTitle">ReMind universet</h2>
+        </div>
+        <button type="button" data-close-video aria-label="Lukk video">Esc</button>
+      </header>
+      <video id="introVideo" controls preload="metadata" poster="../media/remind-intro-poster.jpg">
+        <source src="../media/remind-intro.mp4" type="video/mp4">
+      </video>
     </article>
   </section>
 

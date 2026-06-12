@@ -579,6 +579,8 @@ const readerTitle = document.getElementById("readerTitle");
 const readerKicker = document.getElementById("readerKicker");
 const readerBody = document.getElementById("readerBody");
 const readerAudioMount = document.getElementById("readerAudioMount");
+const videoViewer = document.getElementById("videoViewer");
+const introVideo = document.getElementById("introVideo");
 const languagePanel = document.getElementById("language-panel");
 const pageLocale = document.body.dataset.reworldLocale || "en";
 const assetBase = document.body.dataset.assetBase || "";
@@ -895,6 +897,21 @@ function closeReader() {
   clearAudioPlayer();
 }
 
+function openVideoViewer() {
+  if (!videoViewer) return;
+  videoViewer.classList.add("is-open");
+  videoViewer.setAttribute("aria-hidden", "false");
+  document.body.classList.add("video-open");
+}
+
+function closeVideoViewer() {
+  if (!videoViewer) return;
+  videoViewer.classList.remove("is-open");
+  videoViewer.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("video-open");
+  if (introVideo) introVideo.pause();
+}
+
 document.addEventListener("click", (event) => {
   const openButton = event.target.closest("[data-open-book]");
   if (openButton) {
@@ -913,6 +930,14 @@ document.addEventListener("click", (event) => {
 
   if (event.target.closest("[data-close-reader]")) {
     closeReader();
+  }
+
+  if (event.target.closest("[data-open-video]")) {
+    openVideoViewer();
+  }
+
+  if (event.target.closest("[data-close-video]")) {
+    closeVideoViewer();
   }
 
   const panelButton = event.target.closest("[data-panel-toggle]");
@@ -944,6 +969,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeReader();
     closeSeriesChooser();
+    closeVideoViewer();
   }
 });
 
