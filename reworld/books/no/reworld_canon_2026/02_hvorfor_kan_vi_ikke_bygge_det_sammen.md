@@ -80,7 +80,7 @@ Det var et ord som lignet på å hjelpe, men ikke var det samme.
 
 Å forme kunne bety å få sette spor.
 
-Mina hentet ReWorld Council-kortene.
+Mina hentet ReMind Council-kortene.
 
 Hun la dem rett på en planke.
 

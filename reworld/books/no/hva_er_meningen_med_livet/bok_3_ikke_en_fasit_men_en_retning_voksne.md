@@ -22,7 +22,7 @@ Hvis svaret blir for privat, glemmer det ansvar.
 
 Hvis svaret blir for kollektivt, kan det knuse menneskets frihet.
 
-Derfor kalte Kosmosministeren inn både ReWorld Council og et utvidet råd for denne boken:
+Derfor kalte Kosmosministeren inn både ReMind Council og et utvidet råd for denne boken:
 
 - The Ancestor, historisk hukommelse.
 - The Artist, skapelse, språk og skjønnhet.

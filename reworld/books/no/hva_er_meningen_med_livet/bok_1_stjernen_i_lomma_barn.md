@@ -16,7 +16,7 @@ Kosmosministeren nikket.
 
 "Kanskje begge deler. Men vi må være forsiktige. Når voksne blir for sikre på meningen med livet, kan de begynne å presse barn inn i en mening som ikke er deres."
 
-Så åpnet hun ReWorld Council.
+Så åpnet hun ReMind Council.
 
 Men denne gangen var bordet ikke stort nok.
 

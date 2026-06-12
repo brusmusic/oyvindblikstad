@@ -78,7 +78,7 @@ Helping could mean carrying someone else's plan.
 
 Shaping meant leaving a real mark.
 
-Mina placed the ReWorld Council cards on a plank.
+Mina placed the ReMind Council cards on a plank.
 
 Christianity asked: **Who will have room in what you build?**
 

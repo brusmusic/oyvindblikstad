@@ -207,13 +207,13 @@ def render_no():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReWorld Council</title>
-  <meta name="description" content="ReWorld Council er et digitalt bok- og refleksjonsunivers der barnespørsmål undersøkes av et råd av perspektiver.">
+  <title>ReMind Council</title>
+  <meta name="description" content="ReMind Council er et digitalt bok- og refleksjonsunivers der barnespørsmål undersøkes av et råd av perspektiver.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top">ReWorld Council</a>
+    <a class="brand" href="#top">ReMind Council</a>
     <nav aria-label="Hovednavigasjon">
       <a href="#series">Bøker</a>
       <a href="#council">Rådet</a>
@@ -228,7 +228,7 @@ def render_no():
       <p class="eyebrow">Et barnespørsmål</p>
       <h1>Why can't everyone just be friends?</h1>
       <p class="lead">A child asks. A council listens. The answer is not simple enough to be false.</p>
-      <p>ReWorld er et digitalt bok- og refleksjonsunivers om hvordan mennesker kan tenke sammen uten at én stemme må være konge.</p>
+      <p>ReMind er et digitalt bok- og refleksjonsunivers om hvordan mennesker kan tenke sammen uten at én stemme må være konge.</p>
       <div class="hero-actions">
         <a href="#series">Begynn med bøkene</a>
         <a href="#council">Møt rådet</a>
@@ -303,7 +303,7 @@ def render_no():
 
     <section class="manifest" id="manifest">
       <p class="eyebrow">Manifest</p>
-      <h2>ReWorld skal føles som et stille rådsmøte.</h2>
+      <h2>ReMind skal føles som et stille rådsmøte.</h2>
       <p>Nettsiden skal ikke først og fremst oppleves som en app, et AI-produkt eller en teknologidemonstrasjon. Den skal oppleves som et stille, alvorlig og tilgjengelig rom for spørsmål mennesker ofte unngår fordi de er for vanskelige, for politiske, for personlige eller for store.</p>
       <p>Språket skal være enkelt nok til at ungdom kan lese det, men dypt nok til at voksne må stoppe opp. Håp kommer etter sannhet, ikke i stedet for sannhet.</p>
     </section>
@@ -329,7 +329,7 @@ def render_no():
     <section class="method" id="method">
       <p class="eyebrow">Behind the Council</p>
       <h2>Teknologien skal være synlig nok til å være ærlig, og usynlig nok til at teksten får virke.</h2>
-      <p>ReWorld er foreløpig en statisk nettside med kuraterte tekster, bokserier, rådsmøter, manifest og metode. AI-delen er en del av kunstverket, men den skal ikke stjele hovedrollen fra spørsmålene, historiene og leserens egen refleksjon.</p>
+      <p>ReMind er foreløpig en statisk nettside med kuraterte tekster, bokserier, rådsmøter, manifest og metode. AI-delen er en del av kunstverket, men den skal ikke stjele hovedrollen fra spørsmålene, historiene og leserens egen refleksjon.</p>
     </section>
   </main>
 
@@ -401,13 +401,13 @@ def render_en():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReWorld Council</title>
-  <meta name="description" content="ReWorld Council is a digital book and reflection universe where children's questions are examined by a council of perspectives.">
+  <title>ReMind Council</title>
+  <meta name="description" content="ReMind Council is a digital book and reflection universe where children's questions are examined by a council of perspectives.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top">ReWorld Council</a>
+    <a class="brand" href="#top">ReMind Council</a>
     <nav aria-label="Main navigation">
       <a href="#series">Books</a>
       <a href="#council">Council</a>
@@ -422,7 +422,7 @@ def render_en():
       <p class="eyebrow">A child's question</p>
       <h1>Why can't everyone just be friends?</h1>
       <p class="lead">A child asks. A council listens. The answer is not simple enough to be false.</p>
-      <p>ReWorld is a digital book and reflection universe about how people can think together without one voice becoming king.</p>
+      <p>ReMind is a digital book and reflection universe about how people can think together without one voice becoming king.</p>
       <div class="hero-actions">
         <a href="#series">Begin with the books</a>
         <a href="#council">Meet the council</a>
@@ -518,7 +518,7 @@ def render_en():
 
     <section class="manifest" id="manifest">
       <p class="eyebrow">Manifest</p>
-      <h2>ReWorld should feel like a quiet council meeting.</h2>
+      <h2>ReMind should feel like a quiet council meeting.</h2>
       <p>The website should not primarily feel like an app, an AI product or a technology demonstration. It should feel like a quiet, serious and accessible room for questions people often avoid because they are too difficult, too political, too personal or too large.</p>
       <p>The language should be simple enough for young people to read, but deep enough for adults to stop. Hope comes after truth, not instead of truth.</p>
     </section>
@@ -526,7 +526,7 @@ def render_en():
     <section class="method" id="method">
       <p class="eyebrow">Behind the Council</p>
       <h2>The technology should be visible enough to be honest, and invisible enough for the text to work.</h2>
-      <p>ReWorld is currently a static website with curated texts, book series, council meetings, manifest and method. The AI element is part of the artwork, but it should not steal the main role from the questions, the stories and the reader's own reflection.</p>
+      <p>ReMind is currently a static website with curated texts, book series, council meetings, manifest and method. The AI element is part of the artwork, but it should not steal the main role from the questions, the stories and the reader's own reflection.</p>
     </section>
   </main>
 

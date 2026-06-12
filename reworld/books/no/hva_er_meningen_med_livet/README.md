@@ -1,6 +1,6 @@
 # Hva er meningen med livet?
 
-Ny norsk ReWorld-bokserie i tre nivåer.
+Ny norsk ReMind-bokserie i tre nivåer.
 
 Grunnspørsmål:
 

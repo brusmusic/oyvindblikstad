@@ -141,7 +141,7 @@ const books = [
     level: "session",
     series: "Åpningsbok",
     title: "Det blanke spørsmålet",
-    subtitle: "En åpen ReWorld Council-sesjon",
+    subtitle: "En åpen ReMind Council-sesjon",
     path: "books/no/det_blank_sporsmalet/det_blank_sporsmalet.md",
     audio: "audio/no/det_blank_sporsmalet/det_blanke_sporsmalet.mp3",
     art: {
@@ -376,7 +376,7 @@ const books = [
     id: "no-canon-friends",
     level: "children",
     series: "Serie 08",
-    title: "ReWorld barnebøker 2026",
+    title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor kan ikke alle bare være venner?",
     path: "books/no/reworld_canon_2026/01_hvorfor_kan_ikke_alle_bare_vaere_venner.md",
     teaser: "En norsk barnebok om konflikt, lek, grenser og spørsmålet som virker enkelt helt til voksne må svare.",
@@ -385,7 +385,7 @@ const books = [
     id: "no-canon-build",
     level: "children",
     series: "Serie 08",
-    title: "ReWorld barnebøker 2026",
+    title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor kan vi ikke bygge det sammen?",
     path: "books/no/reworld_canon_2026/02_hvorfor_kan_vi_ikke_bygge_det_sammen.md",
     teaser: "En norsk barnebok om samarbeid, deltakelse og hvem som får være med før planen er bestemt.",
@@ -394,7 +394,7 @@ const books = [
     id: "no-canon-need",
     level: "children",
     series: "Serie 08",
-    title: "ReWorld barnebøker 2026",
+    title: "ReMind barnebøker 2026",
     subtitle: "Hvorfor trenger vi hverandre?",
     path: "books/no/reworld_canon_2026/03_hvorfor_trenger_vi_hverandre.md",
     teaser: "En norsk barnebok om avhengighet, omsorg, luft, vann og det vi deler uten å merke det.",
@@ -404,15 +404,15 @@ const books = [
 const seriesAnchors = {
   "Series 01": {
     src: "/images/reworld-triptych-cover.jpg",
-    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
+    alt: "Three symbolic ReMind images: a line, a structure, and ripples.",
   },
   "Series 02": {
     src: "/images/reworld-triptych-cover.jpg",
-    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
+    alt: "Three symbolic ReMind images: a line, a structure, and ripples.",
   },
   "Series 03": {
     src: "/images/reworld-triptych-cover.jpg",
-    alt: "Three symbolic ReWorld images: a line, a structure, and ripples.",
+    alt: "Three symbolic ReMind images: a line, a structure, and ripples.",
   },
   "Series 04": {
     src: "images/parenting/00_intro.jpg",
@@ -561,9 +561,9 @@ const seriesCatalog = [
     locale: "no",
     series: "Serie 08",
     anchor: "no-meaning",
-    title: "ReWorld barnebøker 2026",
+    title: "ReMind barnebøker 2026",
     movement: "Venner -> bygge sammen -> trenge hverandre.",
-    teaser: "Tre norske barnebøker fra ReWorld-kanonen, samlet som en egen inngang.",
+    teaser: "Tre norske barnebøker fra ReMind-kanonen, samlet som en egen inngang.",
     bookIds: ["no-canon-friends", "no-canon-build", "no-canon-need"],
   },
 ];

@@ -46,7 +46,7 @@ It is easier to doubt in your head than in a group chat.
 
 The next morning, Mina asked Samir, Aksel, Iben, Maja, and two student representatives to come to the library.
 
-The ReWorld Council cards were already on the table.
+The ReMind Council cards were already on the table.
 
 "We are not here to decide who gets destroyed," Mina said. "We are here to examine what happened and what must stop."
 

@@ -62,7 +62,7 @@ It broke the illusion that the project was finished.
 
 ### 3. The Council Enters
 
-Mina placed the ReWorld Council cards beside the laptops.
+Mina placed the ReMind Council cards beside the laptops.
 
 Science asked for user evidence.
 

@@ -64,7 +64,7 @@ Mina brought out a box.
 
 On the lid it said:
 
-**ReWorld Council**
+**ReMind Council**
 
 "Is it a game?" Maja asked.
 

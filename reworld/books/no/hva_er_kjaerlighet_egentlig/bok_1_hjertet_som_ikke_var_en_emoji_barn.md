@@ -24,7 +24,7 @@ Barnets representant så på spørsmålet.
 
 Da ble det stille rundt rådsbordet.
 
-Kosmosministeren åpnet ReWorld Council og inviterte også inn noen fra Extended Council for denne boken:
+Kosmosministeren åpnet ReMind Council og inviterte også inn noen fra Extended Council for denne boken:
 
 - The Ancestor, som husker gamle kjærlighetshistorier og gamle feil.
 - The Caregiver, som vet at kjærlighet ofte er omsorg i praksis.

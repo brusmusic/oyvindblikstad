@@ -1,6 +1,6 @@
 # Hvordan bli trygg i seg selv?
 
-Ny lokal ReWorld-bokserie i markdown-format.
+Ny lokal ReMind-bokserie i markdown-format.
 
 Denne serien er laget på bakgrunn av et spørsmål stilt inn til rådet:
 

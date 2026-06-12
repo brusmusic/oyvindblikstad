@@ -64,7 +64,7 @@ Mina hentet en eske.
 
 På lokket sto det:
 
-**ReWorld Council**
+**ReMind Council**
 
 "Er det et spill?" spurte Maja.
 

@@ -1,6 +1,6 @@
 # Det blanke spørsmålet
 
-## En åpen ReWorld Council-sesjon
+## En åpen ReMind Council-sesjon
 
 ### 1. Spørsmålet som ikke var formulert
 

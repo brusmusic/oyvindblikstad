@@ -190,7 +190,7 @@ The Cosmos Minister closed only this much:
 
 Blix did not receive a final answer.
 
-ReWorld does not promise that.
+ReMind does not promise that.
 
 Instead, the room returned the question to us:
 

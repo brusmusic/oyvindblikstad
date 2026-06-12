@@ -44,7 +44,7 @@ Dagen etter spurte hun rådet:
 
 "Hva er kjærlighet, egentlig?"
 
-Kosmosministeren åpnet ReWorld Council og kalte inn Extended Council:
+Kosmosministeren åpnet ReMind Council og kalte inn Extended Council:
 
 - The Ancestor, som husker kjærlighetens gamle mønstre.
 - The Caregiver, omsorg i praksis.

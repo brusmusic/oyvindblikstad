@@ -1,6 +1,6 @@
 # Hva er kjærlighet, egentlig?
 
-Ny lokal ReWorld-bokserie i markdown-format.
+Ny lokal ReMind-bokserie i markdown-format.
 
 Grunnspørsmål:
 

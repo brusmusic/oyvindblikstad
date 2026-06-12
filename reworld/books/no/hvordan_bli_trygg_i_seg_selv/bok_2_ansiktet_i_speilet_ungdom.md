@@ -30,7 +30,7 @@ Sara så på speilet.
 
 "Hvordan blir man trygg i seg selv?"
 
-Da ble ReWorld Council kalt inn.
+Da ble ReMind Council kalt inn.
 
 Kosmosministeren svarte:
 

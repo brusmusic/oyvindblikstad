@@ -30,7 +30,7 @@ Selvtillit kan handle om hva jeg tror jeg får til.
 
 Trygghet i seg selv handler om hvor jeg kan bo inni meg når jeg ikke får det til, når andre misforstår meg, når jeg må sette en grense, når jeg skammer meg, når jeg ikke vet, når jeg blir avvist, eller når livet ikke gir meg rollen jeg håpet på.
 
-Kosmosministeren åpnet ReWorld Council og inviterte inn et bokspesifikt Extended Council:
+Kosmosministeren åpnet ReMind Council og inviterte inn et bokspesifikt Extended Council:
 
 - The Ancestor, historisk hukommelse.
 - The Inner Child, gamle sår og tidlige behov.

@@ -24,7 +24,7 @@ Sara hvisket:
 
 "Endelig spør de om noe ekte."
 
-Da ble ReWorld Council kalt inn.
+Da ble ReMind Council kalt inn.
 
 Kosmosministeren sa:
 

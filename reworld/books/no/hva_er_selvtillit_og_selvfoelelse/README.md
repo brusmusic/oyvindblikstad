@@ -1,6 +1,6 @@
 # Hva er selvtillit og selvfølelse?
 
-Lokal ReWorld-bokserie i markdown-format.
+Lokal ReMind-bokserie i markdown-format.
 
 ## Bøker
 
