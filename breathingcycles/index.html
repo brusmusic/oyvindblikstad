@@ -56,6 +56,19 @@
         </p>
       </section>
 
+      <section class="section breath-start-section" aria-labelledby="breath-experience-title">
+        <div class="breath-start-card">
+          <div>
+            <p class="eyebrow">Experience</p>
+            <h2 id="breath-experience-title">Let the breath open the room.</h2>
+            <p>
+              A quiet prototype from Breathing Cycles. Start it, listen, and let the visual field follow the rhythm.
+            </p>
+          </div>
+          <button class="button breath-start-button" type="button" data-open-breathing>Start</button>
+        </div>
+      </section>
+
       <section class="section">
         <div class="section-header">
           <h2>Music that moves differently.</h2>
@@ -152,5 +165,30 @@
       <span><a href="https://buymeacoffee.com/resonancelab" target="_blank" rel="noopener">Support the work</a> · <a href="../">Back to the lab</a></span>
     </footer>
   </div>
+
+  <section class="breath-overlay" id="breathOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="breathOverlayTitle">
+    <div class="breath-cover">
+      <div class="breath-cover-copy">
+        <p class="eyebrow">Breathing Cycles</p>
+        <h2 id="breathOverlayTitle">A breath begins.</h2>
+        <p>Press start. Press again to pause. Double press to restart.</p>
+      </div>
+      <div class="breath-controls" aria-label="Breathing player controls">
+        <button type="button" data-breath-toggle>Start</button>
+        <button type="button" data-close-breathing>Close</button>
+      </div>
+    </div>
+    <div class="breath-stage">
+      <div class="breath-phase" id="breathPhase">TAP TO START</div>
+      <canvas id="breathCanvas"></canvas>
+      <audio id="breathAudio" src="breathing-audio1.mp3" preload="auto" playsinline webkit-playsinline></audio>
+    </div>
+    <div class="breath-floating-controls" aria-label="Breathing player controls">
+      <button type="button" data-breath-toggle>Pause</button>
+      <button type="button" data-close-breathing>Close</button>
+    </div>
+  </section>
+
+  <script src="breathing-experience.js"></script>
 </body>
 </html>

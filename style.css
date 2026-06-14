@@ -305,6 +305,13 @@ h1 {
   color: var(--muted);
 }
 
+button.button {
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
 .portrait-panel {
   position: relative;
   min-height: 560px;
@@ -363,6 +370,166 @@ h2 {
   color: #303a35;
   font-size: 1.08rem;
   line-height: 1.72;
+}
+
+.breath-start-section {
+  background: #111411;
+  color: #f7f5ef;
+}
+
+.breath-start-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(28px, 7vw, 88px);
+  align-items: end;
+  width: min(980px, 100%);
+  min-height: clamp(360px, 50vw, 560px);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 72px);
+  border: 1px solid rgba(247, 245, 239, 0.16);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 24% 35%, rgba(170, 128, 88, 0.18), transparent 38%),
+    radial-gradient(circle at 82% 58%, rgba(79, 136, 116, 0.15), transparent 42%),
+    #070807;
+  box-shadow: 0 34px 120px rgba(0,0,0,0.24);
+}
+
+.breath-start-card h2 {
+  max-width: 680px;
+}
+
+.breath-start-card p:not(.eyebrow) {
+  max-width: 580px;
+  color: rgba(247, 245, 239, 0.72);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.breath-start-button {
+  border-color: rgba(247, 245, 239, 0.68);
+  color: #f7f5ef;
+}
+
+body.breath-open {
+  overflow: hidden;
+}
+
+.breath-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+}
+
+.breath-overlay.is-open {
+  display: block;
+}
+
+.breath-cover,
+.breath-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.breath-cover {
+  z-index: 2;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 28px;
+  padding: clamp(24px, 6vw, 74px);
+  background:
+    radial-gradient(circle at 28% 36%, rgba(255,255,255,0.08), transparent 32%),
+    radial-gradient(circle at 78% 62%, rgba(170, 128, 88, 0.16), transparent 36%),
+    linear-gradient(180deg, rgba(0,0,0,0.32), rgba(0,0,0,0.86)),
+    #000;
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+.breath-overlay.has-started .breath-cover {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(1.018);
+}
+
+.breath-cover-copy {
+  align-self: end;
+  max-width: 780px;
+}
+
+.breath-cover-copy h2 {
+  margin: 0 0 18px;
+  color: #fff;
+  font-size: clamp(3rem, 8vw, 8.5rem);
+}
+
+.breath-cover-copy p:not(.eyebrow) {
+  max-width: 520px;
+  color: rgba(255,255,255,0.68);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.breath-controls {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.breath-controls button,
+.breath-floating-controls button {
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,0.26);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 0 15px;
+  cursor: pointer;
+  font: inherit;
+  backdrop-filter: blur(12px);
+}
+
+.breath-stage {
+  z-index: 1;
+}
+
+#breathCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.breath-phase {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: 100%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.5);
+  font-family: Inter, sans-serif;
+  font-size: clamp(2.8rem, 7vw, 7rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.breath-floating-controls {
+  position: absolute;
+  right: clamp(14px, 3vw, 28px);
+  bottom: clamp(14px, 3vw, 28px);
+  z-index: 5;
+  display: none;
+  gap: 10px;
+}
+
+.breath-overlay.has-started .breath-floating-controls {
+  display: flex;
 }
 
 .project-list {
@@ -737,6 +904,11 @@ h2 {
 
   .notes {
     grid-template-columns: 1fr;
+  }
+
+  .breath-start-card {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 }
 
