@@ -162,6 +162,68 @@
               </g>
             </svg>
           </div>
+          <div class="logo-controls">
+            <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="mixer-panel">
+              Mixer
+            </button>
+
+            <aside class="mixer-panel" id="mixer-panel" data-open="false" aria-label="Logo color mixer">
+              <div class="mixer-header">
+                <h2>Mixer</h2>
+                <button class="close-panel" type="button" aria-label="Close mixer">x</button>
+              </div>
+
+              <div class="mixer">
+                <section class="channel-strip">
+                  <span class="channel-name">Field 1</span>
+                  <div class="channel-controls">
+                    <label class="control-stack">
+                      <span class="control-label">Color</span>
+                      <input class="color-slider" type="range" min="0" max="360" value="160" data-channel="a" data-color="true" />
+                      <span class="value-readout" data-readout="a-color">160°</span>
+                    </label>
+                    <label class="control-stack">
+                      <span class="control-label">Opacity</span>
+                      <input class="fader" type="range" min="0" max="100" value="55" data-channel="a" data-opacity="true" />
+                      <span class="value-readout" data-readout="a-opacity">55%</span>
+                    </label>
+                  </div>
+                </section>
+
+                <section class="channel-strip">
+                  <span class="channel-name">Field 2</span>
+                  <div class="channel-controls">
+                    <label class="control-stack">
+                      <span class="control-label">Color</span>
+                      <input class="color-slider" type="range" min="0" max="360" value="214" data-channel="b" data-color="true" />
+                      <span class="value-readout" data-readout="b-color">214°</span>
+                    </label>
+                    <label class="control-stack">
+                      <span class="control-label">Opacity</span>
+                      <input class="fader" type="range" min="0" max="100" value="55" data-channel="b" data-opacity="true" />
+                      <span class="value-readout" data-readout="b-opacity">55%</span>
+                    </label>
+                  </div>
+                </section>
+
+                <section class="channel-strip">
+                  <span class="channel-name">Field 3</span>
+                  <div class="channel-controls">
+                    <label class="control-stack">
+                      <span class="control-label">Color</span>
+                      <input class="color-slider" type="range" min="0" max="360" value="32" data-channel="c" data-color="true" />
+                      <span class="value-readout" data-readout="c-color">32°</span>
+                    </label>
+                    <label class="control-stack">
+                      <span class="control-label">Opacity</span>
+                      <input class="fader" type="range" min="0" max="100" value="55" data-channel="c" data-opacity="true" />
+                      <span class="value-readout" data-readout="c-opacity">55%</span>
+                    </label>
+                  </div>
+                </section>
+              </div>
+            </aside>
+          </div>
           <div>
           <p class="eyebrow">ReSonance Lab</p>
           <h1>A laboratory for human experience.</h1>
@@ -261,5 +323,6 @@
       <span><a href="https://buymeacoffee.com/resonancelab" target="_blank" rel="noopener">Support the work</a> · <a href="mailto:oyvindblikstad@gmail.com">oyvindblikstad@gmail.com</a> · <a href="tel:+4794307677">94307677</a></span>
     </footer>
   </div>
+  <script src="logo-mixer.js"></script>
 </body>
 </html>
