@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Wavevest</title>
+    <style>
+      :root { color-scheme: dark; --bg: #111618; --panel: rgba(23, 30, 32, 0.92); --line: rgba(255, 255, 255, 0.14); --ink: #f3f6f4; --muted: #aab5b3; --accent: #8fc9bd; --accent-strong: #b7e6dc; --button-ink: #102023; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% -20%, rgba(82, 151, 143, 0.26), transparent 42%), linear-gradient(180deg, #111618 0%, var(--bg) 100%); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      main { width: min(520px, 100%); border: 1px solid var(--line); border-radius: 8px; background: var(--panel); box-shadow: 0 38px 110px rgba(0, 0, 0, 0.38); padding: 34px; }
+      .eyebrow { margin: 0 0 10px; color: var(--accent-strong); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+      h1 { margin: 0; font-size: clamp(36px, 8vw, 56px); line-height: 1; font-weight: 680; }
+      p { color: var(--muted); font-size: 17px; line-height: 1.5; }
+      form { display: grid; gap: 14px; margin-top: 28px; }
+      label { display: grid; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 700; }
+      input { width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255, 255, 255, 0.055); color: var(--ink); padding: 0 14px; font: inherit; }
+      button { min-height: 54px; border: 0; border-radius: 6px; background: var(--accent); color: var(--button-ink); font: inherit; font-weight: 750; cursor: pointer; }
+      .status { min-height: 22px; color: var(--accent-strong); font-size: 14px; }
+      .status.error { color: #f0aaa0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Private test</p>
+      <h1>Wavevest</h1>
+      <p>This prototype is available by invitation for guided summer testing.</p>
+      <form id="unlockForm" autocomplete="off">
+        <label>
+          Access code
+          <input id="password" type="password" autocomplete="current-password" autofocus />
+        </label>
+        <button id="unlockButton" type="submit">Open Wavevest</button>
+        <div class="status" id="status" role="status"></div>
+      </form>
+    </main>
+    <script src="payload.js"></script>
+    <script>
+      const form = document.getElementById("unlockForm");
+      const passwordInput = document.getElementById("password");
+      const statusEl = document.getElementById("status");
+      const button = document.getElementById("unlockButton");
+      function bytesFromBase64(value) { return Uint8Array.from(atob(value), (char) => char.charCodeAt(0)); }
+      async function deriveKey(password, salt, iterations) {
+        const encoded = new TextEncoder().encode(password);
+        const keyMaterial = await crypto.subtle.importKey("raw", encoded, "PBKDF2", false, ["deriveKey"]);
+        return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      }
+      async function unlock(password) {
+        const payload = window.WAVEVEST_PAYLOAD;
+        const salt = bytesFromBase64(payload.salt);
+        const iv = bytesFromBase64(payload.iv);
+        const tag = bytesFromBase64(payload.tag);
+        const data = bytesFromBase64(payload.data);
+        const encrypted = new Uint8Array(data.length + tag.length);
+        encrypted.set(data);
+        encrypted.set(tag, data.length);
+        const key = await deriveKey(password, salt, payload.iterations);
+        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
+        return new TextDecoder().decode(decrypted);
+      }
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        statusEl.className = "status";
+        statusEl.textContent = "Opening...";
+        button.disabled = true;
+        try {
+          const html = await unlock(passwordInput.value);
+          document.open();
+          document.write(html);
+          document.close();
+        } catch {
+          statusEl.className = "status error";
+          statusEl.textContent = "Access code was not accepted.";
+          button.disabled = false;
+          passwordInput.select();
+        }
+      });
+    </script>
+  </body>
+</html>
