@@ -96,12 +96,142 @@ a {
   font-size: 0.94rem;
 }
 
+.nav-cluster {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
 .nav a {
   text-decoration: none;
 }
 
 .nav a:hover {
   color: var(--ink);
+}
+
+.beta-test-button {
+  min-height: 38px;
+  border: 1px solid rgba(213, 170, 118, 0.42);
+  border-radius: 999px;
+  background: rgba(213, 170, 118, 0.09);
+  color: #fff7df;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.beta-test-button:hover {
+  background: rgba(213, 170, 118, 0.17);
+}
+
+.wavevest-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.wavevest-modal.hidden {
+  display: none;
+}
+
+.wavevest-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+}
+
+.wavevest-dialog {
+  position: relative;
+  width: min(520px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(12, 18, 16, 0.96);
+  box-shadow: 0 36px 120px rgba(0, 0, 0, 0.62);
+  padding: clamp(28px, 5vw, 42px);
+}
+
+.wavevest-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(246, 241, 232, 0.04);
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.wavevest-dialog h2 {
+  margin-bottom: 16px;
+  font-size: clamp(2.6rem, 8vw, 4.8rem);
+}
+
+.wavevest-dialog p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.wavevest-dialog form {
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.wavevest-dialog label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wavevest-dialog input {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(246, 241, 232, 0.055);
+  color: var(--ink);
+  padding: 0 14px;
+  font: inherit;
+}
+
+.wavevest-dialog form button {
+  min-height: 54px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--green);
+  color: #08100d;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.wavevest-status {
+  min-height: 22px;
+  color: var(--green);
+  font-size: 0.92rem;
+}
+
+.wavevest-status.error {
+  color: #f0aaa0;
 }
 
 main {
@@ -451,6 +581,10 @@ blockquote {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .nav-cluster {
+    justify-items: start;
   }
 
   h1 {
