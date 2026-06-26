@@ -55,13 +55,34 @@
       <img src="../assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab mark">
       <span>ReSonance Lab</span>
     </a>
-    <nav class="nav" aria-label="Hovednavigasjon">
-      <a href="../">Lab</a>
-      <a href="../about/">Øyvind</a>
-      <a href="../breathingcycles/">Breathing Cycles</a>
-      <a href="https://oyvindblikstad.com/remind/">ReMind</a>
-    </nav>
+    <div class="nav-cluster">
+      <nav class="nav" aria-label="Hovednavigasjon">
+        <a href="../">Lab</a>
+        <a href="../about/">Øyvind</a>
+        <a href="../breathingcycles/">Breathing Cycles</a>
+        <a href="https://oyvindblikstad.com/remind/">ReMind</a>
+      </nav>
+      <button class="beta-test-button" id="wavevestBetaBtn" type="button">Flowers beta test</button>
+    </div>
   </header>
+
+  <div class="wavevest-modal hidden" id="wavevestModal" role="dialog" aria-modal="true" aria-labelledby="wavevestTitle">
+    <button class="wavevest-backdrop" type="button" data-wavevest-close aria-label="Lukk"></button>
+    <div class="wavevest-dialog">
+      <button class="wavevest-close" type="button" data-wavevest-close aria-label="Lukk">×</button>
+      <p class="eyebrow">Private test</p>
+      <h2 id="wavevestTitle">Flowers beta test</h2>
+      <p>Åpne Wavevest-prototypen med testkoden du har fått.</p>
+      <form id="wavevestUnlockForm" autocomplete="off">
+        <label>
+          Access code
+          <input id="wavevestPassword" type="password" autocomplete="current-password">
+        </label>
+        <button type="submit">Open Wavevest</button>
+        <div class="wavevest-status" id="wavevestStatus" role="status"></div>
+      </form>
+    </div>
+  </div>
 
   <main>
     <section class="hero">
@@ -207,6 +228,7 @@
     <span><a href="https://buymeacoffee.com/resonancelab" target="_blank" rel="noopener">Støtt arbeidet</a> · <a href="../">Tilbake til laben</a></span>
   </footer>
 
+  <script src="../wavevest/payload.js"></script>
   <script src="rehuman.js"></script>
 </body>
 </html>
