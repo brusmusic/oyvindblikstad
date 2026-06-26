@@ -23,9 +23,25 @@ const unlockForm = document.getElementById("wavevestUnlockForm");
 const passwordInput = document.getElementById("wavevestPassword");
 const statusEl = document.getElementById("wavevestStatus");
 
+function trackWavevestGate(eventName, params = {}) {
+  const payload = {
+    event_category: "wavevest_beta",
+    app_location: "rehuman_gate",
+    transport_type: "beacon",
+    ...params
+  };
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, payload);
+  } else {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: eventName, ...payload });
+  }
+}
+
 function openWavevestModal() {
   modal?.classList.remove("hidden");
   statusEl.textContent = "";
+  trackWavevestGate("wavevest_gate_open");
   window.setTimeout(() => passwordInput?.focus(), 30);
 }
 
@@ -86,10 +102,12 @@ unlockForm?.addEventListener("submit", async (event) => {
 
   try {
     const html = await unlockWavevest(passwordInput.value);
+    trackWavevestGate("wavevest_unlock_success");
     document.open();
     document.write(html);
     document.close();
   } catch {
+    trackWavevestGate("wavevest_unlock_failed");
     statusEl.className = "wavevest-status error";
     statusEl.textContent = "Access code was not accepted.";
     button.disabled = false;
