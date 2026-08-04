@@ -1,4 +1,21 @@
-MIT License
+Repository License
+
+The public website files in this repository are licensed under the MIT License
+below, EXCEPT for the Wavevest / Flowers beta software and encrypted payload.
+
+The Wavevest / Flowers beta software, including everything in the /wavevest
+directory, the encrypted payload, decrypted application code, app design,
+audio-control logic, bodymapping logic, biofeedback logic, documentation, and
+related research implementation, is proprietary software.
+
+Copyright (c) 2026 Øyvind Blikstad. All rights reserved.
+
+No permission is granted to copy, modify, distribute, sublicense, sell, reverse
+engineer, decrypt, extract, or create derivative works from the Wavevest /
+Flowers beta software or its encrypted payload without prior written permission
+from the copyright holder.
+
+MIT License for the remaining public website files
 
 Copyright (c) 2025 oyvindblikstad
 
