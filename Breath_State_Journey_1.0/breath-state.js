@@ -8,6 +8,7 @@
   const MAX_FUNDAMENTAL_HZ = 70;
   const MIN_HARMONIC_FIELD_HZ = 90;
   const HOLD_MOTION = 0.15;
+  const MIN_ACTIVE_HOLD_SEC = 2;
   const DEFAULT_BREATH_CURVE_Y_MAX_SEC = 20;
   const MIN_BREATH_CURVE_Y_MAX_SEC = 5;
   const MAX_BREATH_CURVE_Y_MAX_SEC = 60;
@@ -747,23 +748,34 @@
 
   function breathValues(item) {
     const breath = Array.isArray(item?.breath) ? item.breath : [3, 6];
-    if (breath.length >= 4) return breath;
+    if (breath.length >= 4) return [breath[0] ?? 3, normalizeHoldSeconds(breath[1]), breath[2] ?? 6, normalizeHoldSeconds(breath[3])];
     return [breath[0] ?? 3, 0, breath[1] ?? 6, 0];
   }
 
-  function curvePoints(startValue, endValue) {
+  function normalizeHoldSeconds(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0.05) return 0;
+    return Math.max(MIN_ACTIVE_HOLD_SEC, numeric);
+  }
+
+  function normalizeBreathCurveValue(trackId, value) {
+    const clamped = clamp(value, 0, MAX_BREATH_CURVE_Y_MAX_SEC);
+    return trackId === "holdInhale" || trackId === "holdExhale" ? normalizeHoldSeconds(clamped) : clamped;
+  }
+
+  function curvePoints(startValue, endValue, trackId = null) {
     return [
-      { t: 0, v: clamp(startValue, 0, MAX_BREATH_CURVE_Y_MAX_SEC) },
-      { t: 1, v: clamp(endValue, 0, MAX_BREATH_CURVE_Y_MAX_SEC) }
+      { t: 0, v: trackId ? normalizeBreathCurveValue(trackId, startValue) : clamp(startValue, 0, MAX_BREATH_CURVE_Y_MAX_SEC) },
+      { t: 1, v: trackId ? normalizeBreathCurveValue(trackId, endValue) : clamp(endValue, 0, MAX_BREATH_CURVE_Y_MAX_SEC) }
     ];
   }
 
   function resetBreathCurvesFromControls() {
     state.breathCurves = {
-      inhale: curvePoints(inputValue("startInhaleInput", 3), inputValue("endInhaleInput", 7)),
-      holdInhale: curvePoints(inputValue("startHoldInhaleInput", 0), inputValue("endHoldInhaleInput", 0)),
-      exhale: curvePoints(inputValue("startExhaleInput", 6), inputValue("endExhaleInput", 12)),
-      holdExhale: curvePoints(inputValue("startHoldExhaleInput", 0), inputValue("endHoldExhaleInput", 0))
+      inhale: curvePoints(inputValue("startInhaleInput", 3), inputValue("endInhaleInput", 7), "inhale"),
+      holdInhale: curvePoints(inputValue("startHoldInhaleInput", 0), inputValue("endHoldInhaleInput", 0), "holdInhale"),
+      exhale: curvePoints(inputValue("startExhaleInput", 6), inputValue("endExhaleInput", 12), "exhale"),
+      holdExhale: curvePoints(inputValue("startHoldExhaleInput", 0), inputValue("endHoldExhaleInput", 0), "holdExhale")
     };
     renderBreathCurveEditor();
   }
@@ -858,9 +870,9 @@
       harmonic: lerp(from.harmonic, to.harmonic, local),
       reverb: lerp(from.reverb, to.reverb, local),
       inhaleSec: evaluateBreathCurve("inhale", t),
-      holdInhaleSec: evaluateBreathCurve("holdInhale", t),
+      holdInhaleSec: normalizeHoldSeconds(evaluateBreathCurve("holdInhale", t)),
       exhaleSec: evaluateBreathCurve("exhale", t),
-      holdExhaleSec: evaluateBreathCurve("holdExhale", t)
+      holdExhaleSec: normalizeHoldSeconds(evaluateBreathCurve("holdExhale", t))
     };
   }
 
@@ -920,9 +932,9 @@
 
   function phaseDuration(params) {
     if (state.phase === "inhale") return params.inhaleSec;
-    if (state.phase === "holdInhale") return params.holdInhaleSec >= 1 ? params.holdInhaleSec : 0;
+    if (state.phase === "holdInhale") return params.holdInhaleSec >= MIN_ACTIVE_HOLD_SEC ? params.holdInhaleSec : 0;
     if (state.phase === "exhale") return params.exhaleSec;
-    return params.holdExhaleSec >= 1 ? params.holdExhaleSec : 0;
+    return params.holdExhaleSec >= MIN_ACTIVE_HOLD_SEC ? params.holdExhaleSec : 0;
   }
 
   function phaseLabel(phase = state.phase) {
@@ -948,10 +960,10 @@
       const duration = nextPhase === "inhale"
         ? params.inhaleSec
         : nextPhase === "holdInhale"
-          ? (params.holdInhaleSec >= 1 ? params.holdInhaleSec : 0)
+          ? (params.holdInhaleSec >= MIN_ACTIVE_HOLD_SEC ? params.holdInhaleSec : 0)
           : nextPhase === "exhale"
             ? params.exhaleSec
-            : (params.holdExhaleSec >= 1 ? params.holdExhaleSec : 0);
+            : (params.holdExhaleSec >= MIN_ACTIVE_HOLD_SEC ? params.holdExhaleSec : 0);
       if (duration > 0.001) return nextPhase;
       nextPhase = nextBreathPhase(nextPhase);
     }
@@ -1923,7 +1935,7 @@
     const endpointT = index === 0 ? 0 : index === curve.length - 1 ? 1 : null;
     return {
       t: endpointT === null ? clamp(point.t, minT, maxT) : endpointT,
-      v: clamp(point.v, 0, MAX_BREATH_CURVE_Y_MAX_SEC)
+      v: normalizeBreathCurveValue(trackId, point.v)
     };
   }
 
@@ -1946,11 +1958,11 @@
       const curve = curves[trackId];
       if (!curve?.length) return;
       sortCurve(curve);
-      curve[0] = { ...curve[0], t: 0, v: clamp(inputValue(ids.start, curve[0].v), 0, MAX_BREATH_CURVE_Y_MAX_SEC) };
+      curve[0] = { ...curve[0], t: 0, v: normalizeBreathCurveValue(trackId, inputValue(ids.start, curve[0].v)) };
       curve[curve.length - 1] = {
         ...curve[curve.length - 1],
         t: 1,
-        v: clamp(inputValue(ids.end, curve[curve.length - 1].v), 0, MAX_BREATH_CURVE_Y_MAX_SEC)
+        v: normalizeBreathCurveValue(trackId, inputValue(ids.end, curve[curve.length - 1].v))
       };
       sortCurve(curve);
     });
@@ -1988,7 +2000,7 @@
     const nextT = index < curve.length - 1 ? curve[index + 1].t - 0.01 : 1;
     curve[index] = {
       t: index === 0 ? 0 : index === curve.length - 1 ? 1 : clamp(point.t, previousT, nextT),
-      v: clamp(point.v, 0, MAX_BREATH_CURVE_Y_MAX_SEC)
+      v: normalizeBreathCurveValue(trackId, point.v)
     };
     sortCurve(curve);
   }
@@ -1997,7 +2009,7 @@
     const curve = ensureBreathCurves()[trackId];
     const nextPoint = {
       t: clamp(point.t, 0, 1),
-      v: clamp(point.v, 0, MAX_BREATH_CURVE_Y_MAX_SEC)
+      v: normalizeBreathCurveValue(trackId, point.v)
     };
     curve.push(nextPoint);
     sortCurve(curve);
