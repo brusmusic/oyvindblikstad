@@ -157,7 +157,8 @@
       rafId: 0,
       samples: [],
       listener: null,
-      lastResult: null
+      lastResult: null,
+      motionAllowed: false
     },
     guideRoundRobin: {
       in: 0,
@@ -995,16 +996,22 @@
   }
 
   function abeMotionSupported() {
-    return typeof window.DeviceMotionEvent !== "undefined";
+    return typeof window.DeviceMotionEvent !== "undefined" || typeof window.DeviceOrientationEvent !== "undefined";
   }
 
   async function requestAbeMotionAccess() {
     if (!abeMotionSupported()) return false;
-    const permissionRequest = window.DeviceMotionEvent.requestPermission;
-    if (typeof permissionRequest !== "function") return true;
+    const requests = [];
+    if (typeof window.DeviceMotionEvent?.requestPermission === "function") {
+      requests.push(window.DeviceMotionEvent.requestPermission.call(window.DeviceMotionEvent));
+    }
+    if (typeof window.DeviceOrientationEvent?.requestPermission === "function") {
+      requests.push(window.DeviceOrientationEvent.requestPermission.call(window.DeviceOrientationEvent));
+    }
+    if (!requests.length) return true;
     try {
-      const permission = await permissionRequest.call(window.DeviceMotionEvent);
-      return permission === "granted";
+      const results = await Promise.allSettled(requests);
+      return results.every((result) => result.status === "fulfilled" && result.value === "granted");
     } catch {
       return false;
     }
@@ -1012,7 +1019,7 @@
 
   function startAbeMotionCapture() {
     state.abe.samples = [];
-    if (!abeMotionSupported()) return;
+    if (typeof window.DeviceMotionEvent === "undefined") return;
     const startedAt = performance.now() / 1000;
     state.abe.listener = (event) => {
       const rotation = event.rotationRate || {};
@@ -1256,7 +1263,11 @@
       prep.hasCandidate ? abeBreathLabel(prep.startInhale, prep.startExhale) : "measuring",
       abeBreathLabel(prep.endInhale, prep.endExhale)
     );
-    if (progress < 0.22) {
+    if (!state.abe.motionAllowed) {
+      setAbeStatus("Motion access is unavailable or denied. ABE is preparing a default calm start.", "default");
+    } else if (elapsedSec > 5 && state.abe.samples.length < 10) {
+      setAbeStatus("Motion access is granted, but no movement samples are arriving yet. Keep the page open and phone still.", "waiting");
+    } else if (progress < 0.22) {
       setAbeStatus("Place the phone flat on belly or chest. Let the speaker play quietly.", "place");
     } else if (progress < ABE_BROWN_START_PROGRESS) {
       setAbeStatus("Stay still enough for the phone to feel the breath. No special breathing yet.", signal);
@@ -1282,16 +1293,18 @@
       els.abePrepareBtn.disabled = true;
       els.abePrepareBtn.textContent = "Preparing...";
       setAbeValues("measuring", "calm target");
-      setAbeStatus("Starting nature layer and asking the phone for motion access.", "opening");
+      setAbeStatus("Asking the phone for motion access before audio starts.", "opening");
       els.noiseColorSelect.value = "brown";
       els.natureLayerToggle.checked = true;
       els.breathLayerToggle.checked = true;
       state.abe.lastResult = null;
+      state.abe.motionAllowed = false;
+      const motionAllowed = await requestAbeMotionAccess();
+      state.abe.motionAllowed = motionAllowed;
       state.audio = makeAudioGraph();
       state.audio.setBreathNoiseColor("brown");
       await state.audio.ctx.resume();
       await state.audio.setNatureSource(els.natureSourceSelect.value);
-      const motionAllowed = await requestAbeMotionAccess();
       if (motionAllowed) startAbeMotionCapture();
       if (!motionAllowed) {
         setAbeStatus("Motion access was not granted. ABE will use the default calm start.", "default");
