@@ -139,6 +139,8 @@ function writeReports(reports) {
 function reportSummary(profile) {
   return {
     breathDetected: Boolean(profile?.breath?.detected),
+    breathUsable: Boolean(profile?.breath?.usable),
+    breathQualityLabel: profile?.breath?.qualityLabel ?? null,
     breathsPerMinute: profile?.breath?.breathsPerMinute ?? null,
     cycleDuration: profile?.breath?.cycleDuration ?? null,
     inhaleDuration: profile?.breath?.inhaleDuration ?? null,

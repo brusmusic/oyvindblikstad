@@ -99,7 +99,6 @@ function estimateRatio(signal, peaks, troughs, sampleRate, cycleDuration) {
 export class BreathDetector {
   analyze(samples, options = {}) {
     const sampleRate = options.sampleRate || 20;
-    const warmupSec = Number.isFinite(options.warmupSec) ? options.warmupSec : 5;
     if (!samples || samples.length < 80) {
       return {
         breath: { detected: false, confidence: 0 },
@@ -107,6 +106,8 @@ export class BreathDetector {
         debug: { reason: "not_enough_motion_samples" }
       };
     }
+    const durationSec = (samples[samples.length - 1].t - samples[0].t) / 1000;
+    const warmupSec = Number.isFinite(options.warmupSec) ? options.warmupSec : clamp(durationSec * 0.12, 2, 5);
     const keys = ["gx", "gy", "gz", "gravityMagnitude", "rotationMagnitude", "alpha", "beta", "gamma"];
     const candidates = keys.map((key) => {
       const raw = resample(samples, key, sampleRate).slice(Math.round(warmupSec * sampleRate));
@@ -117,14 +118,22 @@ export class BreathDetector {
     }).sort((a, b) => b.score - a.score);
 
     const best = candidates[0];
-    const durationSec = (samples[samples.length - 1].t - samples[0].t) / 1000;
     const sampleRateQuality = clamp(samples.length / Math.max(1, durationSec * 18), 0, 1);
     const confidence = clamp((best?.score || 0) * 0.78 + sampleRateQuality * 0.22, 0, 1);
-    if (!best || confidence < 0.42 || !Number.isFinite(best.cycleDuration)) {
+    const usableThreshold = Number.isFinite(options.usableThreshold) ? options.usableThreshold : 0.32;
+    if (!best || confidence < usableThreshold || !Number.isFinite(best.cycleDuration)) {
       return {
-        breath: { detected: false, confidence },
-        motion: { stability: best?.stability || 0, signalQuality: best?.score || 0 },
-        debug: { bestKey: best?.key || "", candidates }
+        breath: { detected: false, confidence, usable: false },
+        motion: { stability: best?.stability || 0, signalQuality: best?.score || 0, bestKey: best?.key || "", warmupSec },
+        debug: {
+          bestKey: best?.key || "",
+          warmupSec,
+          sampleRate,
+          signal: best?.signal || [],
+          peaks: (best?.peaks || []).map((index) => index / sampleRate),
+          troughs: (best?.troughs || []).map((index) => index / sampleRate),
+          candidates: candidates.map((candidate) => ({ key: candidate.key, score: candidate.score, cycleDuration: candidate.cycleDuration }))
+        }
       };
     }
     const ratio = estimateRatio(best.signal, best.peaks, best.troughs, sampleRate, best.cycleDuration);
@@ -140,6 +149,8 @@ export class BreathDetector {
         inhaleDuration,
         exhaleDuration,
         phaseConfidence: ratio.phaseConfidence || 0,
+        usable: confidence >= usableThreshold,
+        qualityLabel: confidence >= 0.55 ? "strong" : "weak",
         confidence
       },
       motion: {
