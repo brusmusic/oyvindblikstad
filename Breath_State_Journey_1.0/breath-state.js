@@ -24,6 +24,7 @@
   const ABE_DURATION_SEC = 28;
   const ABE_BROWN_START_PROGRESS = 0.58;
   const ABE_USABLE_CONFIDENCE = 0.42;
+  const EASY_DEFAULT_PRESET_NAME = "vagal reset";
   const EASY_DEFAULT_PRESET_ID = "builtin-vagal-reset";
   const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone vertically on your upper belly and press start.";
   const VOICE_PROMPT_TEXT = "I am amazing. Sometimes I forget. Well, here I am.";
@@ -2323,6 +2324,13 @@
     return readPresets().find((preset) => preset.id === id) || null;
   }
 
+  function easyDefaultPresetId() {
+    const presets = readPresets();
+    const preferred = presets.find((preset) => (preset.name || "").trim().toLowerCase() === EASY_DEFAULT_PRESET_NAME);
+    if (preferred) return preferred.id;
+    return presetById(EASY_DEFAULT_PRESET_ID)?.id || EASY_DEFAULT_PRESET_ID;
+  }
+
   function syncPresetSelectors(id) {
     const preset = presetById(id);
     if (els.presetSelect && preset) els.presetSelect.value = preset.id;
@@ -3112,7 +3120,7 @@
     els.stopBtn.addEventListener("click", () => stopJourney());
     window.addEventListener("beforeunload", () => stopJourney(true));
     syncControlsFromJourney();
-    applyPresetById(EASY_DEFAULT_PRESET_ID);
+    applyPresetById(easyDefaultPresetId());
     setAppMode("easy");
     updateVoiceReflectionUI();
   }
