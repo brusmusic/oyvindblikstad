@@ -91,6 +91,30 @@ h1 {
   justify-content: flex-end;
 }
 
+.mode-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.mode-select button {
+  min-height: 38px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.mode-select button.is-active {
+  border-color: rgba(154, 212, 200, 0.48);
+  background: rgba(154, 212, 200, 0.2);
+  color: var(--text);
+  font-weight: 800;
+}
+
 .topbar-actions a,
 button {
   min-height: 44px;
@@ -487,6 +511,27 @@ output {
   background-size: 72px 72px;
 }
 
+.easy-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.easy-panel label {
+  margin-top: 0;
+}
+
+.easy-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.easy-actions button {
+  min-width: 112px;
+}
+
 .ambient-field {
   --state-color: #9ad4c8;
   min-height: clamp(340px, 48vh, 540px);
@@ -749,6 +794,47 @@ output {
   margin-top: 5px;
 }
 
+body[data-app-mode="easy"] .breath-app {
+  gap: 14px;
+}
+
+body[data-app-mode="easy"] .topbar-actions,
+body[data-app-mode="easy"] .control-panel,
+body[data-app-mode="easy"] .state-row,
+body[data-app-mode="easy"] .readouts,
+body[data-app-mode="easy"] .layer-monitor,
+body[data-app-mode="easy"] .event-log {
+  display: none;
+}
+
+body[data-app-mode="easy"] .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body[data-app-mode="easy"] .stage {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: clamp(14px, 2.4vw, 24px);
+}
+
+body[data-app-mode="easy"] .ambient-field {
+  min-height: min(68vh, 620px);
+}
+
+body[data-app-mode="easy"] .orb-center {
+  width: min(72%, 310px);
+  padding: clamp(20px, 4vw, 34px);
+}
+
+body[data-app-mode="easy"] .orb-center > span:not(.hold-wall) {
+  max-width: 18rem;
+  font-size: clamp(0.88rem, 2.8vw, 1.04rem);
+}
+
+body[data-app-mode="advanced"] .easy-panel {
+  display: none;
+}
+
 @keyframes slowSpin {
   to {
     transform: rotate(360deg);
@@ -768,9 +854,21 @@ output {
     flex-direction: column;
   }
 
+  .mode-select {
+    width: 100%;
+  }
+
   .state-row,
   .readouts {
     grid-template-columns: 1fr;
+  }
+
+  .easy-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .easy-actions button {
+    flex: 1;
   }
 
 }

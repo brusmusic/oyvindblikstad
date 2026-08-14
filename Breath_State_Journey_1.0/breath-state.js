@@ -21,6 +21,8 @@
   const ABE_DURATION_SEC = 28;
   const ABE_BROWN_START_PROGRESS = 0.58;
   const ABE_USABLE_CONFIDENCE = 0.42;
+  const EASY_DEFAULT_PRESET_ID = "builtin-vagal-reset";
+  const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone vertically on your upper belly and press start.";
   const GUIDE_CUES = {
     inhaleStart: "in",
     holdAfterInhaleStart: "hold",
@@ -131,6 +133,7 @@
 
   const state = {
     audio: null,
+    appMode: "easy",
     playing: false,
     holding: false,
     startedAt: 0,
@@ -1216,6 +1219,7 @@
       els.abePrepareBtn.disabled = false;
       els.abePrepareBtn.textContent = "Prepare & start";
     }
+    syncEasyTransport();
   }
 
   async function finishAbeEntry(result) {
@@ -1294,6 +1298,7 @@
       }
       state.abe.running = true;
       state.abe.startedAt = performance.now();
+      syncEasyTransport();
       const now = state.audio.ctx.currentTime;
       state.audio.master.gain.cancelScheduledValues(now);
       state.audio.master.gain.setValueAtTime(0, now);
@@ -1342,6 +1347,7 @@
       els.playBtn.textContent = "Replay journey";
       els.holdBtn.disabled = false;
       els.stopBtn.disabled = false;
+      syncEasyTransport();
       tick();
     } catch (error) {
       console.error(error);
@@ -1360,6 +1366,7 @@
     if (!state.audio) {
       state.playing = false;
       state.holding = false;
+      syncEasyTransport();
       return;
     }
     const audio = state.audio;
@@ -1383,6 +1390,7 @@
     els.holdBtn.disabled = true;
     els.stopBtn.disabled = true;
     els.holdBtn.textContent = "Hold";
+    syncEasyTransport();
   }
 
   function toggleHold() {
@@ -2016,6 +2024,54 @@
     if (els.presetStatus) els.presetStatus.textContent = message;
   }
 
+  function presetById(id) {
+    return readPresets().find((preset) => preset.id === id) || null;
+  }
+
+  function syncPresetSelectors(id) {
+    const preset = presetById(id);
+    if (els.presetSelect && preset) els.presetSelect.value = preset.id;
+    if (els.easyPresetSelect && preset) els.easyPresetSelect.value = preset.id;
+    if (els.presetNameInput && preset) els.presetNameInput.value = preset.name;
+  }
+
+  function applyPresetById(id) {
+    const preset = presetById(id);
+    if (!preset) return;
+    syncPresetSelectors(preset.id);
+    applyPreset(preset);
+  }
+
+  function readyPhaseDetail() {
+    return state.appMode === "easy"
+      ? EASY_READY_INSTRUCTION
+      : "Choose a journey and press Play.";
+  }
+
+  function syncEasyTransport() {
+    if (!els.easyStartBtn || !els.easyStopBtn) return;
+    if (state.abe.running) {
+      els.easyStartBtn.disabled = true;
+      els.easyStartBtn.textContent = "Preparing...";
+      els.easyStopBtn.disabled = false;
+      return;
+    }
+    els.easyStartBtn.disabled = false;
+    els.easyStartBtn.textContent = state.playing ? "Restart" : "Start";
+    els.easyStopBtn.disabled = !state.playing && !state.audio;
+  }
+
+  function setAppMode(mode) {
+    state.appMode = mode === "advanced" ? "advanced" : "easy";
+    document.body.dataset.appMode = state.appMode;
+    els.easyModeBtn?.classList.toggle("is-active", state.appMode === "easy");
+    els.advancedModeBtn?.classList.toggle("is-active", state.appMode === "advanced");
+    if (!state.playing && !state.abe.running && els.phaseDetail) {
+      els.phaseDetail.textContent = readyPhaseDetail();
+    }
+    syncEasyTransport();
+  }
+
   function currentPresetSnapshot(name) {
     ensureBreathCurves();
     ensureLayerAutomation();
@@ -2054,13 +2110,14 @@
   }
 
   function renderPresetSelect() {
-    if (!els.presetSelect) return;
     const presets = readPresets();
-    els.presetSelect.innerHTML = presets.length
+    const options = presets.length
       ? presets.map((preset) => `<option value="${preset.id}">${preset.name}</option>`).join("")
       : "<option value=\"\">No presets saved</option>";
-    els.loadPresetBtn.disabled = presets.length === 0;
-    els.deletePresetBtn.disabled = presets.length === 0;
+    if (els.presetSelect) els.presetSelect.innerHTML = options;
+    if (els.easyPresetSelect) els.easyPresetSelect.innerHTML = options;
+    if (els.loadPresetBtn) els.loadPresetBtn.disabled = presets.length === 0;
+    if (els.deletePresetBtn) els.deletePresetBtn.disabled = presets.length === 0;
   }
 
   function savePreset() {
@@ -2076,12 +2133,13 @@
     }
     writePresets(presets);
     renderPresetSelect();
-    els.presetSelect.value = snapshot.id;
+    syncPresetSelectors(snapshot.id);
     setPresetStatus(`Saved "${name}".`);
   }
 
   function applyPreset(preset) {
     if (!preset) return;
+    syncPresetSelectors(preset.id);
     if (preset.journeyId && [...els.journeySelect.options].some((option) => option.value === preset.journeyId)) {
       els.journeySelect.value = preset.journeyId;
     }
@@ -2126,8 +2184,7 @@
   }
 
   function loadSelectedPreset() {
-    const preset = readPresets().find((item) => item.id === els.presetSelect.value);
-    applyPreset(preset);
+    applyPresetById(els.presetSelect.value);
   }
 
   function deleteSelectedPreset() {
@@ -2190,7 +2247,7 @@
     els.phaseTime.textContent = "";
     els.phaseDetail.textContent = state.playing
       ? "Stay with the breath."
-      : "Choose a journey and press Play.";
+      : readyPhaseDetail();
     els.journeyProgressFill.style.setProperty("--journey-progress", `${clamp(progress, 0, 1) * 100}%`);
     els.nextPhaseReadout.textContent = `Next: ${phaseLabel(nextPlayablePhase(state.phase, params)).toLowerCase()}`;
     els.currentState.textContent = params.activeState.name;
@@ -2208,6 +2265,7 @@
     renderEventLog();
     renderBreathCurveEditor(progress);
     renderLayerAutomationEditor(progress);
+    syncEasyTransport();
   }
 
   function renderStates(activeName = "") {
@@ -2264,6 +2322,12 @@
 
   function bind() {
     [
+      "easyModeBtn",
+      "advancedModeBtn",
+      "easyPanel",
+      "easyPresetSelect",
+      "easyStartBtn",
+      "easyStopBtn",
       "journeySelect",
       "presetNameInput",
       "presetSelect",
@@ -2367,9 +2431,11 @@
     els.deletePresetBtn.addEventListener("click", deleteSelectedPreset);
     els.abePrepareBtn.addEventListener("click", startAbeEntry);
     els.presetSelect.addEventListener("change", () => {
-      const preset = readPresets().find((item) => item.id === els.presetSelect.value);
-      els.presetNameInput.value = preset?.name || "";
+      syncPresetSelectors(els.presetSelect.value);
     });
+    els.easyPresetSelect.addEventListener("change", () => applyPresetById(els.easyPresetSelect.value));
+    els.easyModeBtn.addEventListener("click", () => setAppMode("easy"));
+    els.advancedModeBtn.addEventListener("click", () => setAppMode("advanced"));
     els.journeySelect.addEventListener("change", syncControlsFromJourney);
     els.advancedToggle.addEventListener("click", () => {
       els.advancedPanel.hidden = !els.advancedPanel.hidden;
@@ -2517,10 +2583,20 @@
       });
     });
     els.playBtn.addEventListener("click", startJourney);
+    els.easyStartBtn.addEventListener("click", () => {
+      if (state.playing || state.abe.running) stopJourney(true);
+      startAbeEntry();
+    });
+    els.easyStopBtn.addEventListener("click", () => {
+      stopJourney();
+      render(evaluateJourney(0), 0);
+    });
     els.holdBtn.addEventListener("click", toggleHold);
     els.stopBtn.addEventListener("click", () => stopJourney());
     window.addEventListener("beforeunload", () => stopJourney(true));
     syncControlsFromJourney();
+    applyPresetById(EASY_DEFAULT_PRESET_ID);
+    setAppMode("easy");
   }
 
   bind();
