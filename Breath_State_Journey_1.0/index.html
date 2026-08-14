@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
-    <link rel="stylesheet" href="breath-state.css?v=1.1">
+    <link rel="stylesheet" href="breath-state.css?v=1.2">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
@@ -236,7 +236,16 @@
             </label>
             <label class="toggle-line is-muted">
               <input id="natureLayerToggle" type="checkbox">
-              <span>Nature layer placeholder</span>
+              <span>Nature layer</span>
+            </label>
+            <label class="is-muted">
+              <span>Nature source</span>
+              <select id="natureSourceSelect">
+                <option value="birds">Birds</option>
+                <option value="rain">Rain</option>
+                <option value="waves">Waves</option>
+                <option value="fireplace">Fireplace</option>
+              </select>
             </label>
             <label class="is-muted">
               <span>Nature volume</span>
@@ -327,6 +336,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=1.7"></script>
+    <script src="breath-state.js?v=1.8"></script>
   </body>
 </html>

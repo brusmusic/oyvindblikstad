@@ -66,6 +66,12 @@
     blue: { label: "blue", gain: 0.82, filterType: "bandpass", q: 0.95, frequencyScale: 1.35 },
     violet: { label: "violet", gain: 0.7, filterType: "highpass", q: 0.72, frequencyScale: 1.72 }
   };
+  const natureSources = {
+    birds: { label: "birds", url: "../audio/ambience_birds.mp3" },
+    rain: { label: "rain", url: "../audio/ambience_rain.mp3" },
+    waves: { label: "waves", url: "../audio/ambience_waves.mp3" },
+    fireplace: { label: "fireplace", url: "../audio/ambience_fireplace.mp3" }
+  };
 
   const relationshipSets = {
     harmonic: {
@@ -182,6 +188,10 @@
 
   function selectedNoiseProfile() {
     return noiseProfiles[els.noiseColorSelect?.value] || noiseProfiles.white;
+  }
+
+  function selectedNatureSource() {
+    return natureSources[els.natureSourceSelect?.value] || natureSources.birds;
   }
 
   function normalizeNoise(data, targetPeak = 0.95) {
@@ -333,17 +343,100 @@
       return { osc, gain, pan };
     });
 
-    const natureSource = ctx.createBufferSource();
-    natureSource.buffer = createNoiseBuffer(ctx, "pink");
-    natureSource.loop = true;
     const natureFilter = ctx.createBiquadFilter();
     natureFilter.type = "lowpass";
-    natureFilter.frequency.value = 420;
+    natureFilter.frequency.value = 5200;
     const natureGain = ctx.createGain();
     natureGain.gain.value = 0;
-    natureSource.connect(natureFilter);
+    const natureBus = ctx.createGain();
+    natureBus.gain.value = 1;
+    natureBus.connect(natureFilter);
     natureFilter.connect(natureGain);
     natureGain.connect(master);
+    const natureBuffers = new Map();
+    let natureLoop = null;
+    let natureLoopToken = 0;
+
+    function clearNatureLoop(fadeSec = 0.18) {
+      natureLoopToken += 1;
+      if (!natureLoop) return;
+      const now = ctx.currentTime;
+      natureLoop.timers.forEach((timerId) => window.clearTimeout(timerId));
+      natureLoop.clips.forEach(({ source, gain }) => {
+        try {
+          gain.gain.cancelScheduledValues(now);
+          gain.gain.setValueAtTime(gain.gain.value, now);
+          gain.gain.linearRampToValueAtTime(0, now + fadeSec);
+          source.stop(now + fadeSec + 0.04);
+        } catch {
+          // Already stopped.
+        }
+      });
+      natureLoop = null;
+    }
+
+    async function ensureNatureBuffer(sourceId) {
+      const config = natureSources[sourceId] || natureSources.birds;
+      if (!natureBuffers.has(sourceId)) {
+        const promise = fetch(config.url)
+          .then((response) => {
+            if (!response.ok) throw new Error(`Nature audio could not be loaded (${response.status})`);
+            return response.arrayBuffer();
+          })
+          .then((arrayBuffer) => ctx.decodeAudioData(arrayBuffer));
+        natureBuffers.set(sourceId, promise);
+      }
+      return natureBuffers.get(sourceId);
+    }
+
+    function scheduleNatureClip(loop, buffer, when, offsetSec, durationSec, fadeInSec, fadeOutSec) {
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      const duration = Math.max(0.1, Math.min(durationSec, buffer.duration - offsetSec));
+      source.buffer = buffer;
+      gain.gain.setValueAtTime(fadeInSec > 0 ? 0 : 1, when);
+      if (fadeInSec > 0) gain.gain.linearRampToValueAtTime(1, when + fadeInSec);
+      if (fadeOutSec > 0 && duration > fadeOutSec) {
+        gain.gain.setValueAtTime(1, when + duration - fadeOutSec);
+        gain.gain.linearRampToValueAtTime(0, when + duration);
+      }
+      source.connect(gain);
+      gain.connect(natureBus);
+      source.start(when, offsetSec, duration);
+      source.stop(when + duration + 0.06);
+      loop.clips.push({ source, gain });
+    }
+
+    function startNatureLoop(buffer, sourceId) {
+      clearNatureLoop(0.08);
+      const token = natureLoopToken;
+      const loop = { sourceId, clips: [], timers: [] };
+      natureLoop = loop;
+      const now = ctx.currentTime + 0.02;
+      const firstEnd = Math.min(55, Math.max(10, buffer.duration - 0.1));
+      const loopStart = Math.min(10, Math.max(0, buffer.duration - 0.2));
+      const loopEnd = Math.min(55, Math.max(loopStart + 1, buffer.duration - 0.1));
+      const crossfade = Math.min(5, Math.max(0.5, (loopEnd - loopStart) / 3));
+      const loopDuration = Math.max(1, loopEnd - loopStart);
+      const loopInterval = Math.max(1, loopDuration - crossfade);
+      scheduleNatureClip(loop, buffer, now, 0, firstEnd, 0, crossfade);
+
+      const queueLoop = (when) => {
+        if (token !== natureLoopToken || natureLoop !== loop) return;
+        scheduleNatureClip(loop, buffer, when, loopStart, loopDuration, crossfade, crossfade);
+        const delayMs = Math.max(0, ((when + loopInterval) - ctx.currentTime) * 1000);
+        loop.timers.push(window.setTimeout(() => queueLoop(when + loopInterval), delayMs));
+      };
+      const nextWhen = now + Math.max(1, firstEnd - crossfade);
+      loop.timers.push(window.setTimeout(() => queueLoop(nextWhen), Math.max(0, (nextWhen - ctx.currentTime) * 1000)));
+    }
+
+    async function setNatureSource(sourceId = "birds") {
+      const id = natureSources[sourceId] ? sourceId : "birds";
+      if (natureLoop?.sourceId === id) return;
+      const buffer = await ensureNatureBuffer(id);
+      startNatureLoop(buffer, id);
+    }
 
     const guideGain = ctx.createGain();
     guideGain.gain.value = controlValue("guideVoiceVolumeInput", 1.15);
@@ -454,7 +547,6 @@
     beatA.start();
     beatB.start();
     harmonicVoices.forEach((voice) => voice.osc.start());
-    natureSource.start();
 
     return {
       ctx,
@@ -478,8 +570,10 @@
       playGuideCue,
       playTonalGuide,
       setBreathNoiseColor,
+      setNatureSource,
       stopSources() {
-        [breathSource, beatA, beatB, natureSource, ...harmonicVoices.map((voice) => voice.osc)].forEach((source) => {
+        clearNatureLoop(0);
+        [breathSource, beatA, beatB, ...harmonicVoices.map((voice) => voice.osc)].forEach((source) => {
           try {
             source.stop();
           } catch {
@@ -859,7 +953,7 @@
     audio.harmonicWet.gain.setTargetAtTime(layerHarmonic * harmonicSpace * lerp(0.08, 0.28, params.reverb), now, 0.22);
     audio.harmonicDry.gain.setTargetAtTime(layerHarmonic * 0.022, now, 0.12);
 
-    audio.natureFilter.frequency.setTargetAtTime(220 + (params.intensity * 360), now, 0.4);
+    audio.natureFilter.frequency.setTargetAtTime(3200 + (params.intensity * 3600), now, 0.4);
     audio.natureGain.gain.setTargetAtTime(layerNature * 0.035, now, 0.2);
 
     updateMeters({
@@ -1051,7 +1145,7 @@
     const listeningWeight = result && confidence >= ABE_USABLE_CONFIDENCE ? 1 : 0.62;
     const natureLevel = 0.012 + (progress * 0.004);
     const breathLevel = 0.022 * brownFade * (0.32 + (breathAmp * 0.68)) * listeningWeight;
-    audio.natureFilter.frequency.setTargetAtTime(260 + (progress * 150), now, 0.5);
+    audio.natureFilter.frequency.setTargetAtTime(3600 + (progress * 2200), now, 0.5);
     audio.natureGain.gain.setTargetAtTime(natureLevel, now, 0.3);
     audio.breathGain.gain.setTargetAtTime(breathLevel, now, 0.08);
     audio.breathFilter.type = "lowpass";
@@ -1189,6 +1283,7 @@
       state.audio = makeAudioGraph();
       state.audio.setBreathNoiseColor("brown");
       await state.audio.ctx.resume();
+      await state.audio.setNatureSource(els.natureSourceSelect.value);
       const motionAllowed = await requestAbeMotionAccess();
       if (motionAllowed) startAbeMotionCapture();
       if (!motionAllowed) {
@@ -1224,6 +1319,7 @@
         state.audio = makeAudioGraph();
       }
       await state.audio.ctx.resume();
+      if (els.natureLayerToggle.checked) await state.audio.setNatureSource(els.natureSourceSelect.value);
       state.playing = true;
       state.holding = false;
       state.elapsedSec = 0;
@@ -1930,6 +2026,7 @@
       relationship: els.relationshipSelect.value,
       movement: Number(els.movementInput.value),
       noiseColor: els.noiseColorSelect.value,
+      natureSource: els.natureSourceSelect.value,
       toggles: {
         breath: els.breathLayerToggle.checked,
         guideVoice: els.guideLayerToggle.checked,
@@ -1990,6 +2087,7 @@
     if (preset.relationship) els.relationshipSelect.value = preset.relationship;
     if (Number.isFinite(preset.movement)) els.movementInput.value = String(preset.movement);
     if (preset.noiseColor) els.noiseColorSelect.value = preset.noiseColor;
+    if (preset.natureSource && natureSources[preset.natureSource]) els.natureSourceSelect.value = preset.natureSource;
     if (preset.toggles) {
       els.breathLayerToggle.checked = Boolean(preset.toggles.breath);
       els.guideLayerToggle.checked = Boolean(preset.toggles.guideVoice);
@@ -2016,6 +2114,9 @@
     };
     updateBreathInputsFromCurveEndpoints();
     if (state.audio) state.audio.setBreathNoiseColor(els.noiseColorSelect.value);
+    if (state.audio && els.natureLayerToggle.checked) {
+      state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
+    }
     renderControlReadouts();
     render(evaluateJourney(state.playing ? state.elapsedSec / Math.max(1, journeyDuration()) : 0), state.playing ? state.elapsedSec / Math.max(1, journeyDuration()) : 0);
     setPresetStatus(`Loaded "${preset.name}".`);
@@ -2098,7 +2199,8 @@
       els.guideLayerToggle.checked ? "voice" : "",
       els.guideTonalToggle.checked ? "tonal" : ""
     ].filter(Boolean).join("+");
-    els.soundDetail.textContent = `${selectedNoiseProfile().label} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz`;
+    const natureLabel = els.natureLayerToggle.checked ? ` · nature ${selectedNatureSource().label}` : "";
+    els.soundDetail.textContent = `${selectedNoiseProfile().label}${natureLabel} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz`;
     renderStates(params.activeState.name);
     renderEventLog();
     renderBreathCurveEditor(progress);
@@ -2218,6 +2320,7 @@
       "harmonicSpaceInput",
       "harmonicSpaceValue",
       "natureLayerToggle",
+      "natureSourceSelect",
       "natureVolumeInput",
       "natureVolumeValue",
       "relationshipSelect",
@@ -2389,6 +2492,7 @@
       els.harmonicVolumeInput,
       els.harmonicSpaceInput,
       els.natureLayerToggle,
+      els.natureSourceSelect,
       els.natureVolumeInput
     ].forEach((input) => {
       input.addEventListener("input", () => {
@@ -2398,6 +2502,12 @@
         renderControlReadouts();
         if (input === els.noiseColorSelect && state.audio) {
           state.audio.setBreathNoiseColor(els.noiseColorSelect.value);
+        }
+        if (input === els.natureSourceSelect && state.audio) {
+          state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
+        }
+        if (input === els.natureLayerToggle && input.checked && state.audio) {
+          state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
         }
         if (!state.playing) renderBreathCurveEditor();
         if (!state.playing) render(evaluateJourney(0), 0);
