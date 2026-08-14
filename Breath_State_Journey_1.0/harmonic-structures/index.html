@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>Harmonic Structures Synth</title>
+    <link rel="stylesheet" href="synth.css?v=1.0">
+    <script>
+      if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
+        window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
+      }
+    </script>
+  </head>
+  <body>
+    <main class="synth-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Breath State side lab</p>
+          <h1>Harmonic Structures</h1>
+          <p class="subline">Build overtone rows, listen for color, save promising structures for the harmonic field.</p>
+        </div>
+        <nav class="topbar-actions" aria-label="Navigation">
+          <a href="../">Back to Breath State</a>
+        </nav>
+      </header>
+
+      <section class="workspace">
+        <aside class="control-panel" aria-label="Synth controls">
+          <section class="panel-block">
+            <div class="section-head">
+              <p class="eyebrow">Transport</p>
+              <span id="statusText">silent</span>
+            </div>
+            <div class="transport">
+              <button id="playBtn" class="primary" type="button">Play</button>
+              <button id="stopBtn" class="secondary" type="button" disabled>Stop</button>
+            </div>
+            <label>
+              <span>Root</span>
+              <input id="rootInput" type="range" min="36" max="220" step="0.01" value="48">
+              <output id="rootValue">48.00 Hz</output>
+            </label>
+            <label>
+              <span>Master</span>
+              <input id="masterInput" type="range" min="0" max="1" step="0.01" value="0.42">
+              <output id="masterValue">42%</output>
+            </label>
+            <label>
+              <span>Attack</span>
+              <input id="attackInput" type="range" min="0.005" max="3" step="0.005" value="0.18">
+              <output id="attackValue">0.18s</output>
+            </label>
+            <label>
+              <span>Release</span>
+              <input id="releaseInput" type="range" min="0.02" max="5" step="0.01" value="1.2">
+              <output id="releaseValue">1.20s</output>
+            </label>
+            <label>
+              <span>Stereo spread</span>
+              <input id="spreadInput" type="range" min="0" max="1" step="0.01" value="0.42">
+              <output id="spreadValue">42%</output>
+            </label>
+          </section>
+
+          <section class="panel-block">
+            <p class="eyebrow">Overtone presets</p>
+            <div class="preset-grid" id="presetGrid"></div>
+          </section>
+
+          <section class="panel-block">
+            <p class="eyebrow">Tonal cadence colors</p>
+            <div class="preset-grid phase-grid" id="phaseGrid"></div>
+          </section>
+
+          <section class="panel-block">
+            <div class="section-head">
+              <p class="eyebrow">Structure</p>
+              <button id="copyBtn" class="mini" type="button">Copy JSON</button>
+            </div>
+            <textarea id="jsonOutput" readonly></textarea>
+          </section>
+        </aside>
+
+        <section class="stage" aria-label="Harmonic structure editor">
+          <section class="visual-panel">
+            <canvas id="scopeCanvas" width="1200" height="520" aria-label="Harmonic spectrum and waveform"></canvas>
+          </section>
+
+          <section class="partials-panel">
+            <div class="section-head">
+              <p class="eyebrow">Partials</p>
+              <div class="section-actions">
+                <button id="addPartialBtn" class="mini" type="button">Add partial</button>
+                <button id="normalizeBtn" class="mini" type="button">Normalize</button>
+                <button id="clearBtn" class="mini danger" type="button">Clear</button>
+              </div>
+            </div>
+            <div class="partial-header" aria-hidden="true">
+              <span>On</span>
+              <span>Ratio</span>
+              <span>Level</span>
+              <span>Detune</span>
+              <span>Pan</span>
+              <span></span>
+            </div>
+            <div class="partials-list" id="partialsList"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="synth.js?v=1.0"></script>
+  </body>
+</html>
