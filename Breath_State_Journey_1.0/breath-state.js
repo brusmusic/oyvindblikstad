@@ -352,11 +352,25 @@
     const beatB = ctx.createOscillator();
     beatA.type = "sine";
     beatB.type = "sine";
-    const beatGain = ctx.createGain();
-    beatGain.gain.value = 0;
-    beatA.connect(beatGain);
-    beatB.connect(beatGain);
-    beatGain.connect(master);
+    const beatMonoGain = ctx.createGain();
+    const beatLeftGain = ctx.createGain();
+    const beatRightGain = ctx.createGain();
+    const beatLeftPan = ctx.createStereoPanner();
+    const beatRightPan = ctx.createStereoPanner();
+    beatMonoGain.gain.value = 0;
+    beatLeftGain.gain.value = 0;
+    beatRightGain.gain.value = 0;
+    beatLeftPan.pan.value = -1;
+    beatRightPan.pan.value = 1;
+    beatA.connect(beatMonoGain);
+    beatB.connect(beatMonoGain);
+    beatA.connect(beatLeftGain);
+    beatB.connect(beatRightGain);
+    beatLeftGain.connect(beatLeftPan);
+    beatRightGain.connect(beatRightPan);
+    beatMonoGain.connect(master);
+    beatLeftPan.connect(master);
+    beatRightPan.connect(master);
 
     const harmonicBus = ctx.createGain();
     const harmonicDry = ctx.createGain();
@@ -668,7 +682,9 @@
       breathPan,
       beatA,
       beatB,
-      beatGain,
+      beatMonoGain,
+      beatLeftGain,
+      beatRightGain,
       harmonicBus,
       harmonicDry,
       harmonicWet,
@@ -1062,7 +1078,11 @@
     const beatDiff = clamp(1 / Math.max(1, duration || (params.inhaleSec + params.exhaleSec)), 0.025, 1);
     audio.beatA.frequency.setTargetAtTime(fundamental, now, 0.05);
     audio.beatB.frequency.setTargetAtTime(fundamental + beatDiff, now, 0.05);
-    audio.beatGain.gain.setTargetAtTime(layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse)), now, 0.04);
+    const beatLevel = layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse));
+    const splitInterference = els.interferenceRoutingSelect?.value === "split";
+    audio.beatMonoGain.gain.setTargetAtTime(splitInterference ? 0 : beatLevel, now, 0.04);
+    audio.beatLeftGain.gain.setTargetAtTime(splitInterference ? beatLevel * 0.82 : 0, now, 0.04);
+    audio.beatRightGain.gain.setTargetAtTime(splitInterference ? beatLevel * 0.82 : 0, now, 0.04);
 
     const set = relationshipSets[relationshipMode] || relationshipSets.harmonic;
     if (relationshipMode === TONAL_CADENCE_MODE) {
@@ -1310,7 +1330,9 @@
     audio.breathFilter.frequency.setTargetAtTime(120 + (breathAmp * 420), now, 0.12);
     audio.breathFilter.Q.setTargetAtTime(0.68, now, 0.12);
     audio.breathPan.pan.setTargetAtTime(0, now, 0.16);
-    audio.beatGain.gain.setTargetAtTime(0, now, 0.12);
+    audio.beatMonoGain.gain.setTargetAtTime(0, now, 0.12);
+    audio.beatLeftGain.gain.setTargetAtTime(0, now, 0.12);
+    audio.beatRightGain.gain.setTargetAtTime(0, now, 0.12);
     audio.harmonicVoices.forEach((voice) => voice.gain.gain.setTargetAtTime(0, now, 0.16));
     audio.harmonicDry.gain.setTargetAtTime(0, now, 0.16);
     audio.harmonicWet.gain.setTargetAtTime(0, now, 0.16);
@@ -1327,6 +1349,7 @@
 
     els.noiseColorSelect.value = "brown";
     els.relationshipSelect.value = TONAL_CADENCE_MODE;
+    els.interferenceRoutingSelect.value = "mono";
     els.breathLayerToggle.checked = true;
     els.natureLayerToggle.checked = true;
     els.guideLayerToggle.checked = true;
@@ -2114,6 +2137,7 @@
         fundamental: 48,
         duration: 360,
         relationship: TONAL_CADENCE_MODE,
+        interferenceRouting: "mono",
         movement: 0.28,
         noiseColor: "pink",
         toggles: {
@@ -2157,6 +2181,7 @@
         fundamental: 45,
         duration: 600,
         relationship: "harmonic",
+        interferenceRouting: "mono",
         movement: 0.16,
         noiseColor: "green",
         toggles: {
@@ -2200,6 +2225,7 @@
         fundamental: 39,
         duration: 720,
         relationship: "phi",
+        interferenceRouting: "mono",
         movement: 0.08,
         noiseColor: "brown",
         toggles: {
@@ -2493,6 +2519,7 @@
       fundamental: Number(els.fundamentalInput.value),
       duration: Number(els.durationInput.value),
       relationship: els.relationshipSelect.value,
+      interferenceRouting: els.interferenceRoutingSelect.value,
       movement: Number(els.movementInput.value),
       noiseColor: els.noiseColorSelect.value,
       natureSource: els.natureSourceSelect.value,
@@ -2556,6 +2583,7 @@
     if (Number.isFinite(preset.fundamental)) els.fundamentalInput.value = String(preset.fundamental);
     if (Number.isFinite(preset.duration)) els.durationInput.value = String(preset.duration);
     if (preset.relationship) els.relationshipSelect.value = preset.relationship;
+    els.interferenceRoutingSelect.value = preset.interferenceRouting === "split" ? "split" : "mono";
     if (Number.isFinite(preset.movement)) els.movementInput.value = String(preset.movement);
     if (preset.noiseColor) els.noiseColorSelect.value = preset.noiseColor;
     if (preset.natureSource && natureSources[preset.natureSource]) els.natureSourceSelect.value = preset.natureSource;
@@ -2805,6 +2833,7 @@
       "guideTonalVolumeInput",
       "guideTonalVolumeValue",
       "beatLayerToggle",
+      "interferenceRoutingSelect",
       "beatVolumeInput",
       "beatVolumeValue",
       "harmonicLayerToggle",
@@ -3014,6 +3043,7 @@
       els.guideTonalToggle,
       els.guideTonalVolumeInput,
       els.beatLayerToggle,
+      els.interferenceRoutingSelect,
       els.beatVolumeInput,
       els.harmonicLayerToggle,
       els.harmonicVolumeInput,

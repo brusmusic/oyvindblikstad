@@ -232,6 +232,13 @@
               <input id="beatVolumeInput" type="range" min="0" max="5" step="0.01" value="2.2">
               <output id="beatVolumeValue">220%</output>
             </label>
+            <label>
+              <span>Interference routing</span>
+              <select id="interferenceRoutingSelect">
+                <option value="mono">Mono</option>
+                <option value="split">Split L/R</option>
+              </select>
+            </label>
             <label class="toggle-line">
               <input id="harmonicLayerToggle" type="checkbox" checked>
               <span>Harmonic field</span>
@@ -388,6 +395,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=2.6"></script>
+    <script src="breath-state.js?v=2.7"></script>
   </body>
 </html>
