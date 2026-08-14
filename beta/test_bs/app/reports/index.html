@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>Adaptive Entry Reports</title>
+    <link rel="stylesheet" href="reports.css?v=0.1">
+    <script>
+      if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
+        window.location.replace("../../");
+      }
+    </script>
+  </head>
+  <body>
+    <main class="reports-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Local test log</p>
+          <h1>Adaptive Entry Reports</h1>
+          <p class="subline">Reports are stored only in this browser until you copy or download them.</p>
+        </div>
+        <nav class="topbar-actions">
+          <a href="../">Back to test</a>
+        </nav>
+      </header>
+
+      <section class="toolbar">
+        <button id="copyAllBtn" type="button">Copy all for Codex</button>
+        <button id="downloadAllBtn" type="button">Download JSON</button>
+        <button id="clearBtn" type="button">Clear local reports</button>
+      </section>
+
+      <section class="summary" id="summary"></section>
+      <section class="report-list" id="reportList"></section>
+      <textarea id="exportBox" class="export-box" rows="10" readonly></textarea>
+    </main>
+    <script src="reports.js?v=0.1"></script>
+  </body>
+</html>

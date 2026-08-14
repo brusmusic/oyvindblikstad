@@ -19,10 +19,25 @@ const els = {
   breathRate: $("breathRate"),
   cycleDuration: $("cycleDuration"),
   confidence: $("confidence"),
-  motionQuality: $("motionQuality")
+  motionQuality: $("motionQuality"),
+  reportPanel: $("reportPanel"),
+  reportSignal: $("reportSignal"),
+  reportPlacement: $("reportPlacement"),
+  reportTransition: $("reportTransition"),
+  reportNotes: $("reportNotes"),
+  addReportBtn: $("addReportBtn"),
+  copyReportBtn: $("copyReportBtn"),
+  downloadReportsBtn: $("downloadReportsBtn"),
+  reportStatus: $("reportStatus"),
+  reportExport: $("reportExport")
 };
 
 let entry = new AdaptiveEntryController();
+let capabilities = null;
+let currentProfile = null;
+let currentRun = null;
+let latestReport = null;
+const REPORTS_KEY = "adaptive-entry-reports-v1";
 
 function percent(value) {
   return Number.isFinite(value) ? `${Math.round(value * 100)}%` : "--";
@@ -89,12 +104,142 @@ function drawSignal(debug) {
 }
 
 function showProfile(profile) {
+  currentProfile = profile;
   els.profileOutput.textContent = JSON.stringify(profile, null, 2);
   els.breathRate.textContent = profile?.breath?.detected ? profile.breath.breathsPerMinute.toFixed(1) : "--";
   els.cycleDuration.textContent = profile?.breath?.detected ? seconds(profile.breath.cycleDuration) : "--";
   els.confidence.textContent = percent(profile?.breath?.confidence);
   els.motionQuality.textContent = percent(profile?.motion?.signalQuality);
   drawSignal(profile?.debug?.breath);
+}
+
+function readReports() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(REPORTS_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeReports(reports) {
+  let trimmed = reports.slice(-30);
+  try {
+    localStorage.setItem(REPORTS_KEY, JSON.stringify(trimmed));
+  } catch {
+    trimmed = reports.slice(-10);
+    localStorage.setItem(REPORTS_KEY, JSON.stringify(trimmed));
+  }
+  return trimmed.length;
+}
+
+function reportSummary(profile) {
+  return {
+    breathDetected: Boolean(profile?.breath?.detected),
+    breathsPerMinute: profile?.breath?.breathsPerMinute ?? null,
+    cycleDuration: profile?.breath?.cycleDuration ?? null,
+    inhaleDuration: profile?.breath?.inhaleDuration ?? null,
+    exhaleDuration: profile?.breath?.exhaleDuration ?? null,
+    breathConfidence: profile?.breath?.confidence ?? null,
+    motionSignalQuality: profile?.motion?.signalQuality ?? null,
+    voiceFrequency: profile?.voice?.frequency ?? null,
+    voiceConfidence: profile?.voice?.confidence ?? null,
+    globalTuneFrequency: profile?.globalTune?.frequency ?? null
+  };
+}
+
+function createReport() {
+  if (!currentProfile) return null;
+  const now = new Date();
+  return {
+    schema: "adaptive-entry-report-v1",
+    id: `entry-${now.toISOString()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: now.toISOString(),
+    page: {
+      href: window.location.href,
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      secureContext: window.isSecureContext,
+      screen: {
+        width: window.screen?.width ?? null,
+        height: window.screen?.height ?? null,
+        devicePixelRatio: window.devicePixelRatio ?? null
+      }
+    },
+    run: currentRun,
+    observer: {
+      signalFelt: els.reportSignal?.value || "uncertain",
+      phonePlacement: els.reportPlacement?.value || "unknown",
+      transitionTest: els.reportTransition?.value || "not_tested",
+      notes: els.reportNotes?.value.trim() || ""
+    },
+    summary: reportSummary(currentProfile),
+    capabilities,
+    profile: currentProfile
+  };
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return true;
+  }
+  els.reportExport.focus();
+  els.reportExport.select();
+  return document.execCommand("copy");
+}
+
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function addReport() {
+  const report = createReport();
+  if (!report) {
+    els.reportStatus.textContent = "No completed measurement to report yet.";
+    return;
+  }
+  const reports = readReports();
+  reports.push(report);
+  const storedCount = writeReports(reports);
+  latestReport = report;
+  const text = JSON.stringify(report, null, 2);
+  els.reportExport.value = text;
+  try {
+    await copyText(text);
+    els.reportStatus.textContent = `Report added and copied. Stored locally: ${storedCount}.`;
+  } catch {
+    els.reportStatus.textContent = `Report added. Stored locally: ${storedCount}. Copy it from the box below.`;
+  }
+}
+
+async function copyLatestReport() {
+  const reports = readReports();
+  const report = latestReport || reports[reports.length - 1];
+  if (!report) {
+    els.reportStatus.textContent = "No report has been added yet.";
+    return;
+  }
+  const text = JSON.stringify(report, null, 2);
+  els.reportExport.value = text;
+  await copyText(text);
+  els.reportStatus.textContent = "Latest report copied.";
+}
+
+function downloadReports() {
+  const reports = readReports();
+  if (!reports.length) {
+    els.reportStatus.textContent = "No reports to download yet.";
+    return;
+  }
+  downloadJson(`adaptive-entry-reports-${new Date().toISOString().slice(0, 10)}.json`, reports);
+  els.reportStatus.textContent = `Downloaded ${reports.length} reports.`;
 }
 
 function setProgress(value) {
@@ -104,6 +249,15 @@ function setProgress(value) {
 async function start(options) {
   entry.abort();
   entry = new AdaptiveEntryController();
+  currentProfile = null;
+  latestReport = null;
+  currentRun = {
+    mode: options.voice ? "breath_voice" : "breath",
+    requestedDurationSec: Number(els.durationInput.value) || 45,
+    startedAt: new Date().toISOString()
+  };
+  els.reportPanel.hidden = true;
+  els.reportExport.value = "";
   setProgress(0);
   els.entryTitle.textContent = "Stay just as you are.";
   els.entryInstruction.textContent = "The phone is listening for small rhythmic motion from your breath.";
@@ -127,12 +281,18 @@ async function start(options) {
       }
     });
     setProgress(1);
+    currentRun.completedAt = new Date().toISOString();
+    currentRun.completed = true;
     els.entryTitle.textContent = profile.breath.detected ? "Ready to meet you there." : "Use fallback entry.";
     els.entryInstruction.textContent = profile.breath.detected
       ? "The profile can now be handed to Composer."
       : "The module did not pretend to know more than it knows.";
     showProfile(profile);
+    els.reportPanel.hidden = false;
   } catch (error) {
+    currentRun.completedAt = new Date().toISOString();
+    currentRun.completed = false;
+    currentRun.error = error.message || "Unknown error";
     els.debugStatus.textContent = "Error";
     els.entryTitle.textContent = "Sensor access failed.";
     els.entryInstruction.textContent = error.message || "The phone did not provide motion data.";
@@ -152,7 +312,10 @@ async function boot() {
     els.entryTitle.textContent = "Stopped.";
     els.entryInstruction.textContent = "You can start again when ready.";
   });
-  const capabilities = await detectDeviceCapabilities();
+  els.addReportBtn.addEventListener("click", addReport);
+  els.copyReportBtn.addEventListener("click", copyLatestReport);
+  els.downloadReportsBtn.addEventListener("click", downloadReports);
+  capabilities = await detectDeviceCapabilities();
   els.capabilitiesOutput.textContent = JSON.stringify(capabilities, null, 2);
   drawSignal(null);
 }

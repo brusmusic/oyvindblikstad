@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Cache-Control" content="no-store">
     <title>Adaptive Body Entry</title>
-    <link rel="stylesheet" href="style.css?v=0.1">
+    <link rel="stylesheet" href="style.css?v=0.2">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace("../");
@@ -21,6 +21,7 @@
           <p class="subline">First listen. Then respond.</p>
         </div>
         <nav class="topbar-actions" aria-label="Beta controls">
+          <a href="reports/">Reports</a>
           <a href="../?lock=1">Lock</a>
         </nav>
       </header>
@@ -42,6 +43,57 @@
           <input id="durationInput" type="range" min="20" max="60" step="5" value="45">
           <output id="durationValue">45 sec</output>
         </label>
+      </section>
+
+      <section class="report-panel" id="reportPanel" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Test report</p>
+            <h2>Add report</h2>
+          </div>
+          <a href="reports/">Open reports</a>
+        </div>
+        <div class="report-grid">
+          <label>
+            <span>Signal felt</span>
+            <select id="reportSignal">
+              <option value="good">Good signal</option>
+              <option value="uncertain">Uncertain</option>
+              <option value="bad">Bad signal</option>
+            </select>
+          </label>
+          <label>
+            <span>Phone placement</span>
+            <select id="reportPlacement">
+              <option value="belly">Belly</option>
+              <option value="upper_belly">Upper belly</option>
+              <option value="chest">Chest</option>
+              <option value="pocket">Pocket</option>
+              <option value="handheld">Handheld</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            <span>Transition test</span>
+            <select id="reportTransition">
+              <option value="not_tested">Not tested</option>
+              <option value="ready">Ready to start Breath State</option>
+              <option value="too_short">Needs longer entry</option>
+              <option value="wrong_direction">Wrong direction</option>
+            </select>
+          </label>
+        </div>
+        <label class="notes-row">
+          <span>Notes</span>
+          <textarea id="reportNotes" rows="4" placeholder="Position, feeling, breath state, what worked, what felt wrong..."></textarea>
+        </label>
+        <div class="actions">
+          <button id="addReportBtn" type="button">Add report</button>
+          <button id="copyReportBtn" type="button">Copy latest report</button>
+          <button id="downloadReportsBtn" type="button">Download all</button>
+        </div>
+        <p class="report-status" id="reportStatus">Complete a measurement, add a short note, then copy the report into Codex.</p>
+        <textarea class="report-export" id="reportExport" rows="7" readonly placeholder="The latest JSON report will appear here after Add report."></textarea>
       </section>
 
       <section class="result-grid">
@@ -69,6 +121,6 @@
         </div>
       </section>
     </main>
-    <script type="module" src="demo.mjs?v=0.1"></script>
+    <script type="module" src="demo.mjs?v=0.2"></script>
   </body>
 </html>

@@ -105,7 +105,8 @@ button:first-child {
 
 .entry-card,
 article,
-.debug-panel {
+.debug-panel,
+.report-panel {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface);
@@ -159,7 +160,8 @@ article,
 }
 
 article,
-.debug-panel {
+.debug-panel,
+.report-panel {
   padding: 18px;
 }
 
@@ -176,6 +178,67 @@ pre {
 
 .debug-panel {
   margin-top: 14px;
+}
+
+.report-panel {
+  margin-top: 14px;
+}
+
+.report-panel[hidden] {
+  display: none;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.report-grid label,
+.notes-row {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-weight: 750;
+}
+
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  font: inherit;
+}
+
+select {
+  min-height: 44px;
+  padding: 0 10px;
+}
+
+textarea {
+  padding: 12px;
+  resize: vertical;
+}
+
+.notes-row {
+  margin-top: 12px;
+}
+
+.report-status {
+  margin: 12px 0 0;
+  color: var(--gold);
+  font-weight: 750;
+}
+
+.report-export {
+  min-height: 150px;
+  margin-top: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .section-head {
@@ -243,5 +306,9 @@ pre {
 
   .metrics {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .report-grid {
+    grid-template-columns: 1fr;
   }
 }
