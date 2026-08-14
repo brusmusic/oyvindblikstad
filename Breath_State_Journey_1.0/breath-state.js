@@ -875,6 +875,26 @@
     if (els.abeSignalText) els.abeSignalText.textContent = signal;
   }
 
+  function setAbeValues(startText = "--", targetText = "--") {
+    if (els.abeStartValue) els.abeStartValue.textContent = startText;
+    if (els.abeTargetValue) els.abeTargetValue.textContent = targetText;
+  }
+
+  function abePrepValues(result) {
+    const usable = result?.confidence >= ABE_USABLE_CONFIDENCE && Number.isFinite(result.cycleDuration);
+    const hasCandidate = result && Number.isFinite(result.cycleDuration);
+    const cycle = hasCandidate ? clamp(result.cycleDuration, 3.1, 8.5) : 8.5;
+    const startInhale = hasCandidate ? clamp(cycle * 0.42, 1.2, 3.4) : 3;
+    const startExhale = hasCandidate ? clamp(cycle * 0.58, 1.7, 5.8) : 5.5;
+    const endInhale = clamp(Math.max(inputValue("endInhaleInput", 7), startInhale + 2.4, 6.2), 1, 20);
+    const endExhale = clamp(Math.max(inputValue("endExhaleInput", 12), startExhale + 4.8, 10.5), 1, 30);
+    return { usable, hasCandidate, cycle, startInhale, startExhale, endInhale, endExhale };
+  }
+
+  function abeBreathLabel(inhaleSec, exhaleSec) {
+    return `${inhaleSec.toFixed(1)} in / ${exhaleSec.toFixed(1)} out`;
+  }
+
   function abeMotionSupported() {
     return typeof window.DeviceMotionEvent !== "undefined";
   }
@@ -898,20 +918,30 @@
     state.abe.listener = (event) => {
       const rotation = event.rotationRate || {};
       const accel = event.accelerationIncludingGravity || event.acceleration || {};
-      const gx = Number(rotation.beta) || 0;
-      const gy = Number(rotation.gamma) || 0;
-      const gz = Number(rotation.alpha) || 0;
-      const ax = Number(accel.x) || 0;
-      const ay = Number(accel.y) || 0;
-      const az = Number(accel.z) || 0;
+      const motion = event.acceleration || {};
+      const gx = Number(accel.x) || 0;
+      const gy = Number(accel.y) || 0;
+      const gz = Number(accel.z) || 0;
+      const ax = Number(motion.x) || 0;
+      const ay = Number(motion.y) || 0;
+      const az = Number(motion.z) || 0;
+      const alpha = Number(rotation.alpha) || 0;
+      const beta = Number(rotation.beta) || 0;
+      const gamma = Number(rotation.gamma) || 0;
       const t = (performance.now() / 1000) - startedAt;
       state.abe.samples.push({
         t,
+        ax,
+        ay,
+        az,
         gx,
         gy,
         gz,
-        rotationMagnitude: Math.hypot(gx, gy, gz),
-        gravityMagnitude: Math.hypot(ax, ay, az)
+        alpha,
+        beta,
+        gamma,
+        rotationMagnitude: Math.hypot(alpha, beta, gamma),
+        gravityMagnitude: Math.hypot(gx, gy, gz)
       });
       if (state.abe.samples.length > 1800) state.abe.samples.shift();
     };
@@ -995,7 +1025,7 @@
   }
 
   function analyzeAbeSamples(samples = state.abe.samples) {
-    const keys = ["gx", "gy", "gz", "rotationMagnitude", "gravityMagnitude"];
+    const keys = ["gx", "gy", "gz", "gravityMagnitude", "rotationMagnitude", "alpha", "beta", "gamma"];
     const candidates = keys
       .map((key) => analyzeAbeCandidate(samples, key))
       .filter(Boolean)
@@ -1041,12 +1071,7 @@
   }
 
   function applyAbePreparation(result) {
-    const usable = result?.confidence >= ABE_USABLE_CONFIDENCE && Number.isFinite(result.cycleDuration);
-    const cycle = usable ? clamp(result.cycleDuration, 3.1, 7.5) : 8.5;
-    const startInhale = usable ? clamp(cycle * 0.42, 1.2, 3.4) : 3;
-    const startExhale = usable ? clamp(cycle * 0.58, 1.7, 5.8) : 5.5;
-    const endInhale = clamp(Math.max(inputValue("endInhaleInput", 7), startInhale + 2.4, 6.2), 1, 20);
-    const endExhale = clamp(Math.max(inputValue("endExhaleInput", 12), startExhale + 4.8, 10.5), 1, 30);
+    const prep = abePrepValues(result);
 
     els.noiseColorSelect.value = "brown";
     els.breathLayerToggle.checked = true;
@@ -1059,16 +1084,16 @@
     els.natureVolumeInput.value = "2.25";
     els.harmonicVolumeInput.value = "1.15";
     els.harmonicSpaceInput.value = "2.8";
-    els.movementInput.value = usable ? String(clamp(0.14 + ((1 - result.confidence) * 0.14), 0.12, 0.3)) : "0.16";
+    els.movementInput.value = prep.usable ? String(clamp(0.14 + ((1 - result.confidence) * 0.14), 0.12, 0.3)) : "0.16";
     if (Number(els.durationInput.value) < 300) els.durationInput.value = "300";
 
-    els.startInhaleInput.value = startInhale.toFixed(1);
+    els.startInhaleInput.value = prep.startInhale.toFixed(1);
     els.startHoldInhaleInput.value = "0";
-    els.startExhaleInput.value = startExhale.toFixed(1);
+    els.startExhaleInput.value = prep.startExhale.toFixed(1);
     els.startHoldExhaleInput.value = "0";
-    els.endInhaleInput.value = endInhale.toFixed(1);
+    els.endInhaleInput.value = prep.endInhale.toFixed(1);
     els.endHoldInhaleInput.value = "0";
-    els.endExhaleInput.value = endExhale.toFixed(1);
+    els.endExhaleInput.value = prep.endExhale.toFixed(1);
     els.endHoldExhaleInput.value = "0";
     resetBreathCurvesFromControls();
     state.layerAutomation = {
@@ -1082,7 +1107,8 @@
     if (state.audio) state.audio.setBreathNoiseColor("brown");
     renderControlReadouts();
     render(evaluateJourney(0), 0);
-    return { usable, cycle, startInhale, startExhale };
+    setAbeValues(abeBreathLabel(prep.startInhale, prep.startExhale), abeBreathLabel(prep.endInhale, prep.endExhale));
+    return prep;
   }
 
   function cancelAbeEntry() {
@@ -1100,8 +1126,8 @@
     state.abe.lastResult = result;
     const prep = applyAbePreparation(result);
     const status = prep.usable
-      ? `ABE heard enough motion to start near ${prep.startInhale.toFixed(1)} in / ${prep.startExhale.toFixed(1)} out, then lead slower.`
-      : "ABE stayed cautious and prepared the default calm opening.";
+      ? `Start values set from ${result.key}: ${abeBreathLabel(prep.startInhale, prep.startExhale)}. The journey now leads slower.`
+      : `Signal stayed uncertain. Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.`;
     setAbeStatus(status, prep.usable ? "matched" : "default");
     await startJourney({ reuseAudio: true });
   }
@@ -1114,20 +1140,33 @@
       state.abe.lastResult = analyzeAbeSamples();
     }
     const result = state.abe.lastResult;
+    const prep = abePrepValues(result);
     applyAbePreviewAudio(progress, elapsedSec, result);
     els.phaseLabel.textContent = progress < ABE_BROWN_START_PROGRESS ? "Settling" : "Listening";
     els.phaseTime.hidden = false;
     els.phaseTime.textContent = `${Math.ceil(Math.max(0, ABE_DURATION_SEC - elapsedSec))}s`;
     els.phaseDetail.textContent = progress < ABE_BROWN_START_PROGRESS
-      ? "Nature layer is holding the entry."
-      : "Brown noise is softly meeting the breath signal.";
+      ? "Keep the phone flat and breathe normally."
+      : "Brown noise is meeting the last breath cycles.";
     const signal = result?.confidence >= ABE_USABLE_CONFIDENCE
       ? `${Math.round(result.confidence * 100)}%`
       : "gentle";
-    setAbeStatus(
-      `Preparing entry ${Math.round(progress * 100)}%. ${result ? `${result.key} · ${result.breathsPerMinute.toFixed(1)} bpm` : "Waiting for motion."}`,
-      signal
+    setAbeValues(
+      prep.hasCandidate ? abeBreathLabel(prep.startInhale, prep.startExhale) : "measuring",
+      abeBreathLabel(prep.endInhale, prep.endExhale)
     );
+    if (progress < 0.22) {
+      setAbeStatus("Place the phone flat on belly or chest. Let the speaker play quietly.", "place");
+    } else if (progress < ABE_BROWN_START_PROGRESS) {
+      setAbeStatus("Stay still enough for the phone to feel the breath. No special breathing yet.", signal);
+    } else {
+      setAbeStatus(
+        result
+          ? `Candidate: ${result.key} · ${result.breathsPerMinute.toFixed(1)} bpm · ${Math.round(result.confidence * 100)}%.`
+          : "Brown noise is now following a calm default while ABE waits for a clearer signal.",
+        signal
+      );
+    }
     if (elapsedSec >= ABE_DURATION_SEC) {
       finishAbeEntry(analyzeAbeSamples());
       return;
@@ -1141,6 +1180,7 @@
       stopJourney(true);
       els.abePrepareBtn.disabled = true;
       els.abePrepareBtn.textContent = "Preparing...";
+      setAbeValues("measuring", "calm target");
       setAbeStatus("Starting nature layer and asking the phone for motion access.", "opening");
       els.noiseColorSelect.value = "brown";
       els.natureLayerToggle.checked = true;
@@ -1151,6 +1191,9 @@
       await state.audio.ctx.resume();
       const motionAllowed = await requestAbeMotionAccess();
       if (motionAllowed) startAbeMotionCapture();
+      if (!motionAllowed) {
+        setAbeStatus("Motion access was not granted. ABE will use the default calm start.", "default");
+      }
       state.abe.running = true;
       state.abe.startedAt = performance.now();
       const now = state.audio.ctx.currentTime;
@@ -2126,6 +2169,8 @@
       "abePrepareBtn",
       "abeStatus",
       "abeSignalText",
+      "abeStartValue",
+      "abeTargetValue",
       "fundamentalInput",
       "fundamentalValue",
       "durationInput",

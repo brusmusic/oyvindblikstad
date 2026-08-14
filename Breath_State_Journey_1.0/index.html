@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
-    <link rel="stylesheet" href="breath-state.css?v=1.0">
+    <link rel="stylesheet" href="breath-state.css?v=1.1">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
@@ -57,7 +57,16 @@
               <span id="abeSignalText">gentle</span>
             </div>
             <button id="abePrepareBtn" class="primary" type="button">Prepare & start</button>
-            <p id="abeStatus" class="abe-status">Starts nature first, listens softly to body motion, then lets brown noise meet the last breath cycles.</p>
+            <ol class="abe-steps">
+              <li>Place the phone flat on belly or chest.</li>
+              <li>Let the phone speaker play quietly.</li>
+              <li>Breathe normally until the journey begins.</li>
+            </ol>
+            <div class="abe-values" aria-label="Adaptive entry values">
+              <span><strong id="abeStartValue">--</strong><small>start</small></span>
+              <span><strong id="abeTargetValue">--</strong><small>target</small></span>
+            </div>
+            <p id="abeStatus" class="abe-status">Nature starts first. Brown noise listens for the last breath cycles, then Breath State begins.</p>
           </section>
 
           <section class="panel-block">
@@ -318,6 +327,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=1.6"></script>
+    <script src="breath-state.js?v=1.7"></script>
   </body>
 </html>
