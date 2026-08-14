@@ -14,6 +14,7 @@
   const MIN_BREATH_CURVE_X_WINDOW = 0.12;
   const INTERFERENCE_GAIN_BASE = 0.04;
   const INTERFERENCE_GAIN_PULSE = 0.035;
+  const INTERFERENCE_GAIN_BOOST = 10 ** (15 / 20);
   const BREATH_CURVE_HIT_RADIUS = 12;
   const CURVE_HIT_RADIUS = 12;
   const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
@@ -1071,7 +1072,7 @@
       : fundamental;
     audio.beatA.frequency.setTargetAtTime(beatBase, now, 0.05);
     audio.beatB.frequency.setTargetAtTime(beatBase + beatDiff, now, 0.05);
-    const beatLevel = layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse));
+    const beatLevel = layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse)) * INTERFERENCE_GAIN_BOOST;
     const splitInterference = els.interferenceRoutingSelect?.value === "split";
     audio.beatMonoGain.gain.setTargetAtTime(splitInterference ? 0 : beatLevel, now, 0.04);
     audio.beatLeftGain.gain.setTargetAtTime(splitInterference ? beatLevel * 0.82 : 0, now, 0.04);
