@@ -72,6 +72,8 @@
     waves: { label: "waves", url: "../audio/ambience_waves.mp3" },
     fireplace: { label: "fireplace", url: "../audio/ambience_fireplace.mp3" }
   };
+  const NATURE_SAMPLE_GAIN_DB = 30;
+  const NATURE_SAMPLE_GAIN = 10 ** (NATURE_SAMPLE_GAIN_DB / 20);
 
   const relationshipSets = {
     harmonic: {
@@ -954,7 +956,7 @@
     audio.harmonicDry.gain.setTargetAtTime(layerHarmonic * 0.022, now, 0.12);
 
     audio.natureFilter.frequency.setTargetAtTime(3200 + (params.intensity * 3600), now, 0.4);
-    audio.natureGain.gain.setTargetAtTime(layerNature * 0.035, now, 0.2);
+    audio.natureGain.gain.setTargetAtTime(layerNature * 0.035 * NATURE_SAMPLE_GAIN, now, 0.2);
 
     updateMeters({
       breath: clamp((breathGain * noiseProfile.gain) / 0.07, 0, 1),
@@ -1146,7 +1148,8 @@
     const natureLevel = 0.012 + (progress * 0.004);
     const breathLevel = 0.022 * brownFade * (0.32 + (breathAmp * 0.68)) * listeningWeight;
     audio.natureFilter.frequency.setTargetAtTime(3600 + (progress * 2200), now, 0.5);
-    audio.natureGain.gain.setTargetAtTime(natureLevel, now, 0.3);
+    const boostedNatureLevel = natureLevel * NATURE_SAMPLE_GAIN;
+    audio.natureGain.gain.setTargetAtTime(boostedNatureLevel, now, 0.3);
     audio.breathGain.gain.setTargetAtTime(breathLevel, now, 0.08);
     audio.breathFilter.type = "lowpass";
     audio.breathFilter.frequency.setTargetAtTime(120 + (breathAmp * 420), now, 0.12);
@@ -1160,7 +1163,7 @@
       breath: brownFade * (0.35 + (breathAmp * 0.65)),
       beat: 0,
       harmonic: 0,
-      space: clamp(natureLevel / 0.018, 0, 1)
+      space: clamp(boostedNatureLevel / 0.55, 0, 1)
     });
   }
 
