@@ -40,7 +40,7 @@ let currentProfile = null;
 let currentRun = null;
 let latestReport = null;
 const REPORTS_KEY = "adaptive-entry-reports-v1";
-const VOICE_PROMPT = "I am here now. I breathe in. I breathe out. I let my body arrive.";
+const VOICE_PROMPT = "I am amazing. Sometimes I forget. But here I am.";
 
 function percent(value) {
   return Number.isFinite(value) ? `${Math.round(value * 100)}%` : "--";
