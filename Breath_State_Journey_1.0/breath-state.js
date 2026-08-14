@@ -596,7 +596,7 @@
       });
     }
 
-    function playTonalCadenceChord(eventName, fundamentalHz, strength = 1) {
+    function playTonalCadenceChord(eventName, fundamentalHz, strength = 1, phaseDurationSec = 3) {
       const phase = tonalCadenceEventPhases[eventName];
       if (!phase) return;
       const voicing = tonalCadenceVoicing(phase);
@@ -604,29 +604,38 @@
       const baseHz = clamp(fundamentalHz, MIN_FUNDAMENTAL_HZ, MAX_FUNDAMENTAL_HZ);
       const chordBus = ctx.createGain();
       const chordFilter = ctx.createBiquadFilter();
+      const chordPan = ctx.createStereoPanner();
+      const chordPanByEvent = {
+        inhaleStart: -0.5,
+        holdAfterInhaleStart: 0,
+        exhaleStart: 0.5,
+        holdAfterExhaleStart: 0
+      };
       chordBus.gain.setValueAtTime(clamp(strength, 0, 1.4), now);
+      chordPan.pan.setValueAtTime(chordPanByEvent[eventName] ?? 0, now);
       chordFilter.type = "lowpass";
       chordFilter.frequency.setValueAtTime(2600, now);
       chordFilter.frequency.exponentialRampToValueAtTime(950, now + 1.8);
       chordFilter.Q.setValueAtTime(0.42, now);
       chordBus.connect(chordFilter);
-      chordFilter.connect(tonalCadenceBus);
+      chordFilter.connect(chordPan);
+      chordPan.connect(tonalCadenceBus);
 
-      const baseDuration = phase.includes("hold") ? 3.8 : 3.2;
+      const phaseWindow = clamp(Number(phaseDurationSec) || 3, 0.45, 8);
+      const chordDuration = clamp(phaseWindow * 0.78, 0.42, phase.includes("hold") ? 3.2 : 2.7);
+      const releaseSec = clamp(chordDuration * 0.34, 0.16, 0.95);
+      const sustainUntil = Math.max(0.12, chordDuration - releaseSec);
       voicing.offsets.forEach((offset, index) => {
         const hz = fitFrequencyToRange(semitoneToFrequency(baseHz, offset), MIN_HARMONIC_FIELD_HZ, 1600);
         const noteGain = ctx.createGain();
-        const notePan = ctx.createStereoPanner();
         const amp = (voicing.weights[index] || 0.35) * 0.18;
         const attack = 0.018 + (index * 0.01);
-        const duration = baseDuration + (index * 0.18);
+        const duration = Math.max(attack + 0.12, chordDuration - (index * 0.035));
         noteGain.gain.setValueAtTime(0.0001, now);
         noteGain.gain.linearRampToValueAtTime(amp, now + attack);
-        noteGain.gain.exponentialRampToValueAtTime(Math.max(0.001, amp * 0.26), now + 0.34 + (index * 0.035));
+        noteGain.gain.exponentialRampToValueAtTime(Math.max(0.001, amp * 0.32), now + Math.min(sustainUntil, 0.42 + (index * 0.02)));
         noteGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        notePan.pan.setValueAtTime(voicing.pans[index] ?? 0, now);
-        noteGain.connect(notePan);
-        notePan.connect(chordBus);
+        noteGain.connect(chordBus);
 
         [
           { type: "triangle", detune: -3, gain: 0.78 },
@@ -903,7 +912,8 @@
     const journeyProgress = clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0, 1);
     const strength = controlValue("harmonicVolumeInput", 2.4) * layerAutomationValue("harmonic", journeyProgress) / 1.6;
     if (strength <= 0.02) return;
-    state.audio.playTonalCadenceChord(eventName, selectedFundamental(), strength);
+    const params = evaluateJourney(journeyProgress);
+    state.audio.playTonalCadenceChord(eventName, selectedFundamental(), strength, phaseDuration(params));
   }
 
   function phaseDuration(params) {
