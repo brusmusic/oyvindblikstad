@@ -42,6 +42,19 @@
               <input id="rootInput" type="range" min="36" max="220" step="0.01" value="48">
               <output id="rootValue">48.00 Hz</output>
             </label>
+            <label class="toggle-line">
+              <input id="rootOctaveToggle" type="checkbox">
+              <span>Start on octave</span>
+            </label>
+            <label>
+              <span>Fixed ratio</span>
+              <input id="ratioStepInput" type="range" min="1.01" max="4" step="0.001" value="2">
+              <output id="ratioStepValue">2.000x</output>
+            </label>
+            <div class="transport compact-transport">
+              <button id="applyRatioBtn" class="secondary" type="button">Apply ratio row</button>
+              <button id="normalizeBtn" class="secondary" type="button">Normalize</button>
+            </div>
             <label>
               <span>Master</span>
               <input id="masterInput" type="range" min="0" max="1" step="0.01" value="0.42">
@@ -61,6 +74,15 @@
               <span>Stereo spread</span>
               <input id="spreadInput" type="range" min="0" max="1" step="0.01" value="0.42">
               <output id="spreadValue">42%</output>
+            </label>
+            <label class="toggle-line">
+              <input id="bindiffToggle" type="checkbox" checked>
+              <span>Bindiff pair</span>
+            </label>
+            <label>
+              <span>Bindiff</span>
+              <input id="bindiffInput" type="range" min="0" max="12" step="0.01" value="0.42">
+              <output id="bindiffValue">0.42 Hz</output>
             </label>
           </section>
 
@@ -93,7 +115,6 @@
               <p class="eyebrow">Partials</p>
               <div class="section-actions">
                 <button id="addPartialBtn" class="mini" type="button">Add partial</button>
-                <button id="normalizeBtn" class="mini" type="button">Normalize</button>
                 <button id="clearBtn" class="mini danger" type="button">Clear</button>
               </div>
             </div>

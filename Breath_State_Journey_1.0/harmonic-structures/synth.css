@@ -178,6 +178,10 @@ button:disabled {
   gap: 10px;
 }
 
+.section-actions {
+  flex-wrap: wrap;
+}
+
 .section-head {
   margin-bottom: 12px;
 }
@@ -193,6 +197,22 @@ button:disabled {
 
 .transport button {
   flex: 1;
+}
+
+.compact-transport {
+  margin-top: 10px;
+}
+
+.toggle-line {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.toggle-line input {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--mint);
 }
 
 label {

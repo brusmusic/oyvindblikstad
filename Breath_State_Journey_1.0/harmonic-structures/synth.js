@@ -11,7 +11,11 @@
     analyser: null,
     voices: [],
     animationFrame: 0,
-    partials: []
+    partials: [],
+    rootOctave: false,
+    fixedRatioStep: 2,
+    bindiffEnabled: true,
+    bindiffHz: 0.42
   };
 
   const presets = [
@@ -150,6 +154,10 @@
       "stopBtn",
       "rootInput",
       "rootValue",
+      "rootOctaveToggle",
+      "ratioStepInput",
+      "ratioStepValue",
+      "applyRatioBtn",
       "masterInput",
       "masterValue",
       "attackInput",
@@ -158,6 +166,9 @@
       "releaseValue",
       "spreadInput",
       "spreadValue",
+      "bindiffToggle",
+      "bindiffInput",
+      "bindiffValue",
       "presetGrid",
       "phaseGrid",
       "copyBtn",
@@ -187,6 +198,10 @@
     return Number(els.rootInput.value) || 48;
   }
 
+  function soundRootHz() {
+    return rootHz() * (state.rootOctave ? 2 : 1);
+  }
+
   function masterValue() {
     return Number(els.masterInput.value) || 0;
   }
@@ -203,8 +218,22 @@
     return Number(els.spreadInput.value) || 0;
   }
 
+  function ratioStepValue() {
+    return clamp(Number(els.ratioStepInput.value) || state.fixedRatioStep || 2, 1.01, 4);
+  }
+
+  function bindiffValue() {
+    const numeric = Number(els.bindiffInput.value);
+    if (Number.isFinite(numeric)) return Math.max(0, numeric);
+    return Math.max(0, state.bindiffHz || 0);
+  }
+
   function partialFrequency(partial) {
-    return rootHz() * partial.ratio * (2 ** (partial.detune / 1200));
+    return soundRootHz() * partial.ratio * (2 ** (partial.detune / 1200));
+  }
+
+  function bindiffPairOffset() {
+    return state.bindiffEnabled ? bindiffValue() / 2 : 0;
   }
 
   function setOutput(el, text) {
@@ -212,16 +241,22 @@
   }
 
   function renderReadouts() {
-    setOutput(els.rootValue, `${rootHz().toFixed(2)} Hz`);
+    setOutput(els.rootValue, `${soundRootHz().toFixed(2)} Hz${state.rootOctave ? " (x2)" : ""}`);
+    setOutput(els.ratioStepValue, `${ratioStepValue().toFixed(3)}x`);
     setOutput(els.masterValue, `${Math.round(masterValue() * 100)}%`);
     setOutput(els.attackValue, `${attackSec().toFixed(2)}s`);
     setOutput(els.releaseValue, `${releaseSec().toFixed(2)}s`);
     setOutput(els.spreadValue, `${Math.round(spreadValue() * 100)}%`);
+    setOutput(els.bindiffValue, `${bindiffValue().toFixed(2)} Hz`);
   }
 
   function normalizedStructure() {
     return {
       rootHz: Number(rootHz().toFixed(2)),
+      startOnOctave: state.rootOctave,
+      fixedRatioStep: Number(ratioStepValue().toFixed(3)),
+      bindiffEnabled: state.bindiffEnabled,
+      bindiffHz: Number(bindiffValue().toFixed(2)),
       partials: state.partials.map((partial) => ({
         ratio: Number(partial.ratio.toFixed(4)),
         frequencyHz: Number(partialFrequency(partial).toFixed(2)),
@@ -283,6 +318,21 @@
     if (outputs[3]) outputs[3].textContent = `${partial.pan < -0.02 ? "L" : partial.pan > 0.02 ? "R" : "C"} ${Math.round(Math.abs(partial.pan) * 100)}%`;
   }
 
+  function rebuildFixedRatioSeries() {
+    const count = Math.max(4, state.partials.length || 12);
+    const step = ratioStepValue();
+    state.partials = Array.from({ length: count }, (_, index) => ({
+      ratio: Number((step ** index).toFixed(6)),
+      level: Number((index === 0 ? 0.92 : 0.76 / ((index + 1) ** 0.78)).toFixed(3)),
+      detune: 0,
+      pan: index === 0 ? 0 : index % 2 ? 0.22 : -0.22,
+      on: true
+    }));
+    saveLocal();
+    renderPartials();
+    updateVoices();
+  }
+
   function drawCanvas() {
     const canvas = els.scopeCanvas;
     const ctx = canvas.getContext("2d");
@@ -321,10 +371,19 @@
       const barHeight = partial.level * (height * 0.54);
       const hue = 162 + (index * 18);
       ctx.fillStyle = `hsla(${hue}, 58%, 72%, 0.82)`;
-      ctx.fillRect(x - 4, height * 0.68 - barHeight, 8, barHeight);
+      if (state.bindiffEnabled) {
+        ctx.fillRect(x - 10, height * 0.68 - barHeight, 7, barHeight);
+        ctx.fillRect(x + 3, height * 0.68 - barHeight, 7, barHeight);
+      } else {
+        ctx.fillRect(x - 4, height * 0.68 - barHeight, 8, barHeight);
+      }
       ctx.fillStyle = "rgba(242, 246, 242, 0.7)";
       ctx.font = "11px ui-sans-serif, system-ui";
       ctx.fillText(`${partial.ratio.toFixed(partial.ratio % 1 ? 2 : 0)}x`, x - 12, height * 0.72);
+      if (state.bindiffEnabled) {
+        ctx.fillStyle = "rgba(169, 234, 225, 0.8)";
+        ctx.fillText(`Δ${bindiffValue().toFixed(2)}Hz`, x - 18, height * 0.72 + 12);
+      }
     });
 
     ctx.strokeStyle = "rgba(213, 185, 110, 0.75)";
@@ -371,17 +430,22 @@
 
   function createVoice(partial, index) {
     const ctx = state.ctx;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const pan = ctx.createStereoPanner();
-    const spread = spreadValue();
-    osc.type = "sine";
-    osc.frequency.value = partialFrequency(partial);
-    gain.gain.value = 0.0001;
-    pan.pan.value = clamp(partial.pan * spread, -1, 1);
-    osc.connect(gain).connect(pan).connect(state.master);
-    osc.start();
-    return { osc, gain, pan, index };
+    const modules = [0, 1].map((moduleIndex) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const pan = ctx.createStereoPanner();
+      osc.type = "sine";
+      gain.gain.value = 0.0001;
+      pan.pan.value = 0;
+      osc.connect(gain).connect(pan);
+      osc.start();
+      return { osc, gain, pan, moduleIndex };
+    });
+    const sum = ctx.createGain();
+    modules[0].pan.connect(sum);
+    modules[1].pan.connect(sum);
+    sum.connect(state.master);
+    return { modules, sum, index };
   }
 
   function updateVoices() {
@@ -393,15 +457,24 @@
     }
     while (state.voices.length > targetVoiceCount) {
       const voice = state.voices.pop();
-      voice.gain.gain.setTargetAtTime(0.0001, now, 0.03);
-      voice.osc.stop(now + 0.12);
+      voice.modules.forEach((module) => {
+        module.gain.gain.setTargetAtTime(0.0001, now, 0.03);
+        module.osc.stop(now + 0.12);
+      });
     }
     state.voices.forEach((voice, index) => {
       const partial = state.partials[index];
+      const baseFrequency = partialFrequency(partial);
+      const offset = bindiffPairOffset();
+      const spread = spreadValue() * 0.24;
       const targetGain = state.playing && partial.on ? partial.level * partial.level * 0.16 : 0.0001;
-      voice.osc.frequency.setTargetAtTime(partialFrequency(partial), now, 0.03);
-      voice.pan.pan.setTargetAtTime(clamp(partial.pan * spreadValue(), -1, 1), now, 0.04);
-      voice.gain.gain.setTargetAtTime(targetGain, now, state.playing ? attackSec() : releaseSec());
+      const pairGain = state.playing && partial.on && state.bindiffEnabled ? targetGain * 0.92 : targetGain;
+      voice.modules[0].osc.frequency.setTargetAtTime(Math.max(20, baseFrequency - offset), now, 0.03);
+      voice.modules[1].osc.frequency.setTargetAtTime(Math.max(20, baseFrequency + offset), now, 0.03);
+      voice.modules[0].pan.pan.setTargetAtTime(clamp(partial.pan - spread, -1, 1), now, 0.04);
+      voice.modules[1].pan.pan.setTargetAtTime(clamp(partial.pan + spread, -1, 1), now, 0.04);
+      voice.modules[0].gain.gain.setTargetAtTime(targetGain, now, state.playing ? attackSec() : releaseSec());
+      voice.modules[1].gain.gain.setTargetAtTime(state.bindiffEnabled ? pairGain : 0.0001, now, state.playing ? attackSec() : releaseSec());
     });
     if (state.master) state.master.gain.setTargetAtTime(masterValue(), now, 0.04);
     renderReadouts();
@@ -441,6 +514,14 @@
 
   function loadStructure(structure) {
     if (Number.isFinite(structure.root)) els.rootInput.value = String(structure.root);
+    if (Number.isFinite(structure.fixedRatioStep)) els.ratioStepInput.value = String(structure.fixedRatioStep);
+    if (typeof structure.startOnOctave === "boolean") els.rootOctaveToggle.checked = structure.startOnOctave;
+    if (typeof structure.bindiffEnabled === "boolean") els.bindiffToggle.checked = structure.bindiffEnabled;
+    if (Number.isFinite(structure.bindiffHz)) els.bindiffInput.value = String(structure.bindiffHz);
+    state.rootOctave = Boolean(els.rootOctaveToggle.checked);
+    state.fixedRatioStep = ratioStepValue();
+    state.bindiffEnabled = Boolean(els.bindiffToggle.checked);
+    state.bindiffHz = bindiffValue();
     state.partials = clonePartials(structure.partials || []).slice(0, MAX_PARTIALS);
     saveLocal();
     renderReadouts();
@@ -474,7 +555,14 @@
 
   function saveLocal() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ root: rootHz(), partials: state.partials }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        root: rootHz(),
+        startOnOctave: state.rootOctave,
+        fixedRatioStep: ratioStepValue(),
+        bindiffEnabled: state.bindiffEnabled,
+        bindiffHz: bindiffValue(),
+        partials: state.partials
+      }));
     } catch {
       // Local storage is optional in private browsing.
     }
@@ -486,7 +574,14 @@
       if (!raw) return false;
       const saved = JSON.parse(raw);
       if (!Array.isArray(saved.partials)) return false;
-      loadStructure({ root: Number(saved.root) || 48, partials: saved.partials });
+      loadStructure({
+        root: Number(saved.root) || 48,
+        startOnOctave: Boolean(saved.startOnOctave),
+        fixedRatioStep: Number(saved.fixedRatioStep) || 2,
+        bindiffEnabled: saved.bindiffEnabled !== false,
+        bindiffHz: Number(saved.bindiffHz) || 0.42,
+        partials: saved.partials
+      });
       return true;
     } catch {
       return false;
@@ -528,16 +623,31 @@
     els.playBtn.addEventListener("click", play);
     els.stopBtn.addEventListener("click", stop);
     els.addPartialBtn.addEventListener("click", addPartial);
+    els.applyRatioBtn.addEventListener("click", rebuildFixedRatioSeries);
     els.normalizeBtn.addEventListener("click", normalizeLevels);
     els.clearBtn.addEventListener("click", clearStructure);
     els.copyBtn.addEventListener("click", copyJson);
-    [els.rootInput, els.masterInput, els.attackInput, els.releaseInput, els.spreadInput].forEach((input) => {
+    [els.rootInput, els.ratioStepInput, els.masterInput, els.attackInput, els.releaseInput, els.spreadInput, els.bindiffInput].forEach((input) => {
       input.addEventListener("input", () => {
         saveLocal();
         renderReadouts();
         renderPartials();
         updateVoices();
       });
+    });
+    els.rootOctaveToggle.addEventListener("change", () => {
+      state.rootOctave = els.rootOctaveToggle.checked;
+      saveLocal();
+      renderReadouts();
+      renderPartials();
+      updateVoices();
+    });
+    els.bindiffToggle.addEventListener("change", () => {
+      state.bindiffEnabled = els.bindiffToggle.checked;
+      saveLocal();
+      renderReadouts();
+      renderPartials();
+      updateVoices();
     });
     els.presetGrid.addEventListener("click", (event) => {
       const button = event.target.closest("[data-preset-id]");
@@ -570,6 +680,10 @@
     collectEls();
     renderPresetButtons();
     if (!loadLocal()) loadStructure(presets[0]);
+    state.rootOctave = els.rootOctaveToggle.checked;
+    state.fixedRatioStep = ratioStepValue();
+    state.bindiffEnabled = els.bindiffToggle.checked;
+    state.bindiffHz = bindiffValue();
     renderReadouts();
     renderPartials();
     bindEvents();
