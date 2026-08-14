@@ -490,6 +490,18 @@
     tonalGuideWet.gain.value = controlValue("guideTonalVolumeInput", 1.2) * 0.2;
     tonalGuideReverb.connect(tonalGuideWet);
     tonalGuideWet.connect(master);
+    const tonalCadenceBus = ctx.createGain();
+    const tonalCadenceDry = ctx.createGain();
+    const tonalCadenceReverb = ctx.createConvolver();
+    const tonalCadenceWet = ctx.createGain();
+    tonalCadenceReverb.buffer = createImpulse(ctx);
+    tonalCadenceDry.gain.value = 0;
+    tonalCadenceWet.gain.value = 0;
+    tonalCadenceBus.connect(tonalCadenceDry);
+    tonalCadenceBus.connect(tonalCadenceReverb);
+    tonalCadenceReverb.connect(tonalCadenceWet);
+    tonalCadenceDry.connect(master);
+    tonalCadenceWet.connect(master);
     let guideBufferPromise = null;
 
     async function ensureGuideBuffer() {
@@ -592,6 +604,56 @@
       });
     }
 
+    function playTonalCadenceChord(eventName, fundamentalHz, strength = 1) {
+      const phase = tonalCadenceEventPhases[eventName];
+      if (!phase) return;
+      const voicing = tonalCadenceVoicing(phase);
+      const now = ctx.currentTime;
+      const baseHz = clamp(fundamentalHz, MIN_FUNDAMENTAL_HZ, MAX_FUNDAMENTAL_HZ);
+      const chordBus = ctx.createGain();
+      const chordFilter = ctx.createBiquadFilter();
+      chordBus.gain.setValueAtTime(clamp(strength, 0, 1.4), now);
+      chordFilter.type = "lowpass";
+      chordFilter.frequency.setValueAtTime(2600, now);
+      chordFilter.frequency.exponentialRampToValueAtTime(950, now + 1.8);
+      chordFilter.Q.setValueAtTime(0.42, now);
+      chordBus.connect(chordFilter);
+      chordFilter.connect(tonalCadenceBus);
+
+      const baseDuration = phase.includes("hold") ? 3.8 : 3.2;
+      voicing.offsets.forEach((offset, index) => {
+        const hz = fitFrequencyToRange(semitoneToFrequency(baseHz, offset), 38, 1600);
+        const noteGain = ctx.createGain();
+        const notePan = ctx.createStereoPanner();
+        const amp = (voicing.weights[index] || 0.35) * 0.18;
+        const attack = 0.018 + (index * 0.01);
+        const duration = baseDuration + (index * 0.18);
+        noteGain.gain.setValueAtTime(0.0001, now);
+        noteGain.gain.linearRampToValueAtTime(amp, now + attack);
+        noteGain.gain.exponentialRampToValueAtTime(Math.max(0.001, amp * 0.26), now + 0.34 + (index * 0.035));
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        notePan.pan.setValueAtTime(voicing.pans[index] ?? 0, now);
+        noteGain.connect(notePan);
+        notePan.connect(chordBus);
+
+        [
+          { type: "triangle", detune: -3, gain: 0.78 },
+          { type: "sine", detune: 5, gain: 0.42 }
+        ].forEach((partial) => {
+          const osc = ctx.createOscillator();
+          const partialGain = ctx.createGain();
+          osc.type = partial.type;
+          osc.frequency.setValueAtTime(hz, now);
+          osc.detune.setValueAtTime(partial.detune, now);
+          partialGain.gain.setValueAtTime(partial.gain, now);
+          osc.connect(partialGain);
+          partialGain.connect(noteGain);
+          osc.start(now);
+          osc.stop(now + duration + 0.08);
+        });
+      });
+    }
+
     setBreathNoiseColor(els.noiseColorSelect?.value || "white");
     beatA.start();
     beatB.start();
@@ -615,9 +677,12 @@
       guideGain,
       tonalGuideGain,
       tonalGuideWet,
+      tonalCadenceDry,
+      tonalCadenceWet,
       ensureGuideBuffer,
       playGuideCue,
       playTonalGuide,
+      playTonalCadenceChord,
       setBreathNoiseColor,
       setNatureSource,
       stopSources() {
@@ -815,6 +880,7 @@
     state.eventLog = state.eventLog.slice(0, 12);
     triggerGuideCue(name);
     triggerTonalGuideCue(name);
+    triggerTonalCadenceChord(name);
   }
 
   function triggerGuideCue(eventName) {
@@ -829,8 +895,18 @@
   }
 
   function triggerTonalGuideCue(eventName) {
+    if (els.relationshipSelect?.value === TONAL_CADENCE_MODE) return;
     if (!els.guideTonalToggle?.checked || !state.audio) return;
     state.audio.playTonalGuide(eventName, selectedFundamental(), els.relationshipSelect.value);
+  }
+
+  function triggerTonalCadenceChord(eventName) {
+    if (els.relationshipSelect?.value !== TONAL_CADENCE_MODE) return;
+    if (!els.harmonicLayerToggle?.checked || !state.audio?.playTonalCadenceChord) return;
+    const journeyProgress = clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0, 1);
+    const strength = controlValue("harmonicVolumeInput", 2.4) * layerAutomationValue("harmonic", journeyProgress) / 1.6;
+    if (strength <= 0.02) return;
+    state.audio.playTonalCadenceChord(eventName, selectedFundamental(), strength);
   }
 
   function phaseDuration(params) {
@@ -937,10 +1013,15 @@
     const layerBeat = els.beatLayerToggle.checked ? params.beat * presence * beatVolume * layerAutomationValue("interference", journeyProgress) : 0;
     const layerHarmonic = els.harmonicLayerToggle.checked ? params.harmonic * presence * harmonicVolume * layerAutomationValue("harmonic", journeyProgress) : 0;
     const layerNature = els.natureLayerToggle.checked ? 0.08 * presence * natureVolume * layerAutomationValue("nature", journeyProgress) : 0;
+    const relationshipMode = els.relationshipSelect.value;
     const attackPulse = Math.exp(-Math.max(0, state.elapsedSec - state.lastEventAt) * 2.6);
     audio.guideGain.gain.setTargetAtTime(controlValue("guideVoiceVolumeInput", 1.15) * layerAutomationValue("guideVoice", journeyProgress), now, 0.05);
     audio.tonalGuideGain.gain.setTargetAtTime(controlValue("guideTonalVolumeInput", 1.2) * layerAutomationValue("guideTonal", journeyProgress), now, 0.05);
     audio.tonalGuideWet.gain.setTargetAtTime(controlValue("guideTonalVolumeInput", 1.2) * layerAutomationValue("guideTonal", journeyProgress) * 0.22, now, 0.08);
+    if (audio.tonalCadenceDry && audio.tonalCadenceWet) {
+      audio.tonalCadenceDry.gain.setTargetAtTime(relationshipMode === TONAL_CADENCE_MODE ? 0.82 : 0, now, 0.08);
+      audio.tonalCadenceWet.gain.setTargetAtTime(relationshipMode === TONAL_CADENCE_MODE ? harmonicSpace * 0.13 : 0, now, 0.14);
+    }
 
     let breathAmp = 0;
     let breathPan = 0;
@@ -982,7 +1063,6 @@
     audio.beatB.frequency.setTargetAtTime(fundamental + beatDiff, now, 0.05);
     audio.beatGain.gain.setTargetAtTime(layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse)), now, 0.04);
 
-    const relationshipMode = els.relationshipSelect.value;
     const set = relationshipSets[relationshipMode] || relationshipSets.harmonic;
     if (relationshipMode === TONAL_CADENCE_MODE) {
       const voicing = tonalCadenceVoicing(state.phase);
@@ -991,10 +1071,7 @@
         const isTopVoice = index === voicing.offsets.length - 1;
         const drift = isTopVoice ? 0 : Math.sin((state.elapsedSec * (0.035 + (params.movement * 0.08))) + index) * params.movement * 0.08;
         voice.osc.frequency.setTargetAtTime(semitoneToFrequency(fundamental, offset) + drift, now, 0.16);
-        const densityLift = 0.82 + (params.density * 0.52);
-        const holdSoftener = state.phase === "holdExhale" ? 0.82 : 1;
-        const voiceLevel = layerHarmonic * 0.019 * (voicing.weights[index] || 0.35) * densityLift * holdSoftener;
-        voice.gain.gain.setTargetAtTime(voiceLevel, now, 0.14);
+        voice.gain.gain.setTargetAtTime(0, now, 0.18);
         voice.pan.pan.setTargetAtTime(voicing.pans[index] ?? 0, now, 0.2);
       });
     } else {
