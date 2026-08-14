@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Cache-Control" content="no-store">
     <title>Adaptive Body Entry</title>
-    <link rel="stylesheet" href="style.css?v=0.2">
+    <link rel="stylesheet" href="style.css?v=0.4">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace("../");
@@ -27,15 +27,19 @@
       </header>
 
       <section class="entry-card">
-        <p class="eyebrow">Phone on chest / upper belly</p>
-        <h2 id="entryTitle">Place the phone and breathe normally.</h2>
-        <p id="entryInstruction">When you press Start, keep the phone still and let the system listen for your natural rhythm.</p>
+        <p class="eyebrow">Voice first / phone on belly after</p>
+        <h2 id="entryTitle">Start with your voice.</h2>
+        <p id="entryInstruction">Press Start, read the sentence, then place the phone gently on your belly when asked.</p>
+        <div class="voice-prompt" id="voicePrompt" hidden>
+          <span>Read aloud</span>
+          <p id="voicePromptText">I am here now. I breathe in. I breathe out. I let my body arrive.</p>
+        </div>
         <div class="progress-shell" aria-label="Sensing progress">
           <span id="entryProgress"></span>
         </div>
         <div class="actions">
-          <button id="startBreathBtn" type="button">Start breath sensing</button>
-          <button id="startFullBtn" type="button">Breath + voice</button>
+          <button id="startFullBtn" type="button">Start adaptive entry</button>
+          <button id="startBreathBtn" type="button">Breath only</button>
           <button id="stopBtn" type="button">Stop</button>
         </div>
         <label class="duration-row">
@@ -121,6 +125,6 @@
         </div>
       </section>
     </main>
-    <script type="module" src="demo.mjs?v=0.3"></script>
+    <script type="module" src="demo.mjs?v=0.4"></script>
   </body>
 </html>

@@ -144,6 +144,35 @@ article,
   margin-top: 16px;
 }
 
+.voice-prompt {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--gold), transparent 45%);
+  border-radius: 10px;
+  background: rgba(213, 185, 110, 0.08);
+}
+
+.voice-prompt[hidden] {
+  display: none;
+}
+
+.voice-prompt span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.voice-prompt p {
+  margin: 0;
+  font-size: clamp(1.3rem, 4.8vw, 2.4rem);
+  line-height: 1.2;
+  color: var(--text);
+}
+
 .duration-row {
   color: var(--muted);
 }

@@ -1,8 +1,8 @@
 import { clamp, median, noteFromFrequency } from "./utils.mjs";
 
-function autocorrelate(buffer, sampleRate) {
+function analyzeFrame(buffer, sampleRate) {
   const rms = Math.sqrt(buffer.reduce((sum, value) => sum + value * value, 0) / buffer.length);
-  if (rms < 0.012) return null;
+  if (rms < 0.012) return { rms, frequency: null, clarity: 0 };
   const minLag = Math.floor(sampleRate / 500);
   const maxLag = Math.floor(sampleRate / 75);
   let bestLag = -1;
@@ -16,7 +16,7 @@ function autocorrelate(buffer, sampleRate) {
       bestLag = lag;
     }
   }
-  if (bestLag < 0 || best < 0.002) return null;
+  if (bestLag < 0 || best < 0.002) return { rms, frequency: null, clarity: 0 };
   return { frequency: sampleRate / bestLag, clarity: clamp(best / Math.max(0.0001, rms * rms), 0, 1), rms };
 }
 
@@ -34,34 +34,50 @@ export class VoicePitchDetector {
     source.connect(analyser);
     const buffer = new Float32Array(analyser.fftSize);
     const frames = [];
+    const allFrames = [];
     const started = performance.now();
     while (performance.now() - started < durationMs) {
       analyser.getFloatTimeDomainData(buffer);
-      const pitch = autocorrelate([...buffer], ctx.sampleRate);
-      if (pitch && pitch.clarity > 0.45) frames.push(pitch);
+      const pitch = analyzeFrame([...buffer], ctx.sampleRate);
+      allFrames.push(pitch);
+      if (pitch.frequency && pitch.clarity > 0.35) frames.push(pitch);
       await new Promise((resolve) => setTimeout(resolve, 80));
     }
     stream.getTracks().forEach((track) => track.stop());
     await ctx.close();
-    if (frames.length < 6) {
-      return { voice: { detected: false, confidence: 0.2 }, globalTune: null, debug: { voicedFrames: frames.length } };
+    const voiceActivity = clamp(frames.length / Math.max(1, allFrames.length), 0, 1);
+    const intensityRms = median(allFrames.map((frame) => frame.rms));
+    if (frames.length < 4) {
+      return {
+        voice: {
+          detected: false,
+          confidence: clamp(voiceActivity * 0.45 + clamp(intensityRms / 0.08, 0, 1) * 0.2, 0, 0.45),
+          voiceActivity,
+          intensityRms
+        },
+        globalTune: null,
+        debug: { totalFrames: allFrames.length, voicedFrames: frames.length, voiceActivity, intensityRms }
+      };
     }
     const frequencies = frames.map((frame) => frame.frequency);
     const fundamentalHz = median(frequencies);
     const deviations = frequencies.map((frequency) => Math.abs(Math.log2(frequency / fundamentalHz) * 1200));
     const stability = clamp(1 - (median(deviations) / 55), 0, 1);
     const clarity = median(frames.map((frame) => frame.clarity));
-    const confidence = clamp((frames.length / 18) * 0.25 + stability * 0.45 + clarity * 0.3, 0, 1);
+    const confidence = clamp(voiceActivity * 0.4 + clarity * 0.3 + stability * 0.18 + clamp(intensityRms / 0.08, 0, 1) * 0.12, 0, 1);
     const note = noteFromFrequency(fundamentalHz);
     return {
       voice: {
-        detected: confidence >= 0.55,
+        detected: confidence >= 0.35,
         fundamentalHz,
         pitchClass: note?.pitchClass,
         centsOffset: note?.centsOffset,
+        pitchVariabilityCents: median(deviations),
+        intensityRms,
+        voiceActivity,
         confidence
       },
-      debug: { voicedFrames: frames.length, stability, clarity }
+      debug: { totalFrames: allFrames.length, voicedFrames: frames.length, voiceActivity, stability, clarity, intensityRms }
     };
   }
 }

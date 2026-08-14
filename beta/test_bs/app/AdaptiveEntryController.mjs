@@ -1,4 +1,4 @@
-import { detectDeviceCapabilities } from "./DeviceCapabilities.mjs";
+import { detectDeviceCapabilities, requestMotionPermission } from "./DeviceCapabilities.mjs";
 import { MotionSensor } from "./MotionSensor.mjs";
 import { BreathDetector } from "./BreathDetector.mjs";
 import { VoicePitchDetector } from "./VoicePitchDetector.mjs";
@@ -28,12 +28,24 @@ export class AdaptiveEntryController {
     this.state = "IDLE";
   }
 
+  async wait(seconds, onUpdate, state) {
+    const started = performance.now();
+    while (!this.aborted && performance.now() - started < seconds * 1000) {
+      onUpdate?.({
+        state,
+        progress: (performance.now() - started) / Math.max(1, seconds * 1000)
+      });
+      await new Promise((resolve) => setTimeout(resolve, 160));
+    }
+  }
+
   async run(options = {}) {
     this.aborted = false;
     const onUpdate = options.onUpdate;
     const durationSec = options.durationSec || 45;
     const detectBreath = options.detectBreath !== false;
     const detectVoicePitch = Boolean(options.detectVoicePitch);
+    const placementDelaySec = Number.isFinite(options.placementDelaySec) ? options.placementDelaySec : (detectVoicePitch ? 5 : 0);
     this.transition("PREPARING", onUpdate);
     const capabilities = await detectDeviceCapabilities();
     const profile = {
@@ -46,6 +58,25 @@ export class AdaptiveEntryController {
     };
 
     if (detectBreath && capabilities.accelerometer) {
+      this.transition("REQUESTING_MOTION_ACCESS", onUpdate, { message: "Allow motion access before we begin." });
+      const permission = await requestMotionPermission();
+      if (permission !== "granted") throw new Error("Motion permission was not granted.");
+    }
+
+    if (!this.aborted && detectVoicePitch && capabilities.microphone) {
+      this.transition("SENSING_VOICE", onUpdate, { message: "Read the sentence on screen in your normal voice." });
+      const voiceResult = await this.voicePitchDetector.analyze({ durationSec: options.voiceDurationSec || 7 });
+      profile.voice = voiceResult.voice;
+      profile.globalTune = this.globalTuneMapper.map(voiceResult.voice);
+      profile.debug = { ...(profile.debug || {}), voice: voiceResult.debug };
+      this.transition("VOICE_ACQUIRED", onUpdate, { profile });
+    }
+
+    if (detectBreath && capabilities.accelerometer) {
+      if (placementDelaySec > 0) {
+        this.transition("PLACE_PHONE", onUpdate, { message: "Place the phone gently on your belly." });
+        await this.wait(placementDelaySec, onUpdate, "PLACE_PHONE");
+      }
       this.transition("SENSING_BREATH", onUpdate, { message: "Finding your rhythm..." });
       await this.motionSensor.start();
       const started = performance.now();
@@ -64,14 +95,6 @@ export class AdaptiveEntryController {
       profile.debug = { breath: result.debug };
       this.transition(result.breath.detected ? "BREATH_ACQUIRED" : "BREATH_UNKNOWN", onUpdate, { profile });
       this.haptics.trigger(result.breath.detected ? "softPulse" : "doubleSoftPulse", { intensity: result.breath.detected ? 0.35 : 0.22 });
-    }
-
-    if (!this.aborted && detectVoicePitch && capabilities.microphone) {
-      this.transition("SENSING_VOICE", onUpdate, { message: "If it feels natural, hum softly on the exhale." });
-      const voiceResult = await this.voicePitchDetector.analyze({ durationSec: options.voiceDurationSec || 10 });
-      profile.voice = voiceResult.voice;
-      profile.globalTune = this.globalTuneMapper.map(voiceResult.voice);
-      profile.debug = { ...(profile.debug || {}), voice: voiceResult.debug };
     }
 
     this.transition("PROFILE_READY", onUpdate, { profile });

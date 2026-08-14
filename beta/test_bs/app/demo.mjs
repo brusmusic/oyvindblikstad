@@ -11,6 +11,8 @@ const els = {
   durationValue: $("durationValue"),
   entryTitle: $("entryTitle"),
   entryInstruction: $("entryInstruction"),
+  voicePrompt: $("voicePrompt"),
+  voicePromptText: $("voicePromptText"),
   entryProgress: $("entryProgress"),
   profileOutput: $("profileOutput"),
   capabilitiesOutput: $("capabilitiesOutput"),
@@ -38,6 +40,7 @@ let currentProfile = null;
 let currentRun = null;
 let latestReport = null;
 const REPORTS_KEY = "adaptive-entry-reports-v1";
+const VOICE_PROMPT = "I am here now. I breathe in. I breathe out. I let my body arrive.";
 
 function percent(value) {
   return Number.isFinite(value) ? `${Math.round(value * 100)}%` : "--";
@@ -142,8 +145,11 @@ function reportSummary(profile) {
     exhaleDuration: profile?.breath?.exhaleDuration ?? null,
     breathConfidence: profile?.breath?.confidence ?? null,
     motionSignalQuality: profile?.motion?.signalQuality ?? null,
-    voiceFrequency: profile?.voice?.frequency ?? null,
+    voiceFrequency: profile?.voice?.fundamentalHz ?? profile?.voice?.frequency ?? null,
     voiceConfidence: profile?.voice?.confidence ?? null,
+    voiceActivity: profile?.voice?.voiceActivity ?? null,
+    voiceIntensityRms: profile?.voice?.intensityRms ?? null,
+    voicePitchVariabilityCents: profile?.voice?.pitchVariabilityCents ?? null,
     globalTuneFrequency: profile?.globalTune?.frequency ?? null,
     motionBestKey: profile?.motion?.bestKey ?? profile?.debug?.breath?.bestKey ?? null,
     warmupSec: profile?.motion?.warmupSec ?? profile?.debug?.breath?.warmupSec ?? null,
@@ -258,21 +264,51 @@ async function start(options) {
   currentRun = {
     mode: options.voice ? "breath_voice" : "breath",
     requestedDurationSec: Number(els.durationInput.value) || 45,
+    voicePrompt: options.voice ? VOICE_PROMPT : null,
     startedAt: new Date().toISOString()
   };
   els.reportPanel.hidden = true;
   els.reportExport.value = "";
+  els.voicePrompt.hidden = !options.voice;
   setProgress(0);
-  els.entryTitle.textContent = "Stay just as you are.";
-  els.entryInstruction.textContent = "The phone is listening for small rhythmic motion from your breath.";
+  els.entryTitle.textContent = options.voice ? "Read the sentence." : "Place the phone and breathe normally.";
+  els.entryInstruction.textContent = options.voice
+    ? "Allow microphone access, read once in your normal voice, then wait for the next instruction."
+    : "The phone is listening for small rhythmic motion from your breath.";
   els.debugStatus.textContent = "Preparing";
   try {
     const profile = await entry.run({
       durationSec: Number(els.durationInput.value) || 45,
       detectVoicePitch: Boolean(options.voice),
+      voiceDurationSec: 7,
+      placementDelaySec: options.voice ? 5 : 0,
       onUpdate(update) {
         els.debugStatus.textContent = update.state;
         if (Number.isFinite(update.progress)) setProgress(update.progress);
+        if (update.state === "REQUESTING_MOTION_ACCESS") {
+          els.entryTitle.textContent = "Allow motion access.";
+          els.entryInstruction.textContent = "This lets the phone read the small movement from your breath after the voice check.";
+        }
+        if (update.state === "SENSING_VOICE") {
+          els.voicePrompt.hidden = false;
+          els.entryTitle.textContent = "Read the sentence.";
+          els.entryInstruction.textContent = "Use your normal voice. The recording is analyzed locally and not stored as audio.";
+        }
+        if (update.state === "VOICE_ACQUIRED") {
+          els.entryTitle.textContent = "Voice captured.";
+          els.entryInstruction.textContent = "Now place the phone gently on your belly.";
+          if (update.profile) showProfile(update.profile);
+        }
+        if (update.state === "PLACE_PHONE") {
+          els.voicePrompt.hidden = true;
+          els.entryTitle.textContent = "Place the phone on your belly.";
+          els.entryInstruction.textContent = "Keep it still. Breath sensing starts in a few seconds.";
+        }
+        if (update.state === "SENSING_BREATH") {
+          els.voicePrompt.hidden = true;
+          els.entryTitle.textContent = "Stay just as you are.";
+          els.entryInstruction.textContent = "The phone is listening for small rhythmic motion from your breath.";
+        }
         if (update.state === "BREATH_ACQUIRED") {
           els.entryTitle.textContent = "Got it.";
           els.entryInstruction.textContent = "A usable breath rhythm was detected.";
@@ -293,6 +329,7 @@ async function start(options) {
       : "The module did not pretend to know more than it knows.";
     showProfile(profile);
     els.reportPanel.hidden = false;
+    els.voicePrompt.hidden = true;
   } catch (error) {
     currentRun.completedAt = new Date().toISOString();
     currentRun.completed = false;
@@ -301,6 +338,7 @@ async function start(options) {
     els.entryTitle.textContent = "Sensor access failed.";
     els.entryInstruction.textContent = error.message || "The phone did not provide motion data.";
     els.profileOutput.textContent = JSON.stringify({ error: error.message }, null, 2);
+    els.voicePrompt.hidden = true;
   }
 }
 
@@ -315,6 +353,7 @@ async function boot() {
     els.debugStatus.textContent = "Stopped";
     els.entryTitle.textContent = "Stopped.";
     els.entryInstruction.textContent = "You can start again when ready.";
+    els.voicePrompt.hidden = true;
   });
   els.addReportBtn.addEventListener("click", addReport);
   els.copyReportBtn.addEventListener("click", copyLatestReport);
