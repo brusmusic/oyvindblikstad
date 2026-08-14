@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
-    <link rel="stylesheet" href="breath-state.css?v=1.3">
+    <link rel="stylesheet" href="breath-state.css?v=1.4">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
@@ -308,6 +308,34 @@
             </div>
           </div>
 
+          <section class="voice-reflection" id="voiceReflectionPanel" aria-label="Voice before and after">
+            <div class="section-head">
+              <p class="eyebrow">Voice mirror</p>
+              <span id="voiceReflectionStatus">Optional before / after recording</span>
+            </div>
+            <p class="voice-prompt-text">I am amazing. Sometimes I forget. Well, here I am.</p>
+            <div class="voice-slots">
+              <article class="voice-slot" id="beforeVoiceSlot">
+                <strong>Before</strong>
+                <span id="beforeVoiceStatus">Not recorded</span>
+                <audio id="beforeVoiceAudio" controls hidden></audio>
+                <div class="voice-actions">
+                  <button id="recordBeforeVoiceBtn" class="mini" type="button">Record before</button>
+                  <button id="downloadBeforeVoiceBtn" class="mini" type="button" disabled>Download</button>
+                </div>
+              </article>
+              <article class="voice-slot" id="afterVoiceSlot">
+                <strong>After</strong>
+                <span id="afterVoiceStatus">Not recorded</span>
+                <audio id="afterVoiceAudio" controls hidden></audio>
+                <div class="voice-actions">
+                  <button id="recordAfterVoiceBtn" class="mini" type="button">Record after</button>
+                  <button id="downloadAfterVoiceBtn" class="mini" type="button" disabled>Download</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
           <div class="state-row" id="stateRow"></div>
 
           <div class="readouts">
@@ -351,6 +379,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=2.1"></script>
+    <script src="breath-state.js?v=2.2"></script>
   </body>
 </html>

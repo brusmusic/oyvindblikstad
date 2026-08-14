@@ -23,6 +23,8 @@
   const ABE_USABLE_CONFIDENCE = 0.42;
   const EASY_DEFAULT_PRESET_ID = "builtin-vagal-reset";
   const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone vertically on your upper belly and press start.";
+  const VOICE_PROMPT_TEXT = "I am amazing. Sometimes I forget. Well, here I am.";
+  const VOICE_RECORDING_SEC = 8;
   const GUIDE_CUES = {
     inhaleStart: "in",
     holdAfterInhaleStart: "hold",
@@ -159,6 +161,18 @@
       listener: null,
       lastResult: null,
       motionAllowed: false
+    },
+    voiceReflection: {
+      before: null,
+      after: null,
+      recorder: null,
+      stream: null,
+      chunks: [],
+      recordingSlot: null,
+      timerId: 0,
+      intervalId: 0,
+      recordingStartedAt: 0,
+      afterReady: false
     },
     guideRoundRobin: {
       in: 0,
@@ -1350,6 +1364,8 @@
       state.eventLog = [];
       state.lastEventAt = 0;
       state.guideRoundRobin = { in: 0, hold: 0, out: 0 };
+      state.voiceReflection.afterReady = false;
+      updateVoiceReflectionUI();
       state.startedAt = performance.now();
       if (els.guideLayerToggle.checked) await state.audio.ensureGuideBuffer();
       emitEvent("inhaleStart");
@@ -1428,9 +1444,12 @@
     applyAudio(params);
     render(params, progress);
     if (state.elapsedSec >= duration) {
+      state.voiceReflection.afterReady = true;
       stopJourney();
       els.playBtn.textContent = "Replay journey";
       render(params, 1);
+      setVoiceReflectionStatus("Record the after clip when you are ready.");
+      updateVoiceReflectionUI();
       return;
     }
     state.rafId = requestAnimationFrame(tick);
@@ -2085,6 +2104,168 @@
     syncEasyTransport();
   }
 
+  function voiceMimeType() {
+    if (typeof window.MediaRecorder === "undefined") return "";
+    const preferredTypes = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"];
+    return preferredTypes.find((type) => window.MediaRecorder.isTypeSupported?.(type)) || "";
+  }
+
+  function voiceFileExtension(type = "") {
+    if (type.includes("mp4")) return "m4a";
+    if (type.includes("webm")) return "webm";
+    return "audio";
+  }
+
+  function voiceSlotStatusEl(slot) {
+    return slot === "before" ? els.beforeVoiceStatus : els.afterVoiceStatus;
+  }
+
+  function voiceSlotAudioEl(slot) {
+    return slot === "before" ? els.beforeVoiceAudio : els.afterVoiceAudio;
+  }
+
+  function voiceSlotButtonEl(slot) {
+    return slot === "before" ? els.recordBeforeVoiceBtn : els.recordAfterVoiceBtn;
+  }
+
+  function voiceSlotDownloadEl(slot) {
+    return slot === "before" ? els.downloadBeforeVoiceBtn : els.downloadAfterVoiceBtn;
+  }
+
+  function voiceSlotPanelEl(slot) {
+    return slot === "before" ? els.beforeVoiceSlot : els.afterVoiceSlot;
+  }
+
+  function setVoiceReflectionStatus(message) {
+    if (els.voiceReflectionStatus) els.voiceReflectionStatus.textContent = message;
+  }
+
+  function voiceRecordingName(slot, recording) {
+    const preset = presetById(els.easyPresetSelect?.value || els.presetSelect?.value);
+    const presetName = (preset?.name || "breath-state").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const stamp = new Date(recording.createdAt || Date.now()).toISOString().replace(/[:.]/g, "-");
+    return `${presetName}-${slot}-${stamp}.${voiceFileExtension(recording.type)}`;
+  }
+
+  function updateVoiceReflectionUI() {
+    ["before", "after"].forEach((slot) => {
+      const recording = state.voiceReflection[slot];
+      const isRecording = state.voiceReflection.recordingSlot === slot;
+      const panel = voiceSlotPanelEl(slot);
+      const status = voiceSlotStatusEl(slot);
+      const audio = voiceSlotAudioEl(slot);
+      const button = voiceSlotButtonEl(slot);
+      const download = voiceSlotDownloadEl(slot);
+      panel?.classList.toggle("is-ready", Boolean(recording));
+      panel?.classList.toggle("is-next", slot === "after" && state.voiceReflection.afterReady && !recording && !state.voiceReflection.recordingSlot);
+      if (status && !isRecording) status.textContent = recording ? "Ready to play" : "Not recorded";
+      if (audio) {
+        audio.hidden = !recording;
+        if (recording && audio.src !== recording.url) audio.src = recording.url;
+      }
+      if (button) {
+        button.disabled = Boolean(state.voiceReflection.recordingSlot && !isRecording);
+        button.textContent = isRecording ? "Stop" : `Record ${slot}`;
+      }
+      if (download) download.disabled = !recording || Boolean(state.voiceReflection.recordingSlot);
+    });
+    if (!state.voiceReflection.recordingSlot) {
+      if (state.voiceReflection.before && state.voiceReflection.after) {
+        setVoiceReflectionStatus("Before and after are ready.");
+      } else if (state.voiceReflection.afterReady && !state.voiceReflection.after) {
+        setVoiceReflectionStatus("Record the after clip when you are ready.");
+      } else {
+        setVoiceReflectionStatus("Optional before / after recording");
+      }
+    }
+  }
+
+  function cleanupVoiceRecorder() {
+    clearTimeout(state.voiceReflection.timerId);
+    clearInterval(state.voiceReflection.intervalId);
+    state.voiceReflection.timerId = 0;
+    state.voiceReflection.intervalId = 0;
+    state.voiceReflection.stream?.getTracks().forEach((track) => track.stop());
+    state.voiceReflection.stream = null;
+    state.voiceReflection.recorder = null;
+    state.voiceReflection.recordingSlot = null;
+    state.voiceReflection.recordingStartedAt = 0;
+  }
+
+  function stopVoiceRecording() {
+    const recorder = state.voiceReflection.recorder;
+    if (!recorder) return;
+    if (recorder.state !== "inactive") {
+      recorder.stop();
+    }
+  }
+
+  async function startVoiceRecording(slot) {
+    if (state.voiceReflection.recordingSlot === slot) {
+      stopVoiceRecording();
+      return;
+    }
+    if (state.voiceReflection.recordingSlot) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === "undefined") {
+      setVoiceReflectionStatus("Voice recording is not available in this browser.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      const mimeType = voiceMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      state.voiceReflection.stream = stream;
+      state.voiceReflection.recorder = recorder;
+      state.voiceReflection.chunks = [];
+      state.voiceReflection.recordingSlot = slot;
+      state.voiceReflection.recordingStartedAt = performance.now();
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size) state.voiceReflection.chunks.push(event.data);
+      });
+      recorder.addEventListener("stop", () => {
+        const type = recorder.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(state.voiceReflection.chunks, { type });
+        const previous = state.voiceReflection[slot];
+        if (previous?.url) URL.revokeObjectURL(previous.url);
+        state.voiceReflection[slot] = {
+          blob,
+          type,
+          url: URL.createObjectURL(blob),
+          createdAt: Date.now()
+        };
+        cleanupVoiceRecorder();
+        updateVoiceReflectionUI();
+      }, { once: true });
+      recorder.start();
+      state.voiceReflection.timerId = window.setTimeout(stopVoiceRecording, VOICE_RECORDING_SEC * 1000);
+      state.voiceReflection.intervalId = window.setInterval(() => {
+        const elapsed = (performance.now() - state.voiceReflection.recordingStartedAt) / 1000;
+        const remaining = Math.max(0, Math.ceil(VOICE_RECORDING_SEC - elapsed));
+        voiceSlotStatusEl(slot).textContent = `Recording ${remaining}s`;
+        setVoiceReflectionStatus(`Read once: ${VOICE_PROMPT_TEXT}`);
+      }, 180);
+      updateVoiceReflectionUI();
+    } catch (error) {
+      console.error(error);
+      cleanupVoiceRecorder();
+      setVoiceReflectionStatus(error?.message || "Microphone access was blocked.");
+      updateVoiceReflectionUI();
+    }
+  }
+
+  function downloadVoiceRecording(slot) {
+    const recording = state.voiceReflection[slot];
+    if (!recording) return;
+    const link = document.createElement("a");
+    link.href = recording.url;
+    link.download = voiceRecordingName(slot, recording);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   function currentPresetSnapshot(name) {
     ensureBreathCurves();
     ensureLayerAutomation();
@@ -2341,6 +2522,18 @@
       "easyPresetSelect",
       "easyStartBtn",
       "easyStopBtn",
+      "voiceReflectionPanel",
+      "voiceReflectionStatus",
+      "beforeVoiceSlot",
+      "beforeVoiceStatus",
+      "beforeVoiceAudio",
+      "recordBeforeVoiceBtn",
+      "downloadBeforeVoiceBtn",
+      "afterVoiceSlot",
+      "afterVoiceStatus",
+      "afterVoiceAudio",
+      "recordAfterVoiceBtn",
+      "downloadAfterVoiceBtn",
       "journeySelect",
       "presetNameInput",
       "presetSelect",
@@ -2449,6 +2642,10 @@
     els.easyPresetSelect.addEventListener("change", () => applyPresetById(els.easyPresetSelect.value));
     els.easyModeBtn.addEventListener("click", () => setAppMode("easy"));
     els.advancedModeBtn.addEventListener("click", () => setAppMode("advanced"));
+    els.recordBeforeVoiceBtn.addEventListener("click", () => startVoiceRecording("before"));
+    els.recordAfterVoiceBtn.addEventListener("click", () => startVoiceRecording("after"));
+    els.downloadBeforeVoiceBtn.addEventListener("click", () => downloadVoiceRecording("before"));
+    els.downloadAfterVoiceBtn.addEventListener("click", () => downloadVoiceRecording("after"));
     els.journeySelect.addEventListener("change", syncControlsFromJourney);
     els.advancedToggle.addEventListener("click", () => {
       els.advancedPanel.hidden = !els.advancedPanel.hidden;
@@ -2610,6 +2807,7 @@
     syncControlsFromJourney();
     applyPresetById(EASY_DEFAULT_PRESET_ID);
     setAppMode("easy");
+    updateVoiceReflectionUI();
   }
 
   bind();
