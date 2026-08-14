@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
-    <link rel="stylesheet" href="breath-state.css?v=1.4">
+    <link rel="stylesheet" href="breath-state.css?v=1.5">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
@@ -149,6 +149,10 @@
                 <button type="button" data-curve-track="holdExhale">Hold out</button>
               </div>
               <canvas id="breathCurveCanvas" width="760" height="340" aria-label="Breath duration curve editor"></canvas>
+              <div class="curve-point-actions">
+                <button id="addBreathPointBtn" class="mini" type="button">Add point</button>
+                <button id="deleteBreathPointBtn" class="mini danger" type="button" disabled>Delete selected</button>
+              </div>
               <div class="section-head automation-head">
                 <p class="eyebrow">Layer volume automation</p>
                 <button id="resetLayerAutomationBtn" class="mini" type="button">Reset</button>
@@ -162,6 +166,10 @@
                 <button type="button" data-layer-track="nature">Nature</button>
               </div>
               <canvas id="layerAutomationCanvas" width="760" height="220" aria-label="Layer volume automation editor"></canvas>
+              <div class="curve-point-actions">
+                <button id="addAutomationPointBtn" class="mini" type="button">Add point</button>
+                <button id="deleteAutomationPointBtn" class="mini danger" type="button" disabled>Delete selected</button>
+              </div>
               <div class="curve-editor-controls">
                 <div class="curve-zoom-row" aria-label="Curve zoom controls">
                   <button id="curveTimeZoomOutBtn" class="mini" type="button">Time out</button>
@@ -379,6 +387,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=2.2"></script>
+    <script src="breath-state.js?v=2.3"></script>
   </body>
 </html>

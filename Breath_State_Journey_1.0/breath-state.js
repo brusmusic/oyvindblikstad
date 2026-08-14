@@ -151,6 +151,8 @@
     layerAutomation: null,
     activeBreathCurve: "inhale",
     activeLayerAutomation: "breath",
+    selectedBreathPoint: null,
+    selectedAutomationPoint: null,
     breathCurveView: { xStart: 0, xEnd: 1, yMaxSec: DEFAULT_BREATH_CURVE_Y_MAX_SEC },
     curveDrag: null,
     abe: {
@@ -1197,12 +1199,13 @@
     els.noiseColorSelect.value = "brown";
     els.breathLayerToggle.checked = true;
     els.natureLayerToggle.checked = true;
-    els.guideLayerToggle.checked = false;
+    els.guideLayerToggle.checked = true;
     els.guideTonalToggle.checked = false;
     els.beatLayerToggle.checked = false;
     els.harmonicLayerToggle.checked = true;
     els.breathVolumeInput.value = "1.28";
-    els.natureVolumeInput.value = "2.25";
+    els.guideVoiceVolumeInput.value = "0.42";
+    els.natureVolumeInput.value = "0.2";
     els.harmonicVolumeInput.value = "1.15";
     els.harmonicSpaceInput.value = "2.8";
     els.movementInput.value = prep.usable ? String(clamp(0.14 + ((1 - result.confidence) * 0.14), 0.12, 0.3)) : "0.16";
@@ -1219,11 +1222,11 @@
     resetBreathCurvesFromControls();
     state.layerAutomation = {
       breath: [{ t: 0, v: 0.74 }, { t: 0.14, v: 1 }, { t: 0.72, v: 0.7 }, { t: 1, v: 0.34 }],
-      guideVoice: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
+      guideVoice: [{ t: 0, v: 0.42 }, { t: 0.16, v: 0.32 }, { t: 0.38, v: 0.08 }, { t: 0.56, v: 0.34 }, { t: 0.72, v: 0.12 }, { t: 1, v: 0 }],
       guideTonal: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
       interference: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
       harmonic: [{ t: 0, v: 0.32 }, { t: 0.34, v: 0.58 }, { t: 1, v: 0.28 }],
-      nature: [{ t: 0, v: 1 }, { t: 0.3, v: 0.82 }, { t: 1, v: 0.42 }]
+      nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.2 }, { t: 1, v: 0.12 }]
     };
     if (state.audio) state.audio.setBreathNoiseColor("brown");
     renderControlReadouts();
@@ -1618,6 +1621,17 @@
         ctx.arc(p.x, p.y, trackId === state.activeBreathCurve ? 5 : 4, 0, Math.PI * 2);
         ctx.fill();
       });
+      if (trackId === state.activeBreathCurve && state.selectedBreathPoint?.trackId === trackId) {
+        const point = curve[state.selectedBreathPoint.index];
+        if (point) {
+          const p = curvePointToCanvas(point, bounds);
+          ctx.beginPath();
+          ctx.strokeStyle = "#f2f6f2";
+          ctx.lineWidth = 2;
+          ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
     });
     ctx.globalAlpha = 1;
 
@@ -1630,6 +1644,7 @@
     ctx.stroke();
     ctx.restore();
     renderBreathCurveToolbar();
+    updateCurvePointControls();
   }
 
   function renderLayerAutomationEditor(progress = clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0, 1)) {
@@ -1688,6 +1703,17 @@
         ctx.arc(p.x, p.y, trackId === state.activeLayerAutomation ? 5 : 4, 0, Math.PI * 2);
         ctx.fill();
       });
+      if (trackId === state.activeLayerAutomation && state.selectedAutomationPoint?.trackId === trackId) {
+        const point = curve[state.selectedAutomationPoint.index];
+        if (point) {
+          const p = automationPointToCanvas(point, bounds);
+          ctx.beginPath();
+          ctx.strokeStyle = "#f2f6f2";
+          ctx.lineWidth = 2;
+          ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
     });
     ctx.globalAlpha = 1;
     const playheadX = bounds.x + (((clamp(progress, 0, 1) - view.xStart) / Math.max(MIN_BREATH_CURVE_X_WINDOW, view.xEnd - view.xStart)) * bounds.width);
@@ -1699,6 +1725,7 @@
     ctx.stroke();
     ctx.restore();
     renderLayerAutomationToolbar();
+    updateCurvePointControls();
   }
 
   function findCurvePointAt(clientX, clientY) {
@@ -1788,6 +1815,25 @@
     render(evaluateJourney(progress), progress);
   }
 
+  function curveEditT() {
+    if (state.playing) return clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0.02, 0.98);
+    const view = curveView();
+    return clamp((view.xStart + view.xEnd) / 2, 0.02, 0.98);
+  }
+
+  function updateCurvePointControls() {
+    if (els.deleteBreathPointBtn) {
+      const selected = state.selectedBreathPoint;
+      const curve = selected?.trackId ? ensureBreathCurves()[selected.trackId] : null;
+      els.deleteBreathPointBtn.disabled = !curve || selected.index <= 0 || selected.index >= curve.length - 1;
+    }
+    if (els.deleteAutomationPointBtn) {
+      const selected = state.selectedAutomationPoint;
+      const curve = selected?.trackId ? ensureLayerAutomation()[selected.trackId] : null;
+      els.deleteAutomationPointBtn.disabled = !curve || selected.index <= 0 || selected.index >= curve.length - 1;
+    }
+  }
+
   function setCurvePoint(trackId, index, point) {
     const curve = ensureBreathCurves()[trackId];
     const previousT = index > 0 ? curve[index - 1].t + 0.01 : 0;
@@ -1801,11 +1847,13 @@
 
   function addCurvePoint(trackId, point) {
     const curve = ensureBreathCurves()[trackId];
-    curve.push({
+    const nextPoint = {
       t: clamp(point.t, 0, 1),
       v: clamp(point.v, 0, MAX_BREATH_CURVE_Y_MAX_SEC)
-    });
+    };
+    curve.push(nextPoint);
     sortCurve(curve);
+    return curve.indexOf(nextPoint);
   }
 
   function removeCurvePoint(trackId, index) {
@@ -1828,11 +1876,13 @@
 
   function addAutomationPoint(trackId, point) {
     const curve = ensureLayerAutomation()[trackId];
-    curve.push({
+    const nextPoint = {
       t: clamp(point.t, 0, 1),
       v: clamp(point.v, 0, 1)
-    });
+    };
+    curve.push(nextPoint);
     sortCurve(curve);
+    return curve.indexOf(nextPoint);
   }
 
   function removeAutomationPoint(trackId, index) {
@@ -1846,6 +1896,42 @@
     renderControlReadouts();
     const progress = state.playing ? state.elapsedSec / Math.max(1, journeyDuration()) : 0;
     render(evaluateJourney(progress), progress);
+  }
+
+  function addBreathPointFromControls() {
+    const trackId = state.activeBreathCurve;
+    const t = curveEditT();
+    const curve = ensureBreathCurves()[trackId];
+    const v = evaluateValueCurve(curve, t, breathTracks[trackId]?.fallback || 0);
+    const index = addCurvePoint(trackId, { t, v });
+    state.selectedBreathPoint = { trackId, index };
+    renderAfterCurveEdit(true);
+  }
+
+  function deleteSelectedBreathPoint() {
+    const selected = state.selectedBreathPoint;
+    if (!selected) return;
+    removeCurvePoint(selected.trackId, selected.index);
+    state.selectedBreathPoint = null;
+    renderAfterCurveEdit(true);
+  }
+
+  function addAutomationPointFromControls() {
+    const trackId = state.activeLayerAutomation;
+    const t = curveEditT();
+    const curve = ensureLayerAutomation()[trackId];
+    const v = evaluateValueCurve(curve, t, 1);
+    const index = addAutomationPoint(trackId, { t, v });
+    state.selectedAutomationPoint = { trackId, index };
+    renderAfterAutomationEdit();
+  }
+
+  function deleteSelectedAutomationPoint() {
+    const selected = state.selectedAutomationPoint;
+    if (!selected) return;
+    removeAutomationPoint(selected.trackId, selected.index);
+    state.selectedAutomationPoint = null;
+    renderAfterAutomationEdit();
   }
 
   function zoomBreathCurveTime(factor) {
@@ -1902,20 +1988,20 @@
         noiseColor: "pink",
         toggles: {
           breath: true,
-          guideVoice: false,
+          guideVoice: true,
           guideTonal: true,
           interference: true,
           harmonic: true,
-          nature: false
+          nature: true
         },
         volumes: {
           breath: 1.8,
-          guideVoice: 0.9,
+          guideVoice: 0.55,
           guideTonal: 1.35,
           interference: 3.2,
           harmonic: 2.15,
           harmonicSpace: 2.7,
-          nature: 0
+          nature: 0.18
         },
         breathCurves: {
           inhale: [{ t: 0, v: 3.2 }, { t: 0.45, v: 4.2 }, { t: 1, v: 5 }],
@@ -1925,11 +2011,11 @@
         },
         layerAutomation: {
           breath: [{ t: 0, v: 0.62 }, { t: 0.08, v: 1 }, { t: 0.7, v: 0.92 }, { t: 1, v: 0.58 }],
-          guideVoice: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
+          guideVoice: [{ t: 0, v: 0.44 }, { t: 0.16, v: 0.42 }, { t: 0.3, v: 0.12 }, { t: 0.5, v: 0.36 }, { t: 0.68, v: 0.16 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 1 }, { t: 0.3, v: 0.92 }, { t: 0.8, v: 0.58 }, { t: 1, v: 0.34 }],
           interference: [{ t: 0, v: 0.9 }, { t: 0.22, v: 1 }, { t: 0.72, v: 0.45 }, { t: 1, v: 0.2 }],
           harmonic: [{ t: 0, v: 0.28 }, { t: 0.38, v: 0.72 }, { t: 0.78, v: 0.86 }, { t: 1, v: 0.48 }],
-          nature: [{ t: 0, v: 0 }, { t: 1, v: 0 }]
+          nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.22 }, { t: 1, v: 0.16 }]
         },
         view
       },
@@ -1945,20 +2031,20 @@
         noiseColor: "green",
         toggles: {
           breath: true,
-          guideVoice: false,
+          guideVoice: true,
           guideTonal: true,
           interference: true,
           harmonic: true,
-          nature: false
+          nature: true
         },
         volumes: {
           breath: 1.45,
-          guideVoice: 0.75,
+          guideVoice: 0.45,
           guideTonal: 0.95,
           interference: 2.4,
           harmonic: 1.8,
           harmonicSpace: 3.1,
-          nature: 0
+          nature: 0.16
         },
         breathCurves: {
           inhale: [{ t: 0, v: 5 }, { t: 0.45, v: 5.2 }, { t: 1, v: 5.5 }],
@@ -1968,11 +2054,11 @@
         },
         layerAutomation: {
           breath: [{ t: 0, v: 0.48 }, { t: 0.12, v: 0.82 }, { t: 0.88, v: 0.82 }, { t: 1, v: 0.38 }],
-          guideVoice: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
+          guideVoice: [{ t: 0, v: 0.34 }, { t: 0.15, v: 0.26 }, { t: 0.42, v: 0.16 }, { t: 0.58, v: 0.25 }, { t: 0.78, v: 0.12 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.72 }, { t: 0.5, v: 0.55 }, { t: 1, v: 0.25 }],
           interference: [{ t: 0, v: 0.52 }, { t: 0.18, v: 0.75 }, { t: 0.82, v: 0.62 }, { t: 1, v: 0.22 }],
           harmonic: [{ t: 0, v: 0.34 }, { t: 0.5, v: 0.68 }, { t: 1, v: 0.4 }],
-          nature: [{ t: 0, v: 0 }, { t: 1, v: 0 }]
+          nature: [{ t: 0, v: 0.22 }, { t: 0.64, v: 0.2 }, { t: 1, v: 0.16 }]
         },
         view
       },
@@ -1988,20 +2074,20 @@
         noiseColor: "brown",
         toggles: {
           breath: true,
-          guideVoice: false,
+          guideVoice: true,
           guideTonal: true,
           interference: true,
           harmonic: true,
-          nature: false
+          nature: true
         },
         volumes: {
           breath: 1.55,
-          guideVoice: 0.7,
+          guideVoice: 0.42,
           guideTonal: 0.72,
           interference: 1.85,
           harmonic: 1.65,
           harmonicSpace: 3.6,
-          nature: 0
+          nature: 0.15
         },
         breathCurves: {
           inhale: [{ t: 0, v: 3.5 }, { t: 0.4, v: 4.6 }, { t: 1, v: 6 }],
@@ -2011,11 +2097,11 @@
         },
         layerAutomation: {
           breath: [{ t: 0, v: 0.58 }, { t: 0.16, v: 0.94 }, { t: 0.76, v: 0.72 }, { t: 1, v: 0.28 }],
-          guideVoice: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
+          guideVoice: [{ t: 0, v: 0.3 }, { t: 0.16, v: 0.24 }, { t: 0.38, v: 0.12 }, { t: 0.54, v: 0.22 }, { t: 0.72, v: 0.1 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.62 }, { t: 0.35, v: 0.42 }, { t: 1, v: 0.12 }],
           interference: [{ t: 0, v: 0.42 }, { t: 0.3, v: 0.32 }, { t: 1, v: 0.08 }],
           harmonic: [{ t: 0, v: 0.42 }, { t: 0.42, v: 0.86 }, { t: 0.78, v: 0.72 }, { t: 1, v: 0.25 }],
-          nature: [{ t: 0, v: 0 }, { t: 1, v: 0 }]
+          nature: [{ t: 0, v: 0.2 }, { t: 0.66, v: 0.16 }, { t: 1, v: 0.12 }]
         },
         view
       }
@@ -2565,9 +2651,13 @@
       "resetBreathCurvesBtn",
       "breathCurveToolbar",
       "breathCurveCanvas",
+      "addBreathPointBtn",
+      "deleteBreathPointBtn",
       "resetLayerAutomationBtn",
       "layerAutomationToolbar",
       "layerAutomationCanvas",
+      "addAutomationPointBtn",
+      "deleteAutomationPointBtn",
       "breathCurveHint",
       "curveTimeZoomOutBtn",
       "curveTimeZoomInBtn",
@@ -2652,27 +2742,39 @@
     });
     els.resetBreathCurvesBtn.addEventListener("click", () => {
       resetBreathCurvesFromControls();
+      state.selectedBreathPoint = null;
       render(evaluateJourney(state.playing ? state.elapsedSec / Math.max(1, journeyDuration()) : 0), state.playing ? state.elapsedSec / Math.max(1, journeyDuration()) : 0);
     });
     els.breathCurveToolbar.querySelectorAll("[data-curve-track]").forEach((button) => {
       button.addEventListener("click", () => {
         state.activeBreathCurve = button.dataset.curveTrack;
+        state.selectedBreathPoint = null;
         renderBreathCurveEditor();
       });
     });
     els.layerAutomationToolbar.querySelectorAll("[data-layer-track]").forEach((button) => {
       button.addEventListener("click", () => {
         state.activeLayerAutomation = button.dataset.layerTrack;
+        state.selectedAutomationPoint = null;
         renderLayerAutomationEditor();
       });
     });
     els.resetLayerAutomationBtn.addEventListener("click", () => {
       resetLayerAutomation();
+      state.selectedAutomationPoint = null;
       renderAfterAutomationEdit();
     });
+    els.addBreathPointBtn.addEventListener("click", addBreathPointFromControls);
+    els.deleteBreathPointBtn.addEventListener("click", deleteSelectedBreathPoint);
+    els.addAutomationPointBtn.addEventListener("click", addAutomationPointFromControls);
+    els.deleteAutomationPointBtn.addEventListener("click", deleteSelectedAutomationPoint);
     els.breathCurveCanvas.addEventListener("pointerdown", (event) => {
       const hit = findCurvePointAt(event.clientX, event.clientY);
       if (!hit.nearest) return;
+      state.selectedBreathPoint = {
+        trackId: state.activeBreathCurve,
+        index: hit.nearest.index
+      };
       state.curveDrag = {
         editor: "breath",
         trackId: state.activeBreathCurve,
@@ -2684,6 +2786,10 @@
       if (!state.curveDrag || state.curveDrag.editor !== "breath") return;
       const hit = findCurvePointAt(event.clientX, event.clientY);
       setCurvePoint(state.curveDrag.trackId, state.curveDrag.index, hit.canvasPoint);
+      state.selectedBreathPoint = {
+        trackId: state.curveDrag.trackId,
+        index: state.curveDrag.index
+      };
       renderAfterCurveEdit(true);
     });
     els.breathCurveCanvas.addEventListener("pointerup", (event) => {
@@ -2698,14 +2804,20 @@
       const hit = findCurvePointAt(event.clientX, event.clientY);
       if (hit.nearest && hit.nearest.index > 0 && hit.nearest.index < ensureBreathCurves()[state.activeBreathCurve].length - 1) {
         removeCurvePoint(state.activeBreathCurve, hit.nearest.index);
+        state.selectedBreathPoint = null;
       } else if (!hit.nearest) {
-        addCurvePoint(state.activeBreathCurve, hit.canvasPoint);
+        const index = addCurvePoint(state.activeBreathCurve, hit.canvasPoint);
+        state.selectedBreathPoint = { trackId: state.activeBreathCurve, index };
       }
       renderAfterCurveEdit(true);
     });
     els.layerAutomationCanvas.addEventListener("pointerdown", (event) => {
       const hit = findAutomationPointAt(event.clientX, event.clientY);
       if (!hit.nearest) return;
+      state.selectedAutomationPoint = {
+        trackId: state.activeLayerAutomation,
+        index: hit.nearest.index
+      };
       state.curveDrag = {
         editor: "automation",
         trackId: state.activeLayerAutomation,
@@ -2717,6 +2829,10 @@
       if (!state.curveDrag || state.curveDrag.editor !== "automation") return;
       const hit = findAutomationPointAt(event.clientX, event.clientY);
       setAutomationPoint(state.curveDrag.trackId, state.curveDrag.index, hit.canvasPoint);
+      state.selectedAutomationPoint = {
+        trackId: state.curveDrag.trackId,
+        index: state.curveDrag.index
+      };
       renderAfterAutomationEdit();
     });
     els.layerAutomationCanvas.addEventListener("pointerup", (event) => {
@@ -2731,8 +2847,10 @@
       const hit = findAutomationPointAt(event.clientX, event.clientY);
       if (hit.nearest && hit.nearest.index > 0 && hit.nearest.index < ensureLayerAutomation()[state.activeLayerAutomation].length - 1) {
         removeAutomationPoint(state.activeLayerAutomation, hit.nearest.index);
+        state.selectedAutomationPoint = null;
       } else if (!hit.nearest) {
-        addAutomationPoint(state.activeLayerAutomation, hit.canvasPoint);
+        const index = addAutomationPoint(state.activeLayerAutomation, hit.canvasPoint);
+        state.selectedAutomationPoint = { trackId: state.activeLayerAutomation, index };
       }
       renderAfterAutomationEdit();
     });

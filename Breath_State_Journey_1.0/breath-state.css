@@ -452,6 +452,17 @@ output {
   margin-top: 10px;
 }
 
+.curve-point-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.curve-point-actions button {
+  min-height: 36px;
+}
+
 .curve-zoom-row {
   display: flex;
   flex-wrap: wrap;
