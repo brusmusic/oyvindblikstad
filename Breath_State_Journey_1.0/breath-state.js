@@ -42,6 +42,19 @@
     exhaleStart: -5,
     holdAfterExhaleStart: -7
   };
+  const TONAL_CADENCE_MODE = "tonalCadence";
+  const tonalCadenceEventPhases = {
+    inhaleStart: "inhale",
+    holdAfterInhaleStart: "holdInhale",
+    exhaleStart: "exhale",
+    holdAfterExhaleStart: "holdExhale"
+  };
+  const tonalCadenceVoicings = {
+    inhale: { label: "Csus2", offsets: [0, 14, 19, 31], weights: [0.74, 0.34, 0.42, 0.5], pans: [-0.18, -0.08, 0.18, 0.36] },
+    holdInhale: { label: "Fm/C", offsets: [0, 17, 24, 32], weights: [0.68, 0.4, 0.3, 0.54], pans: [-0.14, 0.05, 0.2, 0.38] },
+    exhale: { label: "G/B", offsets: [-1, 14, 19, 31], weights: [0.78, 0.34, 0.44, 0.52], pans: [-0.22, -0.04, 0.2, 0.42] },
+    holdExhale: { label: "Bdim7", offsets: [-1, 14, 17, 32], weights: [0.64, 0.38, 0.38, 0.5], pans: [-0.18, 0, 0.22, 0.36] }
+  };
   const breathTracks = {
     inhale: { label: "Inhale", color: "#9ad4c8", fallback: 3 },
     holdInhale: { label: "Hold in", color: "#d5b96e", fallback: 0 },
@@ -94,6 +107,11 @@
       tension: [1, 1.118, 1.382, 1.618],
       release: [1, 1.236, 1.5, 2.0],
       label: "phi"
+    },
+    tonalCadence: {
+      tension: [1, 9 / 8, 3 / 2, 3],
+      release: [2 ** (-1 / 12), 9 / 8, 3 / 2, 3],
+      label: "tonal cadence"
     }
   };
 
@@ -509,22 +527,31 @@
         holdAfterExhaleStart: { min: 105, max: 205 }
       }[eventName] || { min: 115, max: 320 };
       const guideRootHz = fitFrequencyToRange(cueHz, cueRegister.min, cueRegister.max);
-      const relationshipRatios = (isOpening ? set.tension : set.release)
-        .filter((ratio) => Number.isFinite(ratio) && ratio > 0);
-      const rootRatios = eventName === "holdAfterExhaleStart" ? [1, 2] : [1, 2, 4];
-      const colorRatios = eventName === "holdAfterExhaleStart"
-        ? []
-        : relationshipRatios
-          .filter((ratio) => Math.abs(ratio - 1) > 0.03)
-          .flatMap((ratio) => [ratio, ratio * 2]);
-      const cueVoices = [
-        ...rootRatios.map((ratio, index) => ({ ratio, weight: [0.92, 0.22, 0.1, 0.05][index] || 0.04 })),
-        ...colorRatios.map((ratio, index) => ({ ratio, weight: 0.045 / (index + 1) }))
-      ]
-        .map((voice) => ({ ...voice, hz: guideRootHz * voice.ratio }))
-        .filter((voice) => voice.hz >= 100 && voice.hz <= 4200)
-        .filter((voice, index, voices) => voices.findIndex((candidate) => Math.abs(candidate.ratio - voice.ratio) < 0.001) === index)
-        .sort((a, b) => a.hz - b.hz);
+      const cueVoices = harmonicMode === TONAL_CADENCE_MODE
+        ? tonalCadenceVoicing(tonalCadenceEventPhases[eventName]).offsets
+          .map((offset, index) => ({
+            ratio: 2 ** (offset / 12),
+            weight: [0.32, 0.16, 0.18, 0.24][index] || 0.1,
+            hz: fitFrequencyToRange(semitoneToFrequency(baseHz, offset), 110, 1800)
+          }))
+        : (() => {
+          const relationshipRatios = (isOpening ? set.tension : set.release)
+            .filter((ratio) => Number.isFinite(ratio) && ratio > 0);
+          const rootRatios = eventName === "holdAfterExhaleStart" ? [1, 2] : [1, 2, 4];
+          const colorRatios = eventName === "holdAfterExhaleStart"
+            ? []
+            : relationshipRatios
+              .filter((ratio) => Math.abs(ratio - 1) > 0.03)
+              .flatMap((ratio) => [ratio, ratio * 2]);
+          return [
+            ...rootRatios.map((ratio, index) => ({ ratio, weight: [0.92, 0.22, 0.1, 0.05][index] || 0.04 })),
+            ...colorRatios.map((ratio, index) => ({ ratio, weight: 0.045 / (index + 1) }))
+          ]
+            .map((voice) => ({ ...voice, hz: guideRootHz * voice.ratio }))
+            .filter((voice) => voice.hz >= 100 && voice.hz <= 4200)
+            .filter((voice, index, voices) => voices.findIndex((candidate) => Math.abs(candidate.ratio - voice.ratio) < 0.001) === index)
+            .sort((a, b) => a.hz - b.hz);
+        })();
       const cueBus = ctx.createGain();
       const cueHighpass = ctx.createBiquadFilter();
       const cueFilter = ctx.createBiquadFilter();
@@ -634,6 +661,14 @@
     while (fitted > max) fitted /= 2;
     if (fitted < min) fitted = min;
     return fitted;
+  }
+
+  function tonalCadenceVoicing(phase) {
+    return tonalCadenceVoicings[phase] || tonalCadenceVoicings.inhale;
+  }
+
+  function semitoneToFrequency(rootHz, semitone) {
+    return rootHz * (2 ** (semitone / 12));
   }
 
   function breathValues(item) {
@@ -947,31 +982,47 @@
     audio.beatB.frequency.setTargetAtTime(fundamental + beatDiff, now, 0.05);
     audio.beatGain.gain.setTargetAtTime(layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse)), now, 0.04);
 
-    const set = relationshipSets[els.relationshipSelect.value] || relationshipSets.harmonic;
-    let harmonicLiftSemitone = 0;
-    if (state.phase === "inhale") harmonicLiftSemitone = lerp(-1.5, 2.2, smoothstep(phaseProgress));
-    if (state.phase === "holdInhale") harmonicLiftSemitone = 2.2;
-    if (state.phase === "exhale") harmonicLiftSemitone = lerp(2.2, -5.8, smoothstep(phaseProgress));
-    if (state.phase === "holdExhale") harmonicLiftSemitone = -5.8;
-    const harmonicLift = 2 ** (harmonicLiftSemitone / 12);
-    const releaseWeight = state.phase === "inhale"
-      ? smoothstep(phaseProgress) * 0.24
-      : state.phase === "exhale"
-        ? 0.58 + (smoothstep(phaseProgress) * 0.42)
-        : state.phase === "holdInhale"
-          ? 0.24
-          : 1;
-    audio.harmonicVoices.forEach((voice, index) => {
-      const tensionRatio = set.tension[index] || 1;
-      const releaseRatio = set.release[index] || tensionRatio;
-      const ratio = lerp(tensionRatio, releaseRatio, releaseWeight);
-      const drift = Math.sin((state.elapsedSec * (0.06 + (params.movement * 0.16))) + index) * params.movement * 0.25;
-      voice.osc.frequency.setTargetAtTime((fundamental * ratio * harmonicLift) + drift, now, 0.12);
-      const voiceLevel = layerHarmonic * (index === 0 ? 0.026 : 0.014) * (1 + (params.density * 0.7));
-      const exhaleLift = state.phase === "exhale" ? 1.05 : 0.82;
-      voice.gain.gain.setTargetAtTime(voiceLevel * exhaleLift, now, 0.12);
-      voice.pan.pan.setTargetAtTime((index - 1.5) * 0.28 * (0.45 + params.movement), now, 0.18);
-    });
+    const relationshipMode = els.relationshipSelect.value;
+    const set = relationshipSets[relationshipMode] || relationshipSets.harmonic;
+    if (relationshipMode === TONAL_CADENCE_MODE) {
+      const voicing = tonalCadenceVoicing(state.phase);
+      audio.harmonicVoices.forEach((voice, index) => {
+        const offset = voicing.offsets[index] ?? 0;
+        const isTopVoice = index === voicing.offsets.length - 1;
+        const drift = isTopVoice ? 0 : Math.sin((state.elapsedSec * (0.035 + (params.movement * 0.08))) + index) * params.movement * 0.08;
+        voice.osc.frequency.setTargetAtTime(semitoneToFrequency(fundamental, offset) + drift, now, 0.16);
+        const densityLift = 0.82 + (params.density * 0.52);
+        const holdSoftener = state.phase === "holdExhale" ? 0.82 : 1;
+        const voiceLevel = layerHarmonic * 0.019 * (voicing.weights[index] || 0.35) * densityLift * holdSoftener;
+        voice.gain.gain.setTargetAtTime(voiceLevel, now, 0.14);
+        voice.pan.pan.setTargetAtTime(voicing.pans[index] ?? 0, now, 0.2);
+      });
+    } else {
+      let harmonicLiftSemitone = 0;
+      if (state.phase === "inhale") harmonicLiftSemitone = lerp(-1.5, 2.2, smoothstep(phaseProgress));
+      if (state.phase === "holdInhale") harmonicLiftSemitone = 2.2;
+      if (state.phase === "exhale") harmonicLiftSemitone = lerp(2.2, -5.8, smoothstep(phaseProgress));
+      if (state.phase === "holdExhale") harmonicLiftSemitone = -5.8;
+      const harmonicLift = 2 ** (harmonicLiftSemitone / 12);
+      const releaseWeight = state.phase === "inhale"
+        ? smoothstep(phaseProgress) * 0.24
+        : state.phase === "exhale"
+          ? 0.58 + (smoothstep(phaseProgress) * 0.42)
+          : state.phase === "holdInhale"
+            ? 0.24
+            : 1;
+      audio.harmonicVoices.forEach((voice, index) => {
+        const tensionRatio = set.tension[index] || 1;
+        const releaseRatio = set.release[index] || tensionRatio;
+        const ratio = lerp(tensionRatio, releaseRatio, releaseWeight);
+        const drift = Math.sin((state.elapsedSec * (0.06 + (params.movement * 0.16))) + index) * params.movement * 0.25;
+        voice.osc.frequency.setTargetAtTime((fundamental * ratio * harmonicLift) + drift, now, 0.12);
+        const voiceLevel = layerHarmonic * (index === 0 ? 0.026 : 0.014) * (1 + (params.density * 0.7));
+        const exhaleLift = state.phase === "exhale" ? 1.05 : 0.82;
+        voice.gain.gain.setTargetAtTime(voiceLevel * exhaleLift, now, 0.12);
+        voice.pan.pan.setTargetAtTime((index - 1.5) * 0.28 * (0.45 + params.movement), now, 0.18);
+      });
+    }
     audio.harmonicWet.gain.setTargetAtTime(layerHarmonic * harmonicSpace * lerp(0.08, 0.28, params.reverb), now, 0.22);
     audio.harmonicDry.gain.setTargetAtTime(layerHarmonic * 0.022, now, 0.12);
 
@@ -1197,6 +1248,7 @@
     const prep = abePrepValues(result);
 
     els.noiseColorSelect.value = "brown";
+    els.relationshipSelect.value = TONAL_CADENCE_MODE;
     els.breathLayerToggle.checked = true;
     els.natureLayerToggle.checked = true;
     els.guideLayerToggle.checked = true;
@@ -1983,7 +2035,7 @@
         journeyId: "settle-awake",
         fundamental: 48,
         duration: 360,
-        relationship: "simple",
+        relationship: TONAL_CADENCE_MODE,
         movement: 0.28,
         noiseColor: "pink",
         toggles: {
