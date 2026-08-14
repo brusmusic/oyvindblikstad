@@ -144,6 +144,7 @@ function reportSummary(profile) {
     inhaleDuration: profile?.breath?.inhaleDuration ?? null,
     exhaleDuration: profile?.breath?.exhaleDuration ?? null,
     breathConfidence: profile?.breath?.confidence ?? null,
+    breathPhaseConfidence: profile?.breath?.phaseConfidence ?? null,
     motionSignalQuality: profile?.motion?.signalQuality ?? null,
     voiceFrequency: profile?.voice?.fundamentalHz ?? profile?.voice?.frequency ?? null,
     voiceConfidence: profile?.voice?.confidence ?? null,
@@ -281,6 +282,7 @@ async function start(options) {
       durationSec: Number(els.durationInput.value) || 45,
       detectVoicePitch: Boolean(options.voice),
       voiceDurationSec: 7,
+      voicePrepareSec: 3,
       placementDelaySec: options.voice ? 5 : 0,
       onUpdate(update) {
         els.debugStatus.textContent = update.state;
@@ -289,10 +291,20 @@ async function start(options) {
           els.entryTitle.textContent = "Allow motion access.";
           els.entryInstruction.textContent = "This lets the phone read the small movement from your breath after the voice check.";
         }
+        if (update.state === "REQUESTING_MIC_ACCESS") {
+          els.voicePrompt.hidden = false;
+          els.entryTitle.textContent = "Allow microphone access.";
+          els.entryInstruction.textContent = "The sentence will be recorded after a short pause.";
+        }
+        if (update.state === "PREPARE_VOICE") {
+          els.voicePrompt.hidden = false;
+          els.entryTitle.textContent = "Get ready to read.";
+          els.entryInstruction.textContent = "When the bar fills, read the sentence once in your normal voice.";
+        }
         if (update.state === "SENSING_VOICE") {
           els.voicePrompt.hidden = false;
-          els.entryTitle.textContent = "Read the sentence.";
-          els.entryInstruction.textContent = "Use your normal voice. The recording is analyzed locally and not stored as audio.";
+          els.entryTitle.textContent = "Read now.";
+          els.entryInstruction.textContent = `Use your normal voice. Voice level: ${percent(Math.min(1, (update.voiceLevel || 0) / 0.08))}`;
         }
         if (update.state === "VOICE_ACQUIRED") {
           els.entryTitle.textContent = "Voice captured.";

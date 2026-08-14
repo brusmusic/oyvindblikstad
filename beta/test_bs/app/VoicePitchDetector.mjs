@@ -28,6 +28,7 @@ export class VoicePitchDetector {
     const durationMs = (options.durationSec || 10) * 1000;
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     const ctx = new AudioContext();
+    await ctx.resume();
     const source = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;
@@ -35,12 +36,31 @@ export class VoicePitchDetector {
     const buffer = new Float32Array(analyser.fftSize);
     const frames = [];
     const allFrames = [];
+    const beforeRecordDelayMs = Math.max(0, (options.beforeRecordDelaySec || 0) * 1000);
+    const prepareStarted = performance.now();
+    while (performance.now() - prepareStarted < beforeRecordDelayMs) {
+      analyser.getFloatTimeDomainData(buffer);
+      const frame = analyzeFrame([...buffer], ctx.sampleRate);
+      options.onStatus?.({
+        phase: "prepare",
+        progress: (performance.now() - prepareStarted) / Math.max(1, beforeRecordDelayMs),
+        level: frame.rms,
+        voicedFrames: 0
+      });
+      await new Promise((resolve) => setTimeout(resolve, 80));
+    }
     const started = performance.now();
     while (performance.now() - started < durationMs) {
       analyser.getFloatTimeDomainData(buffer);
       const pitch = analyzeFrame([...buffer], ctx.sampleRate);
       allFrames.push(pitch);
       if (pitch.frequency && pitch.clarity > 0.35) frames.push(pitch);
+      options.onStatus?.({
+        phase: "recording",
+        progress: (performance.now() - started) / Math.max(1, durationMs),
+        level: pitch.rms,
+        voicedFrames: frames.length
+      });
       await new Promise((resolve) => setTimeout(resolve, 80));
     }
     stream.getTracks().forEach((track) => track.stop());

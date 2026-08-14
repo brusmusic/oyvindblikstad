@@ -43,6 +43,7 @@ function render() {
           <span><strong>${formatNumber(summaryData.inhaleDuration)}</strong><small>inhale sec</small></span>
           <span><strong>${formatNumber(summaryData.exhaleDuration)}</strong><small>exhale sec</small></span>
           <span><strong>${formatPercent(summaryData.breathConfidence)}</strong><small>confidence</small></span>
+          <span><strong>${formatPercent(summaryData.breathPhaseConfidence)}</strong><small>phase</small></span>
           <span><strong>${summaryData.motionBestKey || "--"}</strong><small>sensor key</small></span>
           <span><strong>${summaryData.warmupSec ?? "--"}</strong><small>warmup sec</small></span>
         </div>

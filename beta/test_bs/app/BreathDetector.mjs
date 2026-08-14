@@ -65,24 +65,34 @@ function scoreSignal(signal, sampleRate, options = {}) {
   };
 }
 
-function estimateRatio(signal, peaks, troughs, sampleRate) {
-  if (peaks.length < 2 || troughs.length < 2) return { inhaleDuration: NaN, exhaleDuration: NaN };
+function estimateRatio(signal, peaks, troughs, sampleRate, cycleDuration) {
+  if (peaks.length < 2 || troughs.length < 2) return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
   const riseDurations = [];
   const fallDurations = [];
   troughs.forEach((trough) => {
     const nextPeak = peaks.find((peak) => peak > trough);
-    if (Number.isFinite(nextPeak)) riseDurations.push((nextPeak - trough) / sampleRate);
+    const nextTrough = troughs.find((item) => item > trough);
+    if (Number.isFinite(nextPeak) && Number.isFinite(nextTrough) && nextPeak < nextTrough) {
+      riseDurations.push((nextPeak - trough) / sampleRate);
+    }
   });
   peaks.forEach((peak) => {
     const nextTrough = troughs.find((trough) => trough > peak);
-    if (Number.isFinite(nextTrough)) fallDurations.push((nextTrough - peak) / sampleRate);
+    const nextPeak = peaks.find((item) => item > peak);
+    if (Number.isFinite(nextTrough) && Number.isFinite(nextPeak) && nextTrough < nextPeak) {
+      fallDurations.push((nextTrough - peak) / sampleRate);
+    }
   });
   const rise = median(riseDurations);
   const fall = median(fallDurations);
-  if (!Number.isFinite(rise) || !Number.isFinite(fall)) return { inhaleDuration: NaN, exhaleDuration: NaN };
+  if (!Number.isFinite(rise) || !Number.isFinite(fall)) return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
+  const total = rise + fall;
+  const durationMatch = Number.isFinite(cycleDuration) ? clamp(1 - (Math.abs(total - cycleDuration) / Math.max(0.5, cycleDuration)), 0, 1) : 0.5;
+  const scale = Number.isFinite(cycleDuration) && total > cycleDuration * 1.08 ? cycleDuration / total : 1;
   return {
-    inhaleDuration: rise,
-    exhaleDuration: fall
+    inhaleDuration: rise * scale,
+    exhaleDuration: fall * scale,
+    phaseConfidence: clamp(durationMatch * Math.min(riseDurations.length, fallDurations.length) / 3, 0, 1)
   };
 }
 
@@ -117,7 +127,7 @@ export class BreathDetector {
         debug: { bestKey: best?.key || "", candidates }
       };
     }
-    const ratio = estimateRatio(best.signal, best.peaks, best.troughs, sampleRate);
+    const ratio = estimateRatio(best.signal, best.peaks, best.troughs, sampleRate, best.cycleDuration);
     const cycleDuration = best.cycleDuration;
     const breathsPerMinute = 60 / cycleDuration;
     const inhaleDuration = Number.isFinite(ratio.inhaleDuration) ? ratio.inhaleDuration : cycleDuration * 0.42;
@@ -129,6 +139,7 @@ export class BreathDetector {
         cycleDuration,
         inhaleDuration,
         exhaleDuration,
+        phaseConfidence: ratio.phaseConfidence || 0,
         confidence
       },
       motion: {

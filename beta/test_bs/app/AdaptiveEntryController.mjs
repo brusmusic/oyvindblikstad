@@ -64,8 +64,16 @@ export class AdaptiveEntryController {
     }
 
     if (!this.aborted && detectVoicePitch && capabilities.microphone) {
-      this.transition("SENSING_VOICE", onUpdate, { message: "Read the sentence on screen in your normal voice." });
-      const voiceResult = await this.voicePitchDetector.analyze({ durationSec: options.voiceDurationSec || 7 });
+      this.transition("REQUESTING_MIC_ACCESS", onUpdate, { message: "Allow microphone access." });
+      const voiceResult = await this.voicePitchDetector.analyze({
+        durationSec: options.voiceDurationSec || 7,
+        beforeRecordDelaySec: Number.isFinite(options.voicePrepareSec) ? options.voicePrepareSec : 3,
+        onStatus: (status) => {
+          if (this.aborted) return;
+          const state = status.phase === "prepare" ? "PREPARE_VOICE" : "SENSING_VOICE";
+          onUpdate?.({ state, progress: status.progress, voiceLevel: status.level, voicedFrames: status.voicedFrames });
+        }
+      });
       profile.voice = voiceResult.voice;
       profile.globalTune = this.globalTuneMapper.map(voiceResult.voice);
       profile.debug = { ...(profile.debug || {}), voice: voiceResult.debug };
@@ -92,7 +100,7 @@ export class AdaptiveEntryController {
       const result = this.breathDetector.analyze(samples);
       profile.breath = result.breath;
       profile.motion = result.motion;
-      profile.debug = { breath: result.debug };
+      profile.debug = { ...(profile.debug || {}), breath: result.debug };
       this.transition(result.breath.detected ? "BREATH_ACQUIRED" : "BREATH_UNKNOWN", onUpdate, { profile });
       this.haptics.trigger(result.breath.detected ? "softPulse" : "doubleSoftPulse", { intensity: result.breath.detected ? 0.35 : 0.22 });
     }
