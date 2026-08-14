@@ -41,7 +41,7 @@
     inhaleStart: 0,
     holdAfterInhaleStart: 2,
     exhaleStart: -5,
-    holdAfterExhaleStart: -7
+    holdAfterExhaleStart: -4
   };
   const TONAL_CADENCE_MODE = "tonalCadence";
   const tonalCadenceEventPhases = {
@@ -539,14 +539,12 @@
       source.start(ctx.currentTime, offsetSec, GUIDE_CUE_DURATION_SEC);
     }
 
-    function playTonalGuide(eventName, fundamentalHz, harmonicMode) {
+    function playTonalGuide(eventName, fundamentalHz) {
       const semitones = tonalGuideSemitones[eventName];
       if (!Number.isFinite(semitones)) return;
       const now = ctx.currentTime;
       const baseHz = clamp(fundamentalHz, MIN_FUNDAMENTAL_HZ, MAX_FUNDAMENTAL_HZ);
       const cueHz = baseHz * (2 ** (semitones / 12));
-      const set = relationshipSets[harmonicMode] || relationshipSets.harmonic;
-      const isOpening = eventName === "inhaleStart" || eventName === "holdAfterInhaleStart";
       const cueRegister = {
         inhaleStart: { min: 170, max: 360 },
         holdAfterInhaleStart: { min: 150, max: 320 },
@@ -554,31 +552,10 @@
         holdAfterExhaleStart: { min: 105, max: 205 }
       }[eventName] || { min: 115, max: 320 };
       const guideRootHz = fitFrequencyToRange(cueHz, cueRegister.min, cueRegister.max);
-      const cueVoices = harmonicMode === TONAL_CADENCE_MODE
-        ? tonalCadenceVoicing(tonalCadenceEventPhases[eventName]).offsets
-          .map((offset, index) => ({
-            ratio: 2 ** (offset / 12),
-            weight: [0.32, 0.16, 0.18, 0.24][index] || 0.1,
-            hz: fitFrequencyToRange(semitoneToFrequency(baseHz, offset), 110, 1800)
-          }))
-        : (() => {
-          const relationshipRatios = (isOpening ? set.tension : set.release)
-            .filter((ratio) => Number.isFinite(ratio) && ratio > 0);
-          const rootRatios = eventName === "holdAfterExhaleStart" ? [1, 2] : [1, 2, 4];
-          const colorRatios = eventName === "holdAfterExhaleStart"
-            ? []
-            : relationshipRatios
-              .filter((ratio) => Math.abs(ratio - 1) > 0.03)
-              .flatMap((ratio) => [ratio, ratio * 2]);
-          return [
-            ...rootRatios.map((ratio, index) => ({ ratio, weight: [0.92, 0.22, 0.1, 0.05][index] || 0.04 })),
-            ...colorRatios.map((ratio, index) => ({ ratio, weight: 0.045 / (index + 1) }))
-          ]
-            .map((voice) => ({ ...voice, hz: guideRootHz * voice.ratio }))
-            .filter((voice) => voice.hz >= 100 && voice.hz <= 4200)
-            .filter((voice, index, voices) => voices.findIndex((candidate) => Math.abs(candidate.ratio - voice.ratio) < 0.001) === index)
-            .sort((a, b) => a.hz - b.hz);
-        })();
+      const cueVoices = [
+        { hz: guideRootHz, weight: 0.9 },
+        { hz: guideRootHz * 2, weight: 0.08 }
+      ].filter((voice) => voice.hz >= 100 && voice.hz <= 4200);
       const cueBus = ctx.createGain();
       const cueHighpass = ctx.createBiquadFilter();
       const cueFilter = ctx.createBiquadFilter();
@@ -753,6 +730,10 @@
     return rootHz * (2 ** (semitone / 12));
   }
 
+  function tonalCadenceBassSemitone(phase) {
+    return phase === "exhale" || phase === "holdExhale" ? -1 : 0;
+  }
+
   function breathValues(item) {
     const breath = Array.isArray(item?.breath) ? item.breath : [3, 6];
     if (breath.length >= 4) return breath;
@@ -912,9 +893,8 @@
   }
 
   function triggerTonalGuideCue(eventName) {
-    if (els.relationshipSelect?.value === TONAL_CADENCE_MODE) return;
     if (!els.guideTonalToggle?.checked || !state.audio) return;
-    state.audio.playTonalGuide(eventName, selectedFundamental(), els.relationshipSelect.value);
+    state.audio.playTonalGuide(eventName, selectedFundamental());
   }
 
   function triggerTonalCadenceChord(eventName) {
@@ -1076,8 +1056,11 @@
     audio.breathFilter.Q.setTargetAtTime(noiseProfile.q, now, 0.08);
 
     const beatDiff = clamp(1 / Math.max(1, duration || (params.inhaleSec + params.exhaleSec)), 0.025, 1);
-    audio.beatA.frequency.setTargetAtTime(fundamental, now, 0.05);
-    audio.beatB.frequency.setTargetAtTime(fundamental + beatDiff, now, 0.05);
+    const beatBase = relationshipMode === TONAL_CADENCE_MODE
+      ? semitoneToFrequency(fundamental, tonalCadenceBassSemitone(state.phase))
+      : fundamental;
+    audio.beatA.frequency.setTargetAtTime(beatBase, now, 0.05);
+    audio.beatB.frequency.setTargetAtTime(beatBase + beatDiff, now, 0.05);
     const beatLevel = layerBeat * (INTERFERENCE_GAIN_BASE + (INTERFERENCE_GAIN_PULSE * attackPulse));
     const splitInterference = els.interferenceRoutingSelect?.value === "split";
     audio.beatMonoGain.gain.setTargetAtTime(splitInterference ? 0 : beatLevel, now, 0.04);
