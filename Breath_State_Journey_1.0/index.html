@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <title>Breath & State Journey 1.0</title>
+    <link rel="stylesheet" href="breath-state.css?v=1.0">
+  </head>
+  <body>
+    <main class="breath-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Experimental tuner prototype 1.0</p>
+          <h1>Breath & State</h1>
+          <p class="subline">The breath cycle is the score. The layers are instruments.</p>
+        </div>
+        <nav class="topbar-actions" aria-label="Prototype links">
+          <a href="../adaptive-entry/">Adaptive Entry</a>
+          <a href="../Breath_State_Journey_0.1/">Breath 0.1</a>
+          <a href="../Resonance_atlas_1.1/">Atlas 1.1</a>
+          <a href="../composer/">Composer</a>
+        </nav>
+      </header>
+
+      <section class="workspace">
+        <aside class="control-panel" aria-label="Journey controls">
+          <section class="panel-block preset-panel">
+            <div class="section-head">
+              <p class="eyebrow">Presets</p>
+              <button id="savePresetBtn" class="mini" type="button">Save</button>
+            </div>
+            <label>
+              <span>Preset name</span>
+              <input id="presetNameInput" type="text" value="" placeholder="New preset">
+            </label>
+            <label>
+              <span>Saved presets</span>
+              <select id="presetSelect"></select>
+            </label>
+            <div class="preset-actions">
+              <button id="loadPresetBtn" class="mini" type="button">Load</button>
+              <button id="deletePresetBtn" class="mini danger" type="button">Delete</button>
+            </div>
+            <p id="presetStatus" class="preset-status">Presets are stored locally in this browser.</p>
+          </section>
+
+          <section class="panel-block abe-panel">
+            <div class="section-head">
+              <p class="eyebrow">Adaptive Body Entry</p>
+              <span id="abeSignalText">gentle</span>
+            </div>
+            <button id="abePrepareBtn" class="primary" type="button">Prepare & start</button>
+            <p id="abeStatus" class="abe-status">Starts nature first, listens softly to body motion, then lets brown noise meet the last breath cycles.</p>
+          </section>
+
+          <section class="panel-block">
+            <div class="section-head">
+              <p class="eyebrow">Journey</p>
+              <span id="repeatabilityTag">Repeatable</span>
+            </div>
+            <label>
+              <span>Room sequence</span>
+              <select id="journeySelect"></select>
+            </label>
+            <label>
+              <span>Global tune</span>
+              <input id="fundamentalInput" type="range" min="36" max="70" step="0.01" value="48">
+              <output id="fundamentalValue">48.00 Hz</output>
+            </label>
+            <label>
+              <span>Duration</span>
+              <input id="durationInput" type="range" min="60" max="900" step="30" value="300">
+              <output id="durationValue">5:00</output>
+            </label>
+          </section>
+
+          <section class="panel-block">
+            <div class="section-head">
+              <p class="eyebrow">Breath</p>
+              <button id="advancedToggle" class="mini" type="button">Advanced</button>
+            </div>
+            <div class="breath-summary">
+              <span><strong id="startBreathText">3 / 0 / 6 / 0</strong><small>start</small></span>
+              <span><strong id="endBreathText">7 / 0 / 12 / 0</strong><small>end</small></span>
+            </div>
+            <div class="advanced-grid" id="advancedPanel" hidden>
+              <label>
+                <span>Start inhale</span>
+                <input id="startInhaleInput" type="number" min="1" max="20" step="0.1" value="3">
+              </label>
+              <label>
+                <span>Start hold after inhale</span>
+                <input id="startHoldInhaleInput" type="number" min="0" max="20" step="0.1" value="0">
+              </label>
+              <label>
+                <span>Start exhale</span>
+                <input id="startExhaleInput" type="number" min="1" max="30" step="0.1" value="6">
+              </label>
+              <label>
+                <span>Start hold after exhale</span>
+                <input id="startHoldExhaleInput" type="number" min="0" max="20" step="0.1" value="0">
+              </label>
+              <label>
+                <span>End inhale</span>
+                <input id="endInhaleInput" type="number" min="1" max="20" step="0.1" value="7">
+              </label>
+              <label>
+                <span>End hold after inhale</span>
+                <input id="endHoldInhaleInput" type="number" min="0" max="20" step="0.1" value="0">
+              </label>
+              <label>
+                <span>End exhale</span>
+                <input id="endExhaleInput" type="number" min="1" max="30" step="0.1" value="12">
+              </label>
+              <label>
+                <span>End hold after exhale</span>
+                <input id="endHoldExhaleInput" type="number" min="0" max="20" step="0.1" value="0">
+              </label>
+            </div>
+            <div class="breath-curve-editor">
+              <div class="section-head">
+                <p class="eyebrow">Breath curves</p>
+                <button id="resetBreathCurvesBtn" class="mini" type="button">Reset</button>
+              </div>
+              <div class="curve-toolbar" id="breathCurveToolbar" aria-label="Active breath curve">
+                <button type="button" data-curve-track="inhale" class="is-active">Inhale</button>
+                <button type="button" data-curve-track="holdInhale">Hold in</button>
+                <button type="button" data-curve-track="exhale">Exhale</button>
+                <button type="button" data-curve-track="holdExhale">Hold out</button>
+              </div>
+              <canvas id="breathCurveCanvas" width="760" height="340" aria-label="Breath duration curve editor"></canvas>
+              <div class="section-head automation-head">
+                <p class="eyebrow">Layer volume automation</p>
+                <button id="resetLayerAutomationBtn" class="mini" type="button">Reset</button>
+              </div>
+              <div class="curve-toolbar layer-toolbar" id="layerAutomationToolbar" aria-label="Active layer volume curve">
+                <button type="button" data-layer-track="breath" class="is-active">Breath</button>
+                <button type="button" data-layer-track="guideVoice">Guide voice</button>
+                <button type="button" data-layer-track="guideTonal">Guide tonal</button>
+                <button type="button" data-layer-track="interference">Interference</button>
+                <button type="button" data-layer-track="harmonic">Harmonic</button>
+                <button type="button" data-layer-track="nature">Nature</button>
+              </div>
+              <canvas id="layerAutomationCanvas" width="760" height="220" aria-label="Layer volume automation editor"></canvas>
+              <div class="curve-editor-controls">
+                <div class="curve-zoom-row" aria-label="Curve zoom controls">
+                  <button id="curveTimeZoomOutBtn" class="mini" type="button">Time out</button>
+                  <button id="curveTimeZoomInBtn" class="mini" type="button">Time in</button>
+                  <button id="curveSecondsZoomOutBtn" class="mini" type="button">Seconds out</button>
+                  <button id="curveSecondsZoomInBtn" class="mini" type="button">Seconds in</button>
+                  <button id="curveZoomResetBtn" class="mini" type="button">Reset view</button>
+                </div>
+              </div>
+              <p class="curve-hint" id="breathCurveHint">Drag points. Double-click empty space to add. Double-click a point to remove. Start/end number fields follow the curve endpoints.</p>
+            </div>
+          </section>
+
+          <section class="panel-block">
+            <p class="eyebrow">Layers</p>
+            <label class="toggle-line">
+              <input id="breathLayerToggle" type="checkbox" checked>
+              <span>Breath wave</span>
+            </label>
+            <label>
+              <span>Breath color</span>
+              <select id="noiseColorSelect">
+                <option value="white">White noise</option>
+                <option value="pink">Pink noise</option>
+                <option value="brown">Brown noise</option>
+                <option value="green">Green soft</option>
+                <option value="blue">Blue noise</option>
+                <option value="violet">Violet noise</option>
+              </select>
+            </label>
+            <label>
+              <span>Breath volume</span>
+              <input id="breathVolumeInput" type="range" min="0" max="2" step="0.01" value="1.65">
+              <output id="breathVolumeValue">165%</output>
+            </label>
+            <label class="toggle-line">
+              <input id="guideLayerToggle" type="checkbox">
+              <span>Guide</span>
+            </label>
+            <label>
+              <span>Guide voice</span>
+              <input id="guideVoiceVolumeInput" type="range" min="0" max="5" step="0.01" value="1.15">
+              <output id="guideVoiceVolumeValue">115%</output>
+            </label>
+            <label class="toggle-line">
+              <input id="guideTonalToggle" type="checkbox">
+              <span>Guide tonal</span>
+            </label>
+            <label>
+              <span>Guide tonal volume</span>
+              <input id="guideTonalVolumeInput" type="range" min="0" max="5" step="0.01" value="1.2">
+              <output id="guideTonalVolumeValue">120%</output>
+            </label>
+            <label class="toggle-line">
+              <input id="beatLayerToggle" type="checkbox" checked>
+              <span>Interference</span>
+            </label>
+            <label>
+              <span>Interference volume</span>
+              <input id="beatVolumeInput" type="range" min="0" max="5" step="0.01" value="2.2">
+              <output id="beatVolumeValue">220%</output>
+            </label>
+            <label class="toggle-line">
+              <input id="harmonicLayerToggle" type="checkbox" checked>
+              <span>Harmonic field</span>
+            </label>
+            <label>
+              <span>Harmonic volume</span>
+              <input id="harmonicVolumeInput" type="range" min="0" max="5" step="0.01" value="2.4">
+              <output id="harmonicVolumeValue">240%</output>
+            </label>
+            <label>
+              <span>Harmonic space</span>
+              <input id="harmonicSpaceInput" type="range" min="0" max="5" step="0.01" value="2.2">
+              <output id="harmonicSpaceValue">220%</output>
+            </label>
+            <label class="toggle-line is-muted">
+              <input id="natureLayerToggle" type="checkbox">
+              <span>Nature layer placeholder</span>
+            </label>
+            <label class="is-muted">
+              <span>Nature volume</span>
+              <input id="natureVolumeInput" type="range" min="0" max="5" step="0.01" value="1.6">
+              <output id="natureVolumeValue">160%</output>
+            </label>
+          </section>
+
+          <section class="panel-block">
+            <p class="eyebrow">Relationship</p>
+            <label>
+              <span>Harmonic mode</span>
+              <select id="relationshipSelect">
+                <option value="harmonic">Harmonic series</option>
+                <option value="simple">Simple ratios</option>
+                <option value="phi">Phi-ish relations</option>
+              </select>
+            </label>
+            <label>
+              <span>Movement</span>
+              <input id="movementInput" type="range" min="0" max="1" step="0.01" value="0.34">
+              <output id="movementValue">Still 34%</output>
+            </label>
+          </section>
+
+          <div class="transport">
+            <button id="playBtn" class="primary" type="button">Play journey</button>
+            <button id="holdBtn" class="secondary" type="button" disabled>Hold</button>
+            <button id="stopBtn" class="secondary" type="button" disabled>Stop</button>
+          </div>
+        </aside>
+
+        <section class="stage" aria-label="Breath and state visualisation">
+          <div class="ambient-field" id="ambientField">
+            <div class="breath-orb" id="breathOrb">
+              <div class="clock" id="breathClock">
+                <span id="phaseDot"></span>
+              </div>
+              <div class="orb-center">
+                <span class="hold-wall" id="holdWall"></span>
+                <p id="phaseLabel">Ready</p>
+                <strong id="phaseTime" hidden></strong>
+                <span id="phaseDetail">Choose a journey and press Play.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="state-row" id="stateRow"></div>
+
+          <div class="readouts">
+            <article>
+              <p class="eyebrow">Now</p>
+              <strong id="currentState">State A</strong>
+              <span id="currentStateDetail">presence, space, breath</span>
+            </article>
+            <article>
+              <p class="eyebrow">Breath</p>
+              <strong id="breathReadout">3.0 in / 6.0 out</strong>
+              <span id="cycleReadout">cycle 9.0 s</span>
+            </article>
+            <article>
+              <p class="eyebrow">Sound</p>
+              <strong id="soundReadout">silent</strong>
+              <span id="soundDetail">layers waiting</span>
+            </article>
+          </div>
+
+          <div class="layer-monitor">
+            <div><span>Breath</span><i id="breathMeter"></i></div>
+            <div><span>Beat</span><i id="beatMeter"></i></div>
+            <div><span>Harmonic</span><i id="harmonicMeter"></i></div>
+            <div><span>Space</span><i id="spaceMeter"></i></div>
+          </div>
+
+          <section class="event-log" aria-label="Breath events">
+            <div class="section-head">
+              <p class="eyebrow">Breath events</p>
+              <div class="journey-status-strip">
+                <span class="journey-progress-cylinder" id="journeyProgressCylinder" aria-hidden="true">
+                  <i id="journeyProgressFill"></i>
+                </span>
+                <span id="nextPhaseReadout">Next: inhale</span>
+              </div>
+            </div>
+            <ol id="eventLog"></ol>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="breath-state.js?v=1.6"></script>
+  </body>
+</html>
