@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <title>Adaptive Body Entry</title>
+    <link rel="stylesheet" href="style.css?v=0.1">
+    <script>
+      if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
+        window.location.replace("../");
+      }
+    </script>
+  </head>
+  <body>
+    <main class="entry-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Resonance Lab platform module</p>
+          <h1>Adaptive Body Entry</h1>
+          <p class="subline">First listen. Then respond.</p>
+        </div>
+        <nav class="topbar-actions" aria-label="Beta controls">
+          <a href="../?lock=1">Lock</a>
+        </nav>
+      </header>
+
+      <section class="entry-card">
+        <p class="eyebrow">Phone on chest / upper belly</p>
+        <h2 id="entryTitle">Place the phone and breathe normally.</h2>
+        <p id="entryInstruction">When you press Start, keep the phone still and let the system listen for your natural rhythm.</p>
+        <div class="progress-shell" aria-label="Sensing progress">
+          <span id="entryProgress"></span>
+        </div>
+        <div class="actions">
+          <button id="startBreathBtn" type="button">Start breath sensing</button>
+          <button id="startFullBtn" type="button">Breath + voice</button>
+          <button id="stopBtn" type="button">Stop</button>
+        </div>
+        <label class="duration-row">
+          <span>Sensing duration</span>
+          <input id="durationInput" type="range" min="20" max="60" step="5" value="45">
+          <output id="durationValue">45 sec</output>
+        </label>
+      </section>
+
+      <section class="result-grid">
+        <article>
+          <p class="eyebrow">Entry profile</p>
+          <pre id="profileOutput">{}</pre>
+        </article>
+        <article>
+          <p class="eyebrow">Capabilities</p>
+          <pre id="capabilitiesOutput">{}</pre>
+        </article>
+      </section>
+
+      <section class="debug-panel">
+        <div class="section-head">
+          <p class="eyebrow">Developer debug</p>
+          <span id="debugStatus">Idle</span>
+        </div>
+        <canvas id="breathCanvas" width="980" height="300" aria-label="Filtered breath signal"></canvas>
+        <div class="metrics">
+          <span><strong id="breathRate">--</strong><small>breaths/min</small></span>
+          <span><strong id="cycleDuration">--</strong><small>cycle</small></span>
+          <span><strong id="confidence">--</strong><small>confidence</small></span>
+          <span><strong id="motionQuality">--</strong><small>motion quality</small></span>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="demo.mjs?v=0.1"></script>
+  </body>
+</html>
