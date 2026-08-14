@@ -199,6 +199,12 @@ button:disabled {
   margin-bottom: 12px;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 #repeatabilityTag,
 #nextPhaseReadout {
   color: var(--muted);
@@ -421,6 +427,49 @@ output {
 
 .automation-head {
   margin-top: 18px;
+}
+
+.automation-editor-shell {
+  position: relative;
+}
+
+.automation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(4, 8, 8, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.automation-editor-panel {
+  position: relative;
+}
+
+.automation-editor-shell.is-expanded .automation-backdrop {
+  display: block;
+}
+
+.automation-editor-shell.is-expanded .automation-editor-panel {
+  position: fixed;
+  inset: clamp(10px, 3vw, 28px);
+  z-index: 31;
+  display: grid;
+  grid-template-rows: auto auto minmax(300px, 1fr) auto auto;
+  overflow: auto;
+  padding: clamp(12px, 2vw, 20px);
+  border: 1px solid color-mix(in srgb, var(--mint), transparent 64%);
+  border-radius: 8px;
+  background: rgba(9, 15, 15, 0.96);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
+}
+
+.automation-editor-shell.is-expanded .automation-head {
+  margin-top: 0;
+}
+
+.automation-editor-shell.is-expanded #layerAutomationCanvas {
+  min-height: min(58vh, 620px);
+  aspect-ratio: auto;
 }
 
 #breathCurveCanvas,
@@ -924,6 +973,10 @@ body[data-app-mode="advanced"] .easy-panel {
   display: none;
 }
 
+body.automation-expanded {
+  overflow: hidden;
+}
+
 @keyframes slowSpin {
   to {
     transform: rotate(360deg);
@@ -962,6 +1015,19 @@ body[data-app-mode="advanced"] .easy-panel {
 
   .voice-slots {
     grid-template-columns: 1fr;
+  }
+
+  .automation-editor-shell.is-expanded .automation-editor-panel {
+    inset: 8px;
+    grid-template-rows: auto auto minmax(360px, 1fr) auto auto;
+  }
+
+  .automation-editor-shell.is-expanded #layerAutomationCanvas {
+    min-height: 52vh;
+  }
+
+  .automation-editor-shell.is-expanded .layer-toolbar {
+    grid-template-columns: repeat(2, 1fr);
   }
 
 }

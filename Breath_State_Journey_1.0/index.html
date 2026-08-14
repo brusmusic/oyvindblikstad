@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
-    <link rel="stylesheet" href="breath-state.css?v=1.5">
+    <link rel="stylesheet" href="breath-state.css?v=1.6">
     <script>
       if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
         window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
@@ -153,30 +153,38 @@
                 <button id="addBreathPointBtn" class="mini" type="button">Add point</button>
                 <button id="deleteBreathPointBtn" class="mini danger" type="button" disabled>Delete selected</button>
               </div>
-              <div class="section-head automation-head">
-                <p class="eyebrow">Layer volume automation</p>
-                <button id="resetLayerAutomationBtn" class="mini" type="button">Reset</button>
-              </div>
-              <div class="curve-toolbar layer-toolbar" id="layerAutomationToolbar" aria-label="Active layer volume curve">
-                <button type="button" data-layer-track="breath" class="is-active">Breath</button>
-                <button type="button" data-layer-track="guideVoice">Guide voice</button>
-                <button type="button" data-layer-track="guideTonal">Guide tonal</button>
-                <button type="button" data-layer-track="interference">Interference</button>
-                <button type="button" data-layer-track="harmonic">Harmonic</button>
-                <button type="button" data-layer-track="nature">Nature</button>
-              </div>
-              <canvas id="layerAutomationCanvas" width="760" height="220" aria-label="Layer volume automation editor"></canvas>
-              <div class="curve-point-actions">
-                <button id="addAutomationPointBtn" class="mini" type="button">Add point</button>
-                <button id="deleteAutomationPointBtn" class="mini danger" type="button" disabled>Delete selected</button>
-              </div>
-              <div class="curve-editor-controls">
-                <div class="curve-zoom-row" aria-label="Curve zoom controls">
-                  <button id="curveTimeZoomOutBtn" class="mini" type="button">Time out</button>
-                  <button id="curveTimeZoomInBtn" class="mini" type="button">Time in</button>
-                  <button id="curveSecondsZoomOutBtn" class="mini" type="button">Seconds out</button>
-                  <button id="curveSecondsZoomInBtn" class="mini" type="button">Seconds in</button>
-                  <button id="curveZoomResetBtn" class="mini" type="button">Reset view</button>
+              <div class="automation-editor-shell" id="automationEditorShell">
+                <div class="automation-backdrop" id="automationBackdrop" hidden></div>
+                <div class="automation-editor-panel">
+                  <div class="section-head automation-head">
+                    <p class="eyebrow">Layer volume automation</p>
+                    <div class="section-actions">
+                      <button id="expandLayerAutomationBtn" class="mini" type="button">Expand</button>
+                      <button id="resetLayerAutomationBtn" class="mini" type="button">Reset</button>
+                    </div>
+                  </div>
+                  <div class="curve-toolbar layer-toolbar" id="layerAutomationToolbar" aria-label="Active layer volume curve">
+                    <button type="button" data-layer-track="breath" class="is-active">Breath</button>
+                    <button type="button" data-layer-track="guideVoice">Guide voice</button>
+                    <button type="button" data-layer-track="guideTonal">Guide tonal</button>
+                    <button type="button" data-layer-track="interference">Interference</button>
+                    <button type="button" data-layer-track="harmonic">Harmonic</button>
+                    <button type="button" data-layer-track="nature">Nature</button>
+                  </div>
+                  <canvas id="layerAutomationCanvas" width="760" height="220" aria-label="Layer volume automation editor"></canvas>
+                  <div class="curve-point-actions">
+                    <button id="addAutomationPointBtn" class="mini" type="button">Add point</button>
+                    <button id="deleteAutomationPointBtn" class="mini danger" type="button" disabled>Delete selected</button>
+                  </div>
+                  <div class="curve-editor-controls">
+                    <div class="curve-zoom-row" aria-label="Curve zoom controls">
+                      <button id="curveTimeZoomOutBtn" class="mini" type="button">Time out</button>
+                      <button id="curveTimeZoomInBtn" class="mini" type="button">Time in</button>
+                      <button id="curveSecondsZoomOutBtn" class="mini" type="button">Seconds out</button>
+                      <button id="curveSecondsZoomInBtn" class="mini" type="button">Seconds in</button>
+                      <button id="curveZoomResetBtn" class="mini" type="button">Reset view</button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <p class="curve-hint" id="breathCurveHint">Drag points. Double-click empty space to add. Double-click a point to remove. Start/end number fields follow the curve endpoints.</p>
@@ -395,6 +403,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=2.10"></script>
+    <script src="breath-state.js?v=2.11"></script>
   </body>
 </html>

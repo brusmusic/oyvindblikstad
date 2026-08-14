@@ -175,6 +175,7 @@
     selectedAutomationPoint: null,
     breathCurveView: { xStart: 0, xEnd: 1, yMaxSec: DEFAULT_BREATH_CURVE_Y_MAX_SEC },
     curveDrag: null,
+    automationExpanded: false,
     abe: {
       running: false,
       startedAt: 0,
@@ -2045,6 +2046,20 @@
     render(evaluateJourney(progress), progress);
   }
 
+  function setAutomationExpanded(expanded) {
+    state.automationExpanded = Boolean(expanded);
+    els.automationEditorShell?.classList.toggle("is-expanded", state.automationExpanded);
+    if (els.automationBackdrop) els.automationBackdrop.hidden = !state.automationExpanded;
+    if (els.expandLayerAutomationBtn) {
+      els.expandLayerAutomationBtn.textContent = state.automationExpanded ? "Close" : "Expand";
+      els.expandLayerAutomationBtn.setAttribute("aria-expanded", String(state.automationExpanded));
+    }
+    document.body.classList.toggle("automation-expanded", state.automationExpanded);
+    window.requestAnimationFrame(() => {
+      renderLayerAutomationEditor();
+    });
+  }
+
   function addBreathPointFromControls() {
     const trackId = state.activeBreathCurve;
     const t = curveEditT();
@@ -2805,6 +2820,9 @@
       "breathCurveCanvas",
       "addBreathPointBtn",
       "deleteBreathPointBtn",
+      "automationEditorShell",
+      "automationBackdrop",
+      "expandLayerAutomationBtn",
       "resetLayerAutomationBtn",
       "layerAutomationToolbar",
       "layerAutomationCanvas",
@@ -2892,6 +2910,11 @@
     els.journeySelect.addEventListener("change", syncControlsFromJourney);
     els.advancedToggle.addEventListener("click", () => {
       els.advancedPanel.hidden = !els.advancedPanel.hidden;
+    });
+    els.expandLayerAutomationBtn.addEventListener("click", () => setAutomationExpanded(!state.automationExpanded));
+    els.automationBackdrop.addEventListener("click", () => setAutomationExpanded(false));
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && state.automationExpanded) setAutomationExpanded(false);
     });
     els.resetBreathCurvesBtn.addEventListener("click", () => {
       resetBreathCurvesFromControls();
