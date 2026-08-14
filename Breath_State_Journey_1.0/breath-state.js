@@ -6,6 +6,7 @@
   const FADE_OUT_SEC = 1.2;
   const MIN_FUNDAMENTAL_HZ = 36;
   const MAX_FUNDAMENTAL_HZ = 70;
+  const MIN_HARMONIC_FIELD_HZ = 90;
   const HOLD_MOTION = 0.15;
   const DEFAULT_BREATH_CURVE_Y_MAX_SEC = 20;
   const MIN_BREATH_CURVE_Y_MAX_SEC = 5;
@@ -622,7 +623,7 @@
 
       const baseDuration = phase.includes("hold") ? 3.8 : 3.2;
       voicing.offsets.forEach((offset, index) => {
-        const hz = fitFrequencyToRange(semitoneToFrequency(baseHz, offset), 38, 1600);
+        const hz = fitFrequencyToRange(semitoneToFrequency(baseHz, offset), MIN_HARMONIC_FIELD_HZ, 1600);
         const noteGain = ctx.createGain();
         const notePan = ctx.createStereoPanner();
         const amp = (voicing.weights[index] || 0.35) * 0.18;
@@ -1070,7 +1071,7 @@
         const offset = voicing.offsets[index] ?? 0;
         const isTopVoice = index === voicing.offsets.length - 1;
         const drift = isTopVoice ? 0 : Math.sin((state.elapsedSec * (0.035 + (params.movement * 0.08))) + index) * params.movement * 0.08;
-        voice.osc.frequency.setTargetAtTime(semitoneToFrequency(fundamental, offset) + drift, now, 0.16);
+        voice.osc.frequency.setTargetAtTime(Math.max(MIN_HARMONIC_FIELD_HZ, semitoneToFrequency(fundamental, offset) + drift), now, 0.16);
         voice.gain.gain.setTargetAtTime(0, now, 0.18);
         voice.pan.pan.setTargetAtTime(voicing.pans[index] ?? 0, now, 0.2);
       });
@@ -1093,7 +1094,7 @@
         const releaseRatio = set.release[index] || tensionRatio;
         const ratio = lerp(tensionRatio, releaseRatio, releaseWeight);
         const drift = Math.sin((state.elapsedSec * (0.06 + (params.movement * 0.16))) + index) * params.movement * 0.25;
-        voice.osc.frequency.setTargetAtTime((fundamental * ratio * harmonicLift) + drift, now, 0.12);
+        voice.osc.frequency.setTargetAtTime(Math.max(MIN_HARMONIC_FIELD_HZ, (fundamental * ratio * harmonicLift) + drift), now, 0.12);
         const voiceLevel = layerHarmonic * (index === 0 ? 0.026 : 0.014) * (1 + (params.density * 0.7));
         const exhaleLift = state.phase === "exhale" ? 1.05 : 0.82;
         voice.gain.gain.setTargetAtTime(voiceLevel * exhaleLift, now, 0.12);
