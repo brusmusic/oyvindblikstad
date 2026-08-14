@@ -23,11 +23,14 @@ function normalize(values) {
   return values.map((value) => (value - center) / spread);
 }
 
-function findExtrema(signal, sampleRate, direction = 1) {
-  const minGap = Math.round(sampleRate * 1.8);
-  const threshold = Math.max(0.08, robustSpread(signal) * 0.18);
+function findExtrema(signal, sampleRate, direction = 1, options = {}) {
+  const minGapSec = Number.isFinite(options.minCycleSec) ? options.minCycleSec : 3;
+  const edgeGuardSec = Number.isFinite(options.edgeGuardSec) ? options.edgeGuardSec : 1.2;
+  const minGap = Math.round(sampleRate * minGapSec);
+  const edgeGuard = Math.round(sampleRate * edgeGuardSec);
+  const threshold = Math.max(0.1, robustSpread(signal) * 0.24);
   const peaks = [];
-  for (let i = 2; i < signal.length - 2; i += 1) {
+  for (let i = Math.max(2, edgeGuard); i < signal.length - Math.max(2, edgeGuard); i += 1) {
     const value = signal[i] * direction;
     if (value < threshold) continue;
     if (value > signal[i - 1] * direction && value >= signal[i + 1] * direction && value > signal[i - 2] * direction && value >= signal[i + 2] * direction) {
@@ -38,9 +41,9 @@ function findExtrema(signal, sampleRate, direction = 1) {
   return peaks;
 }
 
-function scoreSignal(signal, sampleRate) {
-  const positive = findExtrema(signal, sampleRate, 1);
-  const negative = findExtrema(signal, sampleRate, -1);
+function scoreSignal(signal, sampleRate, options = {}) {
+  const positive = findExtrema(signal, sampleRate, 1, options);
+  const negative = findExtrema(signal, sampleRate, -1, options);
   const peaks = positive.length >= negative.length ? positive : negative;
   if (peaks.length < 3) {
     return { score: 0, peaks, troughs: negative, cycleDuration: NaN, stability: 0 };
@@ -86,6 +89,7 @@ function estimateRatio(signal, peaks, troughs, sampleRate) {
 export class BreathDetector {
   analyze(samples, options = {}) {
     const sampleRate = options.sampleRate || 20;
+    const warmupSec = Number.isFinite(options.warmupSec) ? options.warmupSec : 5;
     if (!samples || samples.length < 80) {
       return {
         breath: { detected: false, confidence: 0 },
@@ -95,11 +99,11 @@ export class BreathDetector {
     }
     const keys = ["gx", "gy", "gz", "gravityMagnitude", "rotationMagnitude", "alpha", "beta", "gamma"];
     const candidates = keys.map((key) => {
-      const raw = resample(samples, key, sampleRate);
+      const raw = resample(samples, key, sampleRate).slice(Math.round(warmupSec * sampleRate));
       const slow = movingAverage(raw, Math.max(3, Math.round(sampleRate * 1.6)));
       const highpassed = raw.map((value, index) => value - slow[index]);
       const filtered = movingAverage(normalize(highpassed), Math.max(1, Math.round(sampleRate * 0.22)));
-      return { key, signal: filtered, ...scoreSignal(filtered, sampleRate) };
+      return { key, signal: filtered, ...scoreSignal(filtered, sampleRate, options) };
     }).sort((a, b) => b.score - a.score);
 
     const best = candidates[0];
@@ -129,10 +133,13 @@ export class BreathDetector {
       },
       motion: {
         stability: best.stability,
-        signalQuality: best.score
+        signalQuality: best.score,
+        bestKey: best.key,
+        warmupSec
       },
       debug: {
         bestKey: best.key,
+        warmupSec,
         sampleRate,
         signal: best.signal,
         peaks: best.peaks.map((index) => index / sampleRate),

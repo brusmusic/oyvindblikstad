@@ -144,7 +144,11 @@ function reportSummary(profile) {
     motionSignalQuality: profile?.motion?.signalQuality ?? null,
     voiceFrequency: profile?.voice?.frequency ?? null,
     voiceConfidence: profile?.voice?.confidence ?? null,
-    globalTuneFrequency: profile?.globalTune?.frequency ?? null
+    globalTuneFrequency: profile?.globalTune?.frequency ?? null,
+    motionBestKey: profile?.motion?.bestKey ?? profile?.debug?.breath?.bestKey ?? null,
+    warmupSec: profile?.motion?.warmupSec ?? profile?.debug?.breath?.warmupSec ?? null,
+    breathPeaks: profile?.debug?.breath?.peaks?.length ?? null,
+    breathTroughs: profile?.debug?.breath?.troughs?.length ?? null
   };
 }
 
