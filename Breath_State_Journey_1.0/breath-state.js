@@ -16,6 +16,7 @@
   const INTERFERENCE_GAIN_BASE = 0.04;
   const INTERFERENCE_GAIN_PULSE = 0.035;
   const INTERFERENCE_GAIN_BOOST = 10 ** (15 / 20);
+  const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
   const PRESET_DB_NAME = "breath-state-journey-1.0-storage";
   const PRESET_DB_STORE = "keyval";
   const PRESET_DB_KEY = PRESET_STORAGE_KEY;
@@ -27,7 +28,6 @@
   };
   const BREATH_CURVE_HIT_RADIUS = 12;
   const CURVE_HIT_RADIUS = 12;
-  const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
   const GUIDE_AUDIO_URL = "../audio/in_hold_out_voice.mp3";
   const GUIDE_CUE_DURATION_SEC = 1.08;
   const ABE_DURATION_SEC = 28;
