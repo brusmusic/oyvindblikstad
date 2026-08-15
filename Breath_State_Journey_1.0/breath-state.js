@@ -16,6 +16,15 @@
   const INTERFERENCE_GAIN_BASE = 0.04;
   const INTERFERENCE_GAIN_PULSE = 0.035;
   const INTERFERENCE_GAIN_BOOST = 10 ** (15 / 20);
+  const PRESET_DB_NAME = "breath-state-journey-1.0-storage";
+  const PRESET_DB_STORE = "keyval";
+  const PRESET_DB_KEY = PRESET_STORAGE_KEY;
+  const HAPTIC_TRANSITION_PATTERNS = {
+    inhaleStart: [18],
+    holdAfterInhaleStart: [24, 88, 22],
+    exhaleStart: [20],
+    holdAfterExhaleStart: [30, 118, 36]
+  };
   const BREATH_CURVE_HIT_RADIUS = 12;
   const CURVE_HIT_RADIUS = 12;
   const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
@@ -76,6 +85,7 @@
     guideVoice: { label: "Guide voice", color: "#d5b96e" },
     guideTonal: { label: "Guide tonal", color: "#f7dca0" },
     interference: { label: "Interference", color: "#f09a86" },
+    haptic: { label: "Haptic", color: "#d8d1ff" },
     harmonic: { label: "Harmonic", color: "#8ea7ff" },
     nature: { label: "Nature", color: "#b9e38f" }
   };
@@ -157,6 +167,7 @@
 
   const state = {
     audio: null,
+    haptics: null,
     appMode: "easy",
     playing: false,
     holding: false,
@@ -169,6 +180,7 @@
     eventLog: [],
     lastEventAt: 0,
     rafId: 0,
+    presetCache: null,
     breathCurves: null,
     layerAutomation: null,
     activeBreathCurve: "inhale",
@@ -298,6 +310,27 @@
     }
     normalizeNoise(data);
     return buffer;
+  }
+
+  function createHapticEngine() {
+    const supported = typeof navigator !== "undefined" && typeof navigator.vibrate === "function";
+    return {
+      supported,
+      trigger(name = "inhaleStart", options = {}) {
+        if (!supported) return { supported: false, pattern: [] };
+        const pattern = HAPTIC_TRANSITION_PATTERNS[name];
+        if (!pattern) return { supported: true, pattern: [] };
+        const intensity = Number.isFinite(options.intensity)
+          ? clamp(options.intensity, 0.15, 1.4)
+          : 0.55;
+        const scaled = pattern.map((value) => Math.max(1, Math.round(value * intensity)));
+        navigator.vibrate(scaled);
+        return { supported: true, pattern: scaled };
+      },
+      cancel() {
+        if (supported) navigator.vibrate(0);
+      }
+    };
   }
 
   function createImpulse(ctx, seconds = 6.8, decay = 3.2) {
@@ -903,6 +936,7 @@
     triggerGuideCue(name);
     triggerTonalGuideCue(name);
     triggerTonalCadenceChord(name);
+    triggerHapticCue(name);
   }
 
   function triggerGuideCue(eventName) {
@@ -929,6 +963,23 @@
     if (strength <= 0.02) return;
     const params = evaluateJourney(journeyProgress);
     state.audio.playTonalCadenceChord(eventName, selectedFundamental(), strength, phaseDuration(params));
+  }
+
+  function cancelHaptics() {
+    state.haptics?.cancel();
+  }
+
+  function triggerHapticCue(eventName) {
+    if (!els.hapticLayerToggle?.checked) return;
+    if (!state.haptics) state.haptics = createHapticEngine();
+    const journeyProgress = clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0, 1);
+    const params = evaluateJourney(journeyProgress);
+    const baseIntensity = controlValue("hapticVolumeInput", 0.85);
+    const automation = layerAutomationValue("haptic", journeyProgress);
+    const beatLink = clamp((Number(params.beat) || 0) * 0.75 + 0.35, 0.25, 1.15);
+    const intensity = clamp(baseIntensity * automation * beatLink, 0, 2);
+    if (intensity <= 0.02) return;
+    state.haptics.trigger(eventName, { intensity });
   }
 
   function phaseDuration(params) {
@@ -1529,6 +1580,7 @@
       state.lastEventAt = 0;
       state.guideRoundRobin = { in: 0, hold: 0, out: 0 };
       state.voiceReflection.afterReady = false;
+      state.haptics = createHapticEngine();
       updateVoiceReflectionUI();
       state.startedAt = performance.now();
       if (els.guideLayerToggle.checked) await state.audio.ensureGuideBuffer();
@@ -1556,6 +1608,8 @@
   function stopJourney(immediate = false) {
     cancelAnimationFrame(state.rafId);
     cancelAbeEntry();
+    cancelHaptics();
+    state.haptics = null;
     if (!state.audio) {
       state.playing = false;
       state.holding = false;
@@ -2167,6 +2221,7 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
+          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2175,6 +2230,7 @@
           guideVoice: 0.55,
           guideTonal: 1.35,
           interference: 3.2,
+          haptic: 0.85,
           harmonic: 2.15,
           harmonicSpace: 2.7,
           nature: 0.18
@@ -2190,6 +2246,7 @@
           guideVoice: [{ t: 0, v: 0.44 }, { t: 0.16, v: 0.42 }, { t: 0.3, v: 0.12 }, { t: 0.5, v: 0.36 }, { t: 0.68, v: 0.16 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 1 }, { t: 0.3, v: 0.92 }, { t: 0.8, v: 0.58 }, { t: 1, v: 0.34 }],
           interference: [{ t: 0, v: 0.9 }, { t: 0.22, v: 1 }, { t: 0.72, v: 0.45 }, { t: 1, v: 0.2 }],
+          haptic: [{ t: 0, v: 0.7 }, { t: 0.28, v: 1 }, { t: 0.76, v: 0.72 }, { t: 1, v: 0.36 }],
           harmonic: [{ t: 0, v: 0.28 }, { t: 0.38, v: 0.72 }, { t: 0.78, v: 0.86 }, { t: 1, v: 0.48 }],
           nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.22 }, { t: 1, v: 0.16 }]
         },
@@ -2211,6 +2268,7 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
+          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2219,6 +2277,7 @@
           guideVoice: 0.45,
           guideTonal: 0.95,
           interference: 2.4,
+          haptic: 0.75,
           harmonic: 1.8,
           harmonicSpace: 3.1,
           nature: 0.16
@@ -2234,6 +2293,7 @@
           guideVoice: [{ t: 0, v: 0.34 }, { t: 0.15, v: 0.26 }, { t: 0.42, v: 0.16 }, { t: 0.58, v: 0.25 }, { t: 0.78, v: 0.12 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.72 }, { t: 0.5, v: 0.55 }, { t: 1, v: 0.25 }],
           interference: [{ t: 0, v: 0.52 }, { t: 0.18, v: 0.75 }, { t: 0.82, v: 0.62 }, { t: 1, v: 0.22 }],
+          haptic: [{ t: 0, v: 0.62 }, { t: 0.26, v: 0.92 }, { t: 0.8, v: 0.58 }, { t: 1, v: 0.3 }],
           harmonic: [{ t: 0, v: 0.34 }, { t: 0.5, v: 0.68 }, { t: 1, v: 0.4 }],
           nature: [{ t: 0, v: 0.22 }, { t: 0.64, v: 0.2 }, { t: 1, v: 0.16 }]
         },
@@ -2255,6 +2315,7 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
+          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2263,6 +2324,7 @@
           guideVoice: 0.42,
           guideTonal: 0.72,
           interference: 1.85,
+          haptic: 0.7,
           harmonic: 1.65,
           harmonicSpace: 3.6,
           nature: 0.15
@@ -2278,6 +2340,7 @@
           guideVoice: [{ t: 0, v: 0.3 }, { t: 0.16, v: 0.24 }, { t: 0.38, v: 0.12 }, { t: 0.54, v: 0.22 }, { t: 0.72, v: 0.1 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.62 }, { t: 0.35, v: 0.42 }, { t: 1, v: 0.12 }],
           interference: [{ t: 0, v: 0.42 }, { t: 0.3, v: 0.32 }, { t: 1, v: 0.08 }],
+          haptic: [{ t: 0, v: 0.58 }, { t: 0.32, v: 0.8 }, { t: 0.84, v: 0.5 }, { t: 1, v: 0.24 }],
           harmonic: [{ t: 0, v: 0.42 }, { t: 0.42, v: 0.86 }, { t: 0.78, v: 0.72 }, { t: 1, v: 0.25 }],
           nature: [{ t: 0, v: 0.2 }, { t: 0.66, v: 0.16 }, { t: 1, v: 0.12 }]
         },
@@ -2303,17 +2366,115 @@
     if (changed) writePresets(presets);
   }
 
-  function readPresets() {
+  function clonePresetList(presets) {
     try {
-      const parsed = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || "[]");
+      return structuredClone(presets);
+    } catch {
+      return JSON.parse(JSON.stringify(presets));
+    }
+  }
+
+  function readPresetsFromLocalStorage() {
+    try {
+      const raw = window.localStorage?.getItem(PRESET_STORAGE_KEY);
+      const parsed = JSON.parse(raw || "[]");
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
   }
 
+  function writePresetsToLocalStorage(presets) {
+    try {
+      window.localStorage?.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+    } catch {
+      // Ignore storage failures and keep the in-memory cache.
+    }
+  }
+
+  function openPresetDb() {
+    if (typeof indexedDB === "undefined") return Promise.resolve(null);
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(PRESET_DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(PRESET_DB_STORE)) {
+          db.createObjectStore(PRESET_DB_STORE);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function readPresetsFromIndexedDb() {
+    const db = await openPresetDb();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      const tx = db.transaction(PRESET_DB_STORE, "readonly");
+      const store = tx.objectStore(PRESET_DB_STORE);
+      const request = store.get(PRESET_DB_KEY);
+      request.onsuccess = () => {
+        try {
+          const value = request.result;
+          resolve(Array.isArray(value) ? value : null);
+        } catch {
+          resolve(null);
+        }
+      };
+      request.onerror = () => resolve(null);
+      tx.oncomplete = () => db.close();
+      tx.onerror = () => {
+        db.close();
+        resolve(null);
+      };
+    });
+  }
+
+  async function writePresetsToIndexedDb(presets) {
+    const db = await openPresetDb();
+    if (!db) return;
+    return new Promise((resolve) => {
+      const tx = db.transaction(PRESET_DB_STORE, "readwrite");
+      tx.objectStore(PRESET_DB_STORE).put(presets, PRESET_DB_KEY);
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        db.close();
+        resolve();
+      };
+    });
+  }
+
+  async function hydratePresetStorage() {
+    const [indexedDbPresets, localPresets] = await Promise.all([
+      readPresetsFromIndexedDb().catch(() => null),
+      Promise.resolve(readPresetsFromLocalStorage())
+    ]);
+    const next = Array.isArray(indexedDbPresets) && indexedDbPresets.length
+      ? indexedDbPresets
+      : localPresets;
+    state.presetCache = clonePresetList(next);
+    writePresetsToLocalStorage(state.presetCache);
+    void writePresetsToIndexedDb(state.presetCache);
+    if (navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+    return state.presetCache;
+  }
+
+  function readPresets() {
+    if (Array.isArray(state.presetCache)) return state.presetCache;
+    state.presetCache = readPresetsFromLocalStorage();
+    return state.presetCache;
+  }
+
   function writePresets(presets) {
-    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+    state.presetCache = clonePresetList(Array.isArray(presets) ? presets : []);
+    writePresetsToLocalStorage(state.presetCache);
+    void writePresetsToIndexedDb(state.presetCache);
   }
 
   function setPresetStatus(message) {
@@ -2557,6 +2718,7 @@
         guideVoice: els.guideLayerToggle.checked,
         guideTonal: els.guideTonalToggle.checked,
         interference: els.beatLayerToggle.checked,
+        haptic: els.hapticLayerToggle.checked,
         harmonic: els.harmonicLayerToggle.checked,
         nature: els.natureLayerToggle.checked
       },
@@ -2565,6 +2727,7 @@
         guideVoice: Number(els.guideVoiceVolumeInput.value),
         guideTonal: Number(els.guideTonalVolumeInput.value),
         interference: Number(els.beatVolumeInput.value),
+        haptic: Number(els.hapticVolumeInput.value),
         harmonic: Number(els.harmonicVolumeInput.value),
         harmonicSpace: Number(els.harmonicSpaceInput.value),
         nature: Number(els.natureVolumeInput.value)
@@ -2583,6 +2746,7 @@
     if (els.presetSelect) els.presetSelect.innerHTML = options;
     if (els.easyPresetSelect) els.easyPresetSelect.innerHTML = options;
     if (els.loadPresetBtn) els.loadPresetBtn.disabled = presets.length === 0;
+    if (els.duplicatePresetBtn) els.duplicatePresetBtn.disabled = presets.length === 0;
     if (els.deletePresetBtn) els.deletePresetBtn.disabled = presets.length === 0;
   }
 
@@ -2603,6 +2767,28 @@
     setPresetStatus(`Saved "${name}".`);
   }
 
+  function duplicateSelectedPreset() {
+    const preset = presetById(els.presetSelect.value);
+    if (!preset) return;
+    const presets = readPresets();
+    const baseName = `${preset.name || "Preset"} Copy`;
+    let name = baseName;
+    let index = 2;
+    while (presets.some((item) => (item.name || "").trim().toLowerCase() === name.toLowerCase())) {
+      name = `${baseName} ${index}`;
+      index += 1;
+    }
+    const duplicate = clonePresetList([preset])[0] || { ...preset };
+    duplicate.id = `preset-${Date.now()}`;
+    duplicate.name = name;
+    duplicate.savedAt = new Date().toISOString();
+    presets.push(duplicate);
+    writePresets(presets);
+    renderPresetSelect();
+    syncPresetSelectors(duplicate.id);
+    setPresetStatus(`Duplicated "${preset.name}" as "${name}".`);
+  }
+
   function applyPreset(preset) {
     if (!preset) return;
     syncPresetSelectors(preset.id);
@@ -2621,6 +2807,7 @@
       els.guideLayerToggle.checked = Boolean(preset.toggles.guideVoice);
       els.guideTonalToggle.checked = Boolean(preset.toggles.guideTonal);
       els.beatLayerToggle.checked = Boolean(preset.toggles.interference);
+      els.hapticLayerToggle.checked = Boolean(preset.toggles.haptic);
       els.harmonicLayerToggle.checked = Boolean(preset.toggles.harmonic);
       els.natureLayerToggle.checked = Boolean(preset.toggles.nature);
     }
@@ -2629,6 +2816,7 @@
       if (Number.isFinite(preset.volumes.guideVoice)) els.guideVoiceVolumeInput.value = String(preset.volumes.guideVoice);
       if (Number.isFinite(preset.volumes.guideTonal)) els.guideTonalVolumeInput.value = String(preset.volumes.guideTonal);
       if (Number.isFinite(preset.volumes.interference)) els.beatVolumeInput.value = String(preset.volumes.interference);
+      if (Number.isFinite(preset.volumes.haptic)) els.hapticVolumeInput.value = String(preset.volumes.haptic);
       if (Number.isFinite(preset.volumes.harmonic)) els.harmonicVolumeInput.value = String(preset.volumes.harmonic);
       if (Number.isFinite(preset.volumes.harmonicSpace)) els.harmonicSpaceInput.value = String(preset.volumes.harmonicSpace);
       if (Number.isFinite(preset.volumes.nature)) els.natureVolumeInput.value = String(preset.volumes.nature);
@@ -2727,7 +2915,10 @@
       els.guideTonalToggle.checked ? "tonal" : ""
     ].filter(Boolean).join("+");
     const natureLabel = els.natureLayerToggle.checked ? ` · nature ${selectedNatureSource().label}` : "";
-    els.soundDetail.textContent = `${selectedNoiseProfile().label}${natureLabel} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz`;
+    const hapticLabel = els.hapticLayerToggle.checked
+      ? ` · haptic ${typeof navigator !== "undefined" && typeof navigator.vibrate === "function" ? "supported" : "unavailable"}`
+      : "";
+    els.soundDetail.textContent = `${selectedNoiseProfile().label}${natureLabel} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz${hapticLabel}`;
     renderStates(params.activeState.name);
     renderEventLog();
     renderBreathCurveEditor(progress);
@@ -2782,12 +2973,13 @@
     els.guideVoiceVolumeValue.textContent = `${Math.round(controlValue("guideVoiceVolumeInput", 1.15) * 100)}%`;
     els.guideTonalVolumeValue.textContent = `${Math.round(controlValue("guideTonalVolumeInput", 1.2) * 100)}%`;
     els.beatVolumeValue.textContent = `${Math.round(controlValue("beatVolumeInput", 2.2) * 100)}%`;
+    els.hapticVolumeValue.textContent = `${Math.round(controlValue("hapticVolumeInput", 0.85) * 100)}%`;
     els.harmonicVolumeValue.textContent = `${Math.round(controlValue("harmonicVolumeInput", 2.4) * 100)}%`;
     els.harmonicSpaceValue.textContent = `${Math.round(controlValue("harmonicSpaceInput", 2.2) * 100)}%`;
     els.natureVolumeValue.textContent = `${Math.round(controlValue("natureVolumeInput", 1.6) * 100)}%`;
   }
 
-  function bind() {
+  async function bind() {
     [
       "easyModeBtn",
       "advancedModeBtn",
@@ -2812,6 +3004,7 @@
       "presetSelect",
       "savePresetBtn",
       "loadPresetBtn",
+      "duplicatePresetBtn",
       "deletePresetBtn",
       "presetStatus",
       "abePrepareBtn",
@@ -2868,6 +3061,9 @@
       "interferenceRoutingSelect",
       "beatVolumeInput",
       "beatVolumeValue",
+      "hapticLayerToggle",
+      "hapticVolumeInput",
+      "hapticVolumeValue",
       "harmonicLayerToggle",
       "harmonicVolumeInput",
       "harmonicVolumeValue",
@@ -2911,10 +3107,12 @@
     });
 
     els.journeySelect.innerHTML = journeys.map((journey) => `<option value="${journey.id}">${journey.name}</option>`).join("");
+    await hydratePresetStorage();
     ensureBuiltInPresets();
     renderPresetSelect();
     els.savePresetBtn.addEventListener("click", savePreset);
     els.loadPresetBtn.addEventListener("click", loadSelectedPreset);
+    els.duplicatePresetBtn.addEventListener("click", duplicateSelectedPreset);
     els.deletePresetBtn.addEventListener("click", deleteSelectedPreset);
     els.abePrepareBtn.addEventListener("click", startAbeEntry);
     els.presetSelect.addEventListener("change", () => {
@@ -3082,6 +3280,8 @@
       els.beatLayerToggle,
       els.interferenceRoutingSelect,
       els.beatVolumeInput,
+      els.hapticLayerToggle,
+      els.hapticVolumeInput,
       els.harmonicLayerToggle,
       els.harmonicVolumeInput,
       els.harmonicSpaceInput,

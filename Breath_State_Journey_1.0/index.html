@@ -51,6 +51,7 @@
             </label>
             <div class="preset-actions">
               <button id="loadPresetBtn" class="mini" type="button">Load</button>
+              <button id="duplicatePresetBtn" class="mini" type="button">Duplicate</button>
               <button id="deletePresetBtn" class="mini danger" type="button">Delete</button>
             </div>
             <p id="presetStatus" class="preset-status">Presets are stored locally in this browser.</p>
@@ -169,6 +170,7 @@
                     <button type="button" data-layer-track="guideVoice">Guide voice</button>
                     <button type="button" data-layer-track="guideTonal">Guide tonal</button>
                     <button type="button" data-layer-track="interference">Interference</button>
+                    <button type="button" data-layer-track="haptic">Haptic</button>
                     <button type="button" data-layer-track="harmonic">Harmonic</button>
                     <button type="button" data-layer-track="nature">Nature</button>
                   </div>
@@ -247,6 +249,15 @@
                 <option value="mono">Mono</option>
                 <option value="split">Split L/R</option>
               </select>
+            </label>
+            <label class="toggle-line">
+              <input id="hapticLayerToggle" type="checkbox">
+              <span>Haptic layer</span>
+            </label>
+            <label>
+              <span>Haptic intensity</span>
+              <input id="hapticVolumeInput" type="range" min="0" max="2" step="0.01" value="0.85">
+              <output id="hapticVolumeValue">85%</output>
             </label>
             <label class="toggle-line">
               <input id="harmonicLayerToggle" type="checkbox" checked>
