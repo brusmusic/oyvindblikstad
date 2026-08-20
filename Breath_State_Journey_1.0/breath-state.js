@@ -33,6 +33,9 @@
   const ABE_DURATION_SEC = 28;
   const ABE_BROWN_START_PROGRESS = 0.58;
   const ABE_USABLE_CONFIDENCE = 0.42;
+  const ABE_SAMPLE_RATE = 20;
+  const ABE_WARMUP_SEC = 3.2;
+  const ABE_PHASE_CONFIDENCE = 0.45;
   const EASY_DEFAULT_PRESET_NAME = "vagal reset";
   const EASY_DEFAULT_PRESET_ID = "builtin-vagal-reset";
   const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone vertically on your upper belly and press start.";
@@ -1216,11 +1219,15 @@
     const usable = result?.confidence >= ABE_USABLE_CONFIDENCE && Number.isFinite(result.cycleDuration);
     const hasCandidate = result && Number.isFinite(result.cycleDuration);
     const cycle = hasCandidate ? clamp(result.cycleDuration, 3.1, 8.5) : 8.5;
-    const startInhale = hasCandidate ? clamp(cycle * 0.42, 1.2, 3.4) : 3;
-    const startExhale = hasCandidate ? clamp(cycle * 0.58, 1.7, 5.8) : 5.5;
+    const phaseUsable = usable
+      && result.phaseConfidence >= ABE_PHASE_CONFIDENCE
+      && Number.isFinite(result.inhaleDuration)
+      && Number.isFinite(result.exhaleDuration);
+    const startInhale = phaseUsable ? clamp(result.inhaleDuration, 1.2, 3.4) : (hasCandidate ? clamp(cycle * 0.42, 1.2, 3.4) : 3);
+    const startExhale = phaseUsable ? clamp(result.exhaleDuration, 1.7, 5.8) : (hasCandidate ? clamp(cycle * 0.58, 1.7, 5.8) : 5.5);
     const endInhale = clamp(Math.max(inputValue("endInhaleInput", 7), startInhale + 2.4, 6.2), 1, 20);
     const endExhale = clamp(Math.max(inputValue("endExhaleInput", 12), startExhale + 4.8, 10.5), 1, 30);
-    return { usable, hasCandidate, cycle, startInhale, startExhale, endInhale, endExhale };
+    return { usable, hasCandidate, phaseUsable, cycle, startInhale, startExhale, endInhale, endExhale };
   }
 
   function abeBreathLabel(inhaleSec, exhaleSec) {
@@ -1312,53 +1319,146 @@
     });
   }
 
-  function analyzeAbeCandidate(samples, key) {
-    const usableSamples = samples.filter((sample) => sample.t >= 3.2 && Number.isFinite(sample[key]));
-    if (usableSamples.length < 80) return null;
-    const raw = usableSamples.map((sample) => sample[key]);
-    const smooth = movingAverage(raw, 5);
-    const mean = smooth.reduce((sum, value) => sum + value, 0) / smooth.length;
-    const centered = smooth.map((value) => value - mean);
-    const rms = Math.sqrt(centered.reduce((sum, value) => sum + (value * value), 0) / centered.length);
-    if (rms <= 0.0001) return null;
-    const z = centered.map((value) => value / rms);
-    const range = Math.max(...smooth) - Math.min(...smooth);
-    const minGap = 1.15;
-    const peaks = [];
-    const troughs = [];
-    for (let i = 2; i < z.length - 2; i += 1) {
-      const t = usableSamples[i].t;
-      if (z[i] > 0.55 && z[i] >= z[i - 1] && z[i] >= z[i + 1] && z[i] >= z[i - 2] && z[i] >= z[i + 2]) {
-        if (!peaks.length || t - peaks[peaks.length - 1] >= minGap) peaks.push(t);
-      }
-      if (z[i] < -0.55 && z[i] <= z[i - 1] && z[i] <= z[i + 1] && z[i] <= z[i - 2] && z[i] <= z[i + 2]) {
-        if (!troughs.length || t - troughs[troughs.length - 1] >= minGap) troughs.push(t);
+  function robustAbeSpread(values) {
+    const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (sorted.length < 2) return 0;
+    const quantile = (ratio) => sorted[Math.floor((sorted.length - 1) * ratio)];
+    return Math.max(0.0001, quantile(0.75) - quantile(0.25));
+  }
+
+  function normalizeAbeSignal(values) {
+    const center = median(values);
+    const spread = robustAbeSpread(values) || 1;
+    return values.map((value) => (value - center) / spread);
+  }
+
+  function resampleAbeSignal(samples, key, sampleRate = ABE_SAMPLE_RATE) {
+    if (samples.length < 2) return { values: [], startSec: 0 };
+    const startSec = samples[0].t;
+    const durationSec = Math.max(0, samples[samples.length - 1].t - startSec);
+    const count = Math.max(1, Math.floor(durationSec * sampleRate));
+    const values = [];
+    let cursor = 0;
+    for (let i = 0; i < count; i += 1) {
+      const t = startSec + ((i / Math.max(1, count - 1)) * durationSec);
+      while (cursor < samples.length - 2 && samples[cursor + 1].t < t) cursor += 1;
+      const a = samples[cursor];
+      const b = samples[Math.min(samples.length - 1, cursor + 1)];
+      const local = (t - a.t) / Math.max(0.001, b.t - a.t);
+      const aValue = Number(a[key]) || 0;
+      const bValue = Number(b[key]) || 0;
+      values.push(aValue + ((bValue - aValue) * local));
+    }
+    return { values, startSec };
+  }
+
+  function findAbeExtrema(signal, sampleRate, direction = 1) {
+    const minGap = Math.round(sampleRate * 2.5);
+    const edgeGuard = Math.round(sampleRate * 1.2);
+    const threshold = Math.max(0.1, robustAbeSpread(signal) * 0.24);
+    const extrema = [];
+    for (let i = Math.max(2, edgeGuard); i < signal.length - Math.max(2, edgeGuard); i += 1) {
+      const value = signal[i] * direction;
+      if (value < threshold) continue;
+      if (value > signal[i - 1] * direction && value >= signal[i + 1] * direction && value > signal[i - 2] * direction && value >= signal[i + 2] * direction) {
+        if (!extrema.length || i - extrema[extrema.length - 1] >= minGap) {
+          extrema.push(i);
+        } else if (value > signal[extrema[extrema.length - 1]] * direction) {
+          extrema[extrema.length - 1] = i;
+        }
       }
     }
-    const periods = [
-      ...peaks.slice(1).map((time, index) => time - peaks[index]),
-      ...troughs.slice(1).map((time, index) => time - troughs[index])
-    ].filter((period) => period >= 2.4 && period <= 8.5);
-    if (periods.length < 2) return null;
-    const cycleDuration = median(periods);
-    const deviation = median(periods.map((period) => Math.abs(period - cycleDuration)));
-    const regularity = clamp(1 - (deviation / Math.max(0.001, cycleDuration * 0.34)), 0, 1);
-    const extremaBalance = clamp(Math.min(peaks.length, troughs.length) / Math.max(1, Math.max(peaks.length, troughs.length)), 0, 1);
-    const countScore = clamp(periods.length / 6, 0, 1);
-    const amplitudeScore = clamp(range / Math.max(0.18, rms * 3.2), 0, 1);
-    const confidence = clamp((regularity * 0.36) + (countScore * 0.26) + (extremaBalance * 0.18) + (amplitudeScore * 0.2), 0, 1);
+    return extrema;
+  }
+
+  function scoreAbeSignal(signal, sampleRate) {
+    const positive = findAbeExtrema(signal, sampleRate, 1);
+    const negative = findAbeExtrema(signal, sampleRate, -1);
+    const peaks = positive.length >= negative.length ? positive : negative;
+    const troughs = positive.length >= negative.length ? negative : positive;
+    if (peaks.length < 3) return { score: 0, peaks, troughs, cycleDuration: NaN, stability: 0 };
+    const intervals = peaks.slice(1).map((peak, index) => (peak - peaks[index]) / sampleRate);
+    const cycleDuration = median(intervals);
+    const deviations = intervals.map((interval) => Math.abs(interval - cycleDuration));
+    const stability = clamp(1 - (median(deviations) / Math.max(0.4, cycleDuration * 0.28)), 0, 1);
+    const physiologic = cycleDuration >= 2.5 && cycleDuration <= 18 ? 1 : 0.25;
+    const amplitude = clamp(robustAbeSpread(signal) / 1.2, 0, 1);
+    const repeat = clamp((peaks.length - 2) / 5, 0, 1);
+    return {
+      score: amplitude * stability * repeat * physiologic,
+      peaks,
+      troughs,
+      cycleDuration,
+      stability
+    };
+  }
+
+  function estimateAbePhaseRatio(peaks, troughs, sampleRate, cycleDuration) {
+    if (peaks.length < 2 || troughs.length < 2) {
+      return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
+    }
+    const riseDurations = [];
+    const fallDurations = [];
+    troughs.forEach((trough) => {
+      const nextPeak = peaks.find((peak) => peak > trough);
+      const nextTrough = troughs.find((item) => item > trough);
+      if (Number.isFinite(nextPeak) && Number.isFinite(nextTrough) && nextPeak < nextTrough) {
+        riseDurations.push((nextPeak - trough) / sampleRate);
+      }
+    });
+    peaks.forEach((peak) => {
+      const nextTrough = troughs.find((trough) => trough > peak);
+      const nextPeak = peaks.find((item) => item > peak);
+      if (Number.isFinite(nextTrough) && Number.isFinite(nextPeak) && nextTrough < nextPeak) {
+        fallDurations.push((nextTrough - peak) / sampleRate);
+      }
+    });
+    const rise = median(riseDurations);
+    const fall = median(fallDurations);
+    if (!Number.isFinite(rise) || !Number.isFinite(fall)) {
+      return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
+    }
+    const total = rise + fall;
+    const durationMatch = Number.isFinite(cycleDuration)
+      ? clamp(1 - (Math.abs(total - cycleDuration) / Math.max(0.5, cycleDuration)), 0, 1)
+      : 0.5;
+    const scale = Number.isFinite(cycleDuration) && total > cycleDuration * 1.08 ? cycleDuration / total : 1;
+    return {
+      inhaleDuration: rise * scale,
+      exhaleDuration: fall * scale,
+      phaseConfidence: clamp(durationMatch * Math.min(riseDurations.length, fallDurations.length) / 3, 0, 1)
+    };
+  }
+
+  function analyzeAbeCandidate(samples, key) {
+    const usableSamples = samples.filter((sample) => sample.t >= ABE_WARMUP_SEC && Number.isFinite(sample[key]));
+    if (usableSamples.length < 80) return null;
+    const resampled = resampleAbeSignal(usableSamples, key);
+    const slow = movingAverage(resampled.values, Math.max(3, Math.round(ABE_SAMPLE_RATE * 1.6)));
+    const highpassed = resampled.values.map((value, index) => value - slow[index]);
+    const signal = movingAverage(normalizeAbeSignal(highpassed), Math.max(1, Math.round(ABE_SAMPLE_RATE * 0.22)));
+    const scored = scoreAbeSignal(signal, ABE_SAMPLE_RATE);
+    if (!Number.isFinite(scored.cycleDuration)) return null;
+    const ratio = estimateAbePhaseRatio(scored.peaks, scored.troughs, ABE_SAMPLE_RATE, scored.cycleDuration);
+    const sampleRateQuality = clamp(usableSamples.length / Math.max(1, (usableSamples[usableSamples.length - 1].t - usableSamples[0].t) * 18), 0, 1);
+    const confidence = clamp((scored.score * 0.78) + (sampleRateQuality * 0.22), 0, 1);
+    const peaks = scored.peaks.map((index) => resampled.startSec + (index / ABE_SAMPLE_RATE));
+    const troughs = scored.troughs.map((index) => resampled.startSec + (index / ABE_SAMPLE_RATE));
     const anchors = [...peaks, ...troughs].sort((a, b) => b - a);
     return {
       key,
       confidence,
-      cycleDuration,
-      breathsPerMinute: 60 / cycleDuration,
+      cycleDuration: scored.cycleDuration,
+      breathsPerMinute: 60 / scored.cycleDuration,
+      inhaleDuration: ratio.inhaleDuration,
+      exhaleDuration: ratio.exhaleDuration,
+      phaseConfidence: ratio.phaseConfidence,
       peaks,
       troughs,
       anchorSec: anchors[0] || usableSamples[usableSamples.length - 1].t,
       sampleCount: usableSamples.length,
-      range,
-      rms
+      range: Math.max(...signal) - Math.min(...signal),
+      rms: Math.sqrt(signal.reduce((sum, value) => sum + (value * value), 0) / Math.max(1, signal.length))
     };
   }
 
@@ -1527,6 +1627,9 @@
     try {
       if (state.abe.running) return;
       stopJourney(true);
+      state.eventLog = [];
+      state.elapsedSec = 0;
+      state.phaseElapsed = 0;
       els.abePrepareBtn.disabled = true;
       els.abePrepareBtn.textContent = "Preparing...";
       setAbeValues("measuring", "calm target");
@@ -1546,7 +1649,7 @@
       const motionAllowed = await requestAbeMotionAccess();
       state.abe.motionAllowed = motionAllowed;
       await audioResume;
-      await state.audio.setNatureSource(els.natureSourceSelect.value);
+      void state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
       if (motionAllowed) startAbeMotionCapture();
       if (!motionAllowed) {
         setAbeStatus("Motion access was not granted. ABE will use the default calm start.", "default");
