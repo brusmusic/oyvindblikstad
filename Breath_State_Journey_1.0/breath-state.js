@@ -1574,7 +1574,6 @@
         state.audio = makeAudioGraph();
       }
       await state.audio.ctx.resume();
-      if (els.natureLayerToggle.checked) await state.audio.setNatureSource(els.natureSourceSelect.value);
       state.playing = true;
       state.holding = false;
       state.elapsedSec = 0;
@@ -1588,7 +1587,13 @@
       state.haptics = createHapticEngine();
       updateVoiceReflectionUI();
       state.startedAt = performance.now();
-      if (els.guideLayerToggle.checked) await state.audio.ensureGuideBuffer();
+      if (els.natureLayerToggle.checked) {
+        void state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
+      }
+      if (els.guideLayerToggle.checked) {
+        void state.audio.ensureGuideBuffer().catch((error) => console.warn(error));
+      }
+      if (els.phaseLabel) els.phaseLabel.textContent = "Journey started";
       emitEvent("inhaleStart");
       const now = state.audio.ctx.currentTime;
       state.audio.master.gain.cancelScheduledValues(now);
