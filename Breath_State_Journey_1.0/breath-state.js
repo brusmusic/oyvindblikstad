@@ -1522,17 +1522,22 @@
       els.abePrepareBtn.disabled = true;
       els.abePrepareBtn.textContent = "Preparing...";
       setAbeValues("measuring", "calm target");
-      setAbeStatus("Asking the phone for motion access before audio starts.", "opening");
+      setAbeStatus("Asking the phone for motion access while the audio engine wakes up.", "opening");
       els.noiseColorSelect.value = "brown";
       els.natureLayerToggle.checked = true;
       els.breathLayerToggle.checked = true;
       state.abe.lastResult = null;
       state.abe.motionAllowed = false;
+      if (!state.audio) {
+        state.audio = makeAudioGraph();
+      }
+      state.audio.setBreathNoiseColor("brown");
+      const audioResume = state.audio.ctx.resume().catch((error) => {
+        console.warn(error);
+      });
       const motionAllowed = await requestAbeMotionAccess();
       state.abe.motionAllowed = motionAllowed;
-      state.audio = makeAudioGraph();
-      state.audio.setBreathNoiseColor("brown");
-      await state.audio.ctx.resume();
+      await audioResume;
       await state.audio.setNatureSource(els.natureSourceSelect.value);
       if (motionAllowed) startAbeMotionCapture();
       if (!motionAllowed) {
