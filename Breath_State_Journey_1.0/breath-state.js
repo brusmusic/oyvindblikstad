@@ -831,6 +831,11 @@
 
   function ensureLayerAutomation() {
     if (!state.layerAutomation) resetLayerAutomation();
+    Object.keys(layerAutomationTracks).forEach((trackId) => {
+      if (!Array.isArray(state.layerAutomation[trackId]) || !state.layerAutomation[trackId].length) {
+        state.layerAutomation[trackId] = [{ t: 0, v: 1 }, { t: 1, v: 1 }];
+      }
+    });
     return state.layerAutomation;
   }
 
@@ -1545,6 +1550,7 @@
       guideVoice: [{ t: 0, v: 0.42 }, { t: 0.16, v: 0.32 }, { t: 0.38, v: 0.08 }, { t: 0.56, v: 0.34 }, { t: 0.72, v: 0.12 }, { t: 1, v: 0 }],
       guideTonal: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
       interference: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
+      haptic: [{ t: 0, v: 0.7 }, { t: 0.28, v: 1 }, { t: 0.76, v: 0.72 }, { t: 1, v: 0.36 }],
       harmonic: [{ t: 0, v: 0.32 }, { t: 0.34, v: 0.58 }, { t: 1, v: 0.28 }],
       nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.2 }, { t: 1, v: 0.12 }]
     };
