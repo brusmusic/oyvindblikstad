@@ -933,10 +933,18 @@
       at: state.elapsedSec
     });
     state.eventLog = state.eventLog.slice(0, 12);
-    triggerGuideCue(name);
-    triggerTonalGuideCue(name);
-    triggerTonalCadenceChord(name);
-    triggerHapticCue(name);
+    [
+      () => triggerGuideCue(name),
+      () => triggerTonalGuideCue(name),
+      () => triggerTonalCadenceChord(name),
+      () => triggerHapticCue(name)
+    ].forEach((runTrigger) => {
+      try {
+        runTrigger();
+      } catch (error) {
+        console.warn(error);
+      }
+    });
   }
 
   function triggerGuideCue(eventName) {
