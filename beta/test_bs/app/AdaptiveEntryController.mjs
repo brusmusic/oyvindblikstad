@@ -3,7 +3,6 @@ import { MotionSensor } from "./MotionSensor.mjs";
 import { BreathDetector } from "./BreathDetector.mjs";
 import { VoicePitchDetector } from "./VoicePitchDetector.mjs";
 import { GlobalTuneMapper } from "./GlobalTuneMapper.mjs";
-import { HapticEngine } from "./HapticEngine.mjs";
 
 export class AdaptiveEntryController {
   constructor() {
@@ -11,7 +10,6 @@ export class AdaptiveEntryController {
     this.breathDetector = new BreathDetector();
     this.voicePitchDetector = new VoicePitchDetector();
     this.globalTuneMapper = new GlobalTuneMapper();
-    this.haptics = new HapticEngine();
     this.state = "IDLE";
     this.aborted = false;
   }
@@ -24,7 +22,6 @@ export class AdaptiveEntryController {
   abort() {
     this.aborted = true;
     this.motionSensor.stop();
-    this.haptics.cancel();
     this.state = "IDLE";
   }
 
@@ -102,7 +99,6 @@ export class AdaptiveEntryController {
       profile.motion = result.motion;
       profile.debug = { ...(profile.debug || {}), breath: result.debug };
       this.transition(result.breath.detected ? "BREATH_ACQUIRED" : "BREATH_UNKNOWN", onUpdate, { profile });
-      this.haptics.trigger(result.breath.detected ? "softPulse" : "doubleSoftPulse", { intensity: result.breath.detected ? 0.35 : 0.22 });
     }
 
     this.transition("PROFILE_READY", onUpdate, { profile });

@@ -5,7 +5,7 @@ export async function detectDeviceCapabilities() {
     accelerometer: typeof DeviceMotionEvent !== "undefined",
     gyroscope: typeof DeviceMotionEvent !== "undefined",
     microphone: Boolean(navigator.mediaDevices?.getUserMedia),
-    haptics: typeof navigator.vibrate === "function",
+    haptics: false,
     advancedHaptics: false,
     headphonesDetected: false,
     secureContext: window.isSecureContext,

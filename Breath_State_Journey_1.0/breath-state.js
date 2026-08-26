@@ -321,23 +321,12 @@
   }
 
   function createHapticEngine() {
-    const supported = typeof navigator !== "undefined" && typeof navigator.vibrate === "function";
     return {
-      supported,
+      supported: false,
       trigger(name = "inhaleStart", options = {}) {
-        if (!supported) return { supported: false, pattern: [] };
-        const pattern = HAPTIC_TRANSITION_PATTERNS[name];
-        if (!pattern) return { supported: true, pattern: [] };
-        const intensity = Number.isFinite(options.intensity)
-          ? clamp(options.intensity, 0.15, 1.4)
-          : 0.55;
-        const scaled = pattern.map((value) => Math.max(1, Math.round(value * intensity)));
-        navigator.vibrate(scaled);
-        return { supported: true, pattern: scaled };
+        return { supported: false, pattern: [], name, options };
       },
-      cancel() {
-        if (supported) navigator.vibrate(0);
-      }
+      cancel() {}
     };
   }
 
@@ -1041,16 +1030,7 @@
   }
 
   function triggerHapticCue(eventName) {
-    if (!els.hapticLayerToggle?.checked) return;
-    if (!state.haptics) state.haptics = createHapticEngine();
-    const journeyProgress = clamp(state.elapsedSec / Math.max(1, journeyDuration()), 0, 1);
-    const params = evaluateJourney(journeyProgress);
-    const baseIntensity = controlValue("hapticVolumeInput", 0.85);
-    const automation = layerAutomationValue("haptic", journeyProgress);
-    const beatLink = clamp((Number(params.beat) || 0) * 0.75 + 0.35, 0.25, 1.15);
-    const intensity = clamp(baseIntensity * automation * beatLink, 0, 2);
-    if (intensity <= 0.02) return;
-    state.haptics.trigger(eventName, { intensity });
+    return createHapticEngine().trigger(eventName);
   }
 
   function phaseDuration(params) {
@@ -1768,7 +1748,7 @@
       state.guideRoundRobin = { in: 0, hold: 0, out: 0 };
       state.audio.resetTonalGuideIntro?.();
       state.voiceReflection.afterReady = false;
-      state.haptics = createHapticEngine();
+      state.haptics = null;
       updateVoiceReflectionUI();
       state.startedAt = performance.now();
       if (els.natureLayerToggle.checked) {
@@ -2912,7 +2892,7 @@
         guideVoice: els.guideLayerToggle.checked,
         guideTonal: els.guideTonalToggle.checked,
         interference: els.beatLayerToggle.checked,
-        haptic: els.hapticLayerToggle.checked,
+        haptic: false,
         harmonic: els.harmonicLayerToggle.checked,
         nature: els.natureLayerToggle.checked
       },
@@ -2921,7 +2901,7 @@
         guideVoice: Number(els.guideVoiceVolumeInput.value),
         guideTonal: Number(els.guideTonalVolumeInput.value),
         interference: Number(els.beatVolumeInput.value),
-        haptic: Number(els.hapticVolumeInput.value),
+        haptic: 0,
         harmonic: Number(els.harmonicVolumeInput.value),
         harmonicSpace: Number(els.harmonicSpaceInput.value),
         nature: Number(els.natureVolumeInput.value)
@@ -3001,7 +2981,7 @@
       els.guideLayerToggle.checked = Boolean(preset.toggles.guideVoice);
       els.guideTonalToggle.checked = Boolean(preset.toggles.guideTonal);
       els.beatLayerToggle.checked = Boolean(preset.toggles.interference);
-      els.hapticLayerToggle.checked = Boolean(preset.toggles.haptic);
+      els.hapticLayerToggle.checked = false;
       els.harmonicLayerToggle.checked = Boolean(preset.toggles.harmonic);
       els.natureLayerToggle.checked = Boolean(preset.toggles.nature);
     }
@@ -3010,7 +2990,7 @@
       if (Number.isFinite(preset.volumes.guideVoice)) els.guideVoiceVolumeInput.value = String(preset.volumes.guideVoice);
       if (Number.isFinite(preset.volumes.guideTonal)) els.guideTonalVolumeInput.value = String(preset.volumes.guideTonal);
       if (Number.isFinite(preset.volumes.interference)) els.beatVolumeInput.value = String(preset.volumes.interference);
-      if (Number.isFinite(preset.volumes.haptic)) els.hapticVolumeInput.value = String(preset.volumes.haptic);
+      els.hapticVolumeInput.value = "0";
       if (Number.isFinite(preset.volumes.harmonic)) els.harmonicVolumeInput.value = String(preset.volumes.harmonic);
       if (Number.isFinite(preset.volumes.harmonicSpace)) els.harmonicSpaceInput.value = String(preset.volumes.harmonicSpace);
       if (Number.isFinite(preset.volumes.nature)) els.natureVolumeInput.value = String(preset.volumes.nature);
@@ -3109,10 +3089,7 @@
       els.guideTonalToggle.checked ? "tonal" : ""
     ].filter(Boolean).join("+");
     const natureLabel = els.natureLayerToggle.checked ? ` · nature ${selectedNatureSource().label}` : "";
-    const hapticLabel = els.hapticLayerToggle.checked
-      ? ` · haptic ${typeof navigator !== "undefined" && typeof navigator.vibrate === "function" ? "supported" : "unavailable"}`
-      : "";
-    els.soundDetail.textContent = `${selectedNoiseProfile().label}${natureLabel} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz${hapticLabel}`;
+    els.soundDetail.textContent = `${selectedNoiseProfile().label}${natureLabel} · ${guideLabels ? `guide ${guideLabels} · ` : ""}${relationshipSets[els.relationshipSelect.value].label} · tune ${selectedFundamental().toFixed(2)} Hz`;
     renderStates(params.activeState.name);
     renderEventLog();
     renderBreathCurveEditor(progress);
@@ -3167,7 +3144,7 @@
     els.guideVoiceVolumeValue.textContent = `${Math.round(controlValue("guideVoiceVolumeInput", 1.15) * 100)}%`;
     els.guideTonalVolumeValue.textContent = `${Math.round(controlValue("guideTonalVolumeInput", 1.2) * 100)}%`;
     els.beatVolumeValue.textContent = `${Math.round(controlValue("beatVolumeInput", 2.2) * 100)}%`;
-    els.hapticVolumeValue.textContent = `${Math.round(controlValue("hapticVolumeInput", 0.85) * 100)}%`;
+    if (els.hapticVolumeValue) els.hapticVolumeValue.textContent = "Off";
     els.harmonicVolumeValue.textContent = `${Math.round(controlValue("harmonicVolumeInput", 2.4) * 100)}%`;
     els.harmonicSpaceValue.textContent = `${Math.round(controlValue("harmonicSpaceInput", 2.2) * 100)}%`;
     els.natureVolumeValue.textContent = `${Math.round(controlValue("natureVolumeInput", 1.6) * 100)}%`;
