@@ -7,6 +7,12 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Breath & State Journey 1.0</title>
     <link rel="stylesheet" href="breath-state.css?v=1.6">
+    <script>
+      const needsPasswordGate = window.location.hostname === "oyvindblikstad.com";
+      if (needsPasswordGate && sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
+        window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
+      }
+    </script>
   </head>
   <body data-app-mode="easy">
     <main class="breath-app">
@@ -46,7 +52,6 @@
             </label>
             <div class="preset-actions">
               <button id="loadPresetBtn" class="mini" type="button">Load</button>
-              <button id="duplicatePresetBtn" class="mini" type="button">Duplicate</button>
               <button id="deletePresetBtn" class="mini danger" type="button">Delete</button>
             </div>
             <p id="presetStatus" class="preset-status">Presets are stored locally in this browser.</p>
@@ -59,7 +64,7 @@
             </div>
             <button id="abePrepareBtn" class="primary" type="button">Prepare & start</button>
             <ol class="abe-steps">
-              <li>Place the phone flat on belly or chest.</li>
+              <li>Place the phone straight down with the bottom edge toward your head.</li>
               <li>Let the phone speaker play quietly.</li>
               <li>Breathe normally until the journey begins.</li>
             </ol>
@@ -165,7 +170,6 @@
                     <button type="button" data-layer-track="guideVoice">Guide voice</button>
                     <button type="button" data-layer-track="guideTonal">Guide tonal</button>
                     <button type="button" data-layer-track="interference">Interference</button>
-                    <button type="button" data-layer-track="haptic" hidden>Haptic</button>
                     <button type="button" data-layer-track="harmonic">Harmonic</button>
                     <button type="button" data-layer-track="nature">Nature</button>
                   </div>
@@ -244,15 +248,6 @@
                 <option value="mono">Mono</option>
                 <option value="split">Split L/R</option>
               </select>
-            </label>
-            <label class="toggle-line" hidden>
-              <input id="hapticLayerToggle" type="checkbox" disabled>
-              <span>Haptic layer</span>
-            </label>
-            <label hidden>
-              <span>Haptic intensity</span>
-              <input id="hapticVolumeInput" type="range" min="0" max="2" step="0.01" value="0" disabled>
-              <output id="hapticVolumeValue">Off</output>
             </label>
             <label class="toggle-line">
               <input id="harmonicLayerToggle" type="checkbox" checked>
@@ -410,6 +405,6 @@
       </section>
     </main>
 
-    <script src="breath-state.js?v=2.17"></script>
+    <script src="breath-state.js?v=2.47"></script>
   </body>
 </html>

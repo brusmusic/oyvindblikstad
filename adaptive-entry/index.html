@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <title>Adaptive Body Entry</title>
+    <link rel="stylesheet" href="style.css?v=2.1">
+  </head>
+  <body>
+    <main class="entry-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Resonance Lab platform module</p>
+          <h1>Adaptive Body Entry</h1>
+          <p class="subline">First listen. Then respond.</p>
+        </div>
+        <nav class="topbar-actions" aria-label="Prototype links">
+          <a href="../Breath_State_Journey_1.0/">Breath 1.0</a>
+          <a href="../Resonance_atlas_1.1/">Atlas 1.1</a>
+          <a href="../composer/">Composer</a>
+          <a href="reports/">Reports</a>
+        </nav>
+      </header>
+
+      <section class="entry-card">
+        <p class="eyebrow">Voice first / phone on belly after</p>
+        <h2 id="entryTitle">Start with your voice.</h2>
+        <p id="entryInstruction">Press Start, read the sentence, then place the phone straight down on your belly with the bottom edge toward your head.</p>
+        <div class="voice-prompt" id="voicePrompt" hidden>
+          <span>Read aloud</span>
+          <p id="voicePromptText">I am amazing. Sometimes I forget. But here I am.</p>
+        </div>
+        <div class="progress-shell" aria-label="Sensing progress">
+          <span id="entryProgress"></span>
+        </div>
+        <div class="actions">
+          <button id="startFullBtn" type="button">Start adaptive entry</button>
+          <button id="startBreathBtn" type="button">Breath only</button>
+          <button id="stopBtn" type="button">Stop</button>
+        </div>
+        <label class="duration-row">
+          <span>Sensing duration</span>
+          <input id="durationInput" type="range" min="10" max="60" step="5" value="30">
+          <output id="durationValue">30 sec</output>
+        </label>
+        <label class="duration-row">
+          <span>Phone direction</span>
+          <select id="phoneOrientationSelect">
+            <option value="bottom_toward_head" selected>Bottom toward head</option>
+            <option value="top_toward_head">Top toward head</option>
+            <option value="top_left">Top toward left</option>
+            <option value="top_right">Top toward right</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="report-panel" id="reportPanel" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Test report</p>
+            <h2>Add report</h2>
+          </div>
+          <a href="reports/">Open reports</a>
+        </div>
+        <div class="report-grid">
+          <label>
+            <span>Signal felt</span>
+            <select id="reportSignal">
+              <option value="good">Good signal</option>
+              <option value="uncertain">Uncertain</option>
+              <option value="bad">Bad signal</option>
+            </select>
+          </label>
+          <label>
+            <span>Phone placement</span>
+            <select id="reportPlacement">
+              <option value="belly">Belly</option>
+              <option value="upper_belly">Upper belly</option>
+              <option value="chest">Chest</option>
+              <option value="pocket">Pocket</option>
+              <option value="handheld">Handheld</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            <span>Transition test</span>
+            <select id="reportTransition">
+              <option value="not_tested">Not tested</option>
+              <option value="ready">Ready to start Breath State</option>
+              <option value="too_short">Needs longer entry</option>
+              <option value="wrong_direction">Wrong direction</option>
+            </select>
+          </label>
+        </div>
+        <label class="notes-row">
+          <span>Notes</span>
+          <textarea id="reportNotes" rows="4" placeholder="Position, feeling, breath state, what worked, what felt wrong..."></textarea>
+        </label>
+        <div class="actions">
+          <button id="addReportBtn" type="button">Add report</button>
+          <button id="copyReportBtn" type="button">Copy latest report</button>
+          <button id="downloadReportsBtn" type="button">Download all</button>
+          <button id="clearReportsBtn" type="button">Clear reports</button>
+        </div>
+        <p class="report-status" id="appVersionStatus">ABE local v1.9</p>
+        <p class="report-status" id="reportStatus">Complete a measurement, add a short note, then copy the report into Codex.</p>
+        <textarea class="report-export" id="reportExport" rows="7" readonly placeholder="The latest JSON report will appear here after Add report."></textarea>
+      </section>
+
+      <section class="result-grid">
+        <article>
+          <p class="eyebrow">Entry profile</p>
+          <pre id="profileOutput">{}</pre>
+        </article>
+        <article>
+          <p class="eyebrow">Capabilities</p>
+          <pre id="capabilitiesOutput">{}</pre>
+        </article>
+      </section>
+
+      <section class="debug-panel">
+        <div class="section-head">
+          <p class="eyebrow">Developer debug</p>
+          <span id="debugStatus">Idle</span>
+        </div>
+        <canvas id="breathCanvas" width="980" height="300" aria-label="Filtered breath signal"></canvas>
+        <div class="metrics">
+          <span><strong id="breathRate">--</strong><small>breaths/min</small></span>
+          <span><strong id="cycleDuration">--</strong><small>cycle</small></span>
+          <span><strong id="confidence">--</strong><small>confidence</small></span>
+          <span><strong id="motionQuality">--</strong><small>motion quality</small></span>
+        </div>
+      </section>
+      <section class="debug-panel">
+        <div class="section-head">
+          <p class="eyebrow">Spectral breath debug</p>
+          <span id="spectralStatus">Sidecar idle</span>
+        </div>
+        <canvas id="spectralCanvas" width="980" height="300" aria-label="Spectral filtered breath signal"></canvas>
+        <div class="metrics">
+          <span><strong id="spectralRate">--</strong><small>breaths/min</small></span>
+          <span><strong id="spectralCycle">--</strong><small>cycle</small></span>
+          <span><strong id="spectralBreath">--</strong><small>in / out</small></span>
+          <span><strong id="spectralConfidence">--</strong><small>confidence</small></span>
+        </div>
+      </section>
+      <section class="debug-panel">
+        <div class="section-head">
+          <p class="eyebrow">Body lift debug</p>
+          <span id="bodyLiftStatus">Sidecar idle</span>
+        </div>
+        <canvas id="bodyLiftCanvas" width="980" height="300" aria-label="Body lift breath signal"></canvas>
+        <div class="metrics">
+          <span><strong id="bodyLiftRate">--</strong><small>breaths/min</small></span>
+          <span><strong id="bodyLiftCycle">--</strong><small>cycle</small></span>
+          <span><strong id="bodyLiftBreath">--</strong><small>in / out</small></span>
+          <span><strong id="bodyLiftConfidence">--</strong><small>confidence</small></span>
+        </div>
+      </section>
+      <section class="debug-panel">
+        <div class="section-head">
+          <p class="eyebrow">Phase state debug</p>
+          <span id="phaseStateStatus">Sidecar idle</span>
+        </div>
+        <canvas id="phaseStateCanvas" width="980" height="300" aria-label="Phase state breath signal"></canvas>
+        <div class="metrics">
+          <span><strong id="phaseStateRate">--</strong><small>breaths/min</small></span>
+          <span><strong id="phaseStateCycle">--</strong><small>cycle</small></span>
+          <span><strong id="phaseStateBreath">--</strong><small>in / out</small></span>
+          <span><strong id="phaseStateConfidence">--</strong><small>confidence</small></span>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="demo.mjs?v=3.8"></script>
+  </body>
+</html>

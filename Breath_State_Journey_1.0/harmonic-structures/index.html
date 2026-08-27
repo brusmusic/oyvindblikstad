@@ -7,6 +7,11 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Harmonic Structures Synth</title>
     <link rel="stylesheet" href="synth.css?v=1.0">
+    <script>
+      if (sessionStorage.getItem("resonance-lab-test-bs-access") !== "granted") {
+        window.location.replace(`/beta/test_bs/?next=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`);
+      }
+    </script>
   </head>
   <body>
     <main class="synth-app">

@@ -16,29 +16,38 @@
   const INTERFERENCE_GAIN_BASE = 0.04;
   const INTERFERENCE_GAIN_PULSE = 0.035;
   const INTERFERENCE_GAIN_BOOST = 10 ** (15 / 20);
-  const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
-  const PRESET_DB_NAME = "breath-state-journey-1.0-storage";
-  const PRESET_DB_STORE = "keyval";
-  const PRESET_DB_KEY = PRESET_STORAGE_KEY;
-  const HAPTIC_TRANSITION_PATTERNS = {
-    inhaleStart: [18],
-    holdAfterInhaleStart: [24, 88, 22],
-    exhaleStart: [20],
-    holdAfterExhaleStart: [30, 118, 36]
-  };
   const BREATH_CURVE_HIT_RADIUS = 12;
   const CURVE_HIT_RADIUS = 12;
+  const PRESET_STORAGE_KEY = "breath-state-journey-1.0-presets";
   const GUIDE_AUDIO_URL = "../audio/in_hold_out_voice.mp3";
   const GUIDE_CUE_DURATION_SEC = 1.08;
-  const ABE_DURATION_SEC = 28;
+  const TONAL_GUIDE_PRE_CUE_PHASE = 2 / 3;
+  const ABE_ENTRY_MIN_SEC = 25;
+  const ABE_ENTRY_MAX_SEC = 45;
+  const ABE_RECENT_WINDOW_SEC = 18;
   const ABE_BROWN_START_PROGRESS = 0.58;
   const ABE_USABLE_CONFIDENCE = 0.42;
-  const ABE_SAMPLE_RATE = 20;
-  const ABE_WARMUP_SEC = 3.2;
-  const ABE_PHASE_CONFIDENCE = 0.45;
+  const ABE_BRIDGE_CONFIDENCE = 0.3;
+  const ABE_MIN_CYCLE_SEC = 2.4;
+  const ABE_MAX_CYCLE_SEC = 12.2;
+  const ABE_MIN_START_CYCLE_SEC = 4;
+  const ABE_MIN_GRAPH_CYCLE_SEC = 4.8;
+  const ABE_MIN_GRAPH_INHALE_SEC = 1.8;
+  const ABE_MIN_GRAPH_EXHALE_SEC = 2.2;
+  const ABE_NATURAL_INHALE_SHARE = 0.38196601125;
+  const ABE_NATURAL_EXHALE_SHARE = 0.61803398875;
+  const ABE_MIN_LONG_EXHALE_CYCLE_SEC = 9.6;
+  const ABE_MIN_LONG_EXHALE_RATIO = 2.2;
+  const ABE_DEFAULT_START_CYCLE_SEC = 8.5;
+  const ABE_EXHALE_SYNC_ARM_PHASE = 0.28;
+  const ABE_EXHALE_SYNC_PHASE_START = 0.46;
+  const ABE_EXHALE_SYNC_PHASE_END = 0.54;
+  const ABE_DETECTOR_URL = "../adaptive-entry/BreathDetector.mjs?v=1.9";
+  const ABE_PHONE_ORIENTATION = "bottom-toward-head";
+  const ABE_EXHALE_SYNC_TURN = "direct";
   const EASY_DEFAULT_PRESET_NAME = "vagal reset";
   const EASY_DEFAULT_PRESET_ID = "builtin-vagal-reset";
-  const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone vertically on your upper belly and press start.";
+  const EASY_READY_INSTRUCTION = "Lay down comfortably, place your phone straight down on your upper belly with the bottom edge toward your head, then press start.";
   const VOICE_PROMPT_TEXT = "I am amazing. Sometimes I forget. Well, here I am.";
   const VOICE_RECORDING_SEC = 8;
   const GUIDE_CUES = {
@@ -53,16 +62,11 @@
     out: [4, 10, 16, 22]
   };
   const tonalGuideSemitones = {
-    inhaleStart: 0,
-    holdAfterInhaleStart: 2,
+    inhaleStart: -5,
+    holdAfterInhaleStart: -4,
     exhaleStart: -5,
     holdAfterExhaleStart: -4
   };
-  const tonalGuideIntroSemitones = {
-    breath: -5,
-    hold: -4
-  };
-  const TONAL_GUIDE_INTRO_START = 2 / 3;
   const TONAL_CADENCE_MODE = "tonalCadence";
   const tonalCadenceEventPhases = {
     inhaleStart: "inhale",
@@ -93,7 +97,6 @@
     guideVoice: { label: "Guide voice", color: "#d5b96e" },
     guideTonal: { label: "Guide tonal", color: "#f7dca0" },
     interference: { label: "Interference", color: "#f09a86" },
-    haptic: { label: "Haptic", color: "#d8d1ff" },
     harmonic: { label: "Harmonic", color: "#8ea7ff" },
     nature: { label: "Nature", color: "#b9e38f" }
   };
@@ -175,7 +178,6 @@
 
   const state = {
     audio: null,
-    haptics: null,
     appMode: "easy",
     playing: false,
     holding: false,
@@ -185,10 +187,10 @@
     phase: "inhale",
     phaseElapsed: 0,
     phasePeakSeen: false,
+    tonalGuidePreCueKey: "",
     eventLog: [],
     lastEventAt: 0,
     rafId: 0,
-    presetCache: null,
     breathCurves: null,
     layerAutomation: null,
     activeBreathCurve: "inhale",
@@ -205,7 +207,14 @@
       samples: [],
       listener: null,
       lastResult: null,
-      motionAllowed: false
+      motionAllowed: false,
+      detector: null,
+      detectorPromise: null,
+      detectorError: "",
+      exhaleSyncArmed: false,
+      lastCyclePhase: null,
+      lastSyncedPeakAt: null,
+      lastObservedPeakAt: null
     },
     voiceReflection: {
       before: null,
@@ -318,16 +327,6 @@
     }
     normalizeNoise(data);
     return buffer;
-  }
-
-  function createHapticEngine() {
-    return {
-      supported: false,
-      trigger(name = "inhaleStart", options = {}) {
-        return { supported: false, pattern: [], name, options };
-      },
-      cancel() {}
-    };
   }
 
   function createImpulse(ctx, seconds = 6.8, decay = 3.2) {
@@ -533,29 +532,12 @@
     const tonalGuideGain = ctx.createGain();
     tonalGuideGain.gain.value = controlValue("guideTonalVolumeInput", 1.2);
     tonalGuideGain.connect(master);
-    const tonalGuideIntroGain = ctx.createGain();
-    tonalGuideIntroGain.gain.value = 0;
-    const tonalGuideIntroFilter = ctx.createBiquadFilter();
-    tonalGuideIntroFilter.type = "lowpass";
-    tonalGuideIntroFilter.frequency.value = 1600;
-    tonalGuideIntroFilter.Q.value = 0.6;
-    const tonalGuideIntroPan = ctx.createStereoPanner();
-    tonalGuideIntroPan.pan.value = 0;
-    const tonalGuideIntroOsc = ctx.createOscillator();
-    tonalGuideIntroOsc.type = "sine";
-    tonalGuideIntroOsc.frequency.value = 180;
-    tonalGuideIntroOsc.connect(tonalGuideIntroGain);
-    tonalGuideIntroGain.connect(tonalGuideIntroFilter);
-    tonalGuideIntroFilter.connect(tonalGuideIntroPan);
-    tonalGuideIntroPan.connect(tonalGuideGain);
-    let tonalGuideIntroKey = "";
     const tonalGuideReverb = ctx.createConvolver();
     const tonalGuideWet = ctx.createGain();
     tonalGuideReverb.buffer = createImpulse(ctx);
     tonalGuideWet.gain.value = controlValue("guideTonalVolumeInput", 1.2) * 0.2;
     tonalGuideReverb.connect(tonalGuideWet);
     tonalGuideWet.connect(master);
-    tonalGuideIntroPan.connect(tonalGuideReverb);
     const tonalCadenceBus = ctx.createGain();
     const tonalCadenceDry = ctx.createGain();
     const tonalCadenceReverb = ctx.createConvolver();
@@ -590,10 +572,15 @@
       source.start(ctx.currentTime, offsetSec, GUIDE_CUE_DURATION_SEC);
     }
 
-    function playTonalGuide(eventName, fundamentalHz) {
+    function playTonalGuide(eventName, fundamentalHz, options = {}) {
       const semitones = tonalGuideSemitones[eventName];
       if (!Number.isFinite(semitones)) return;
       const now = ctx.currentTime;
+      const preview = Boolean(options.preview);
+      const fadeInSec = preview ? clamp(Number(options.fadeInSec) || 1.2, 0.55, 2.8) : 0.55;
+      const releaseSec = preview ? 0.16 : 0.18;
+      const cueDurationSec = preview ? clamp(fadeInSec + releaseSec, 0.75, 3.1) : 0.9;
+      const cueLevel = preview ? 0.15 : 0.26;
       const baseHz = clamp(fundamentalHz, MIN_FUNDAMENTAL_HZ, MAX_FUNDAMENTAL_HZ);
       const cueHz = baseHz * (2 ** (semitones / 12));
       const cueRegister = {
@@ -612,8 +599,9 @@
       const cueFilter = ctx.createBiquadFilter();
       const cuePan = ctx.createStereoPanner();
       cueBus.gain.setValueAtTime(0, now);
-      cueBus.gain.linearRampToValueAtTime(0.26, now + 0.026);
-      cueBus.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+      cueBus.gain.linearRampToValueAtTime(cueLevel, now + fadeInSec);
+      cueBus.gain.setValueAtTime(cueLevel, now + Math.max(0.01, cueDurationSec - releaseSec));
+      cueBus.gain.linearRampToValueAtTime(0, now + cueDurationSec);
       cueHighpass.type = "highpass";
       cueHighpass.frequency.setValueAtTime(115, now);
       cueHighpass.Q.value = 0.72;
@@ -639,42 +627,11 @@
         osc.frequency.setValueAtTime(voice.hz, now);
         const holdOutWeight = eventName === "holdAfterExhaleStart" ? 0.72 : 1;
         gain.gain.setValueAtTime(voice.weight * holdOutWeight, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + lerp(0.42, 0.9, index / Math.max(1, cueVoices.length - 1)));
         osc.connect(gain);
         gain.connect(cueBus);
         osc.start(now);
-        osc.stop(now + 1);
+        osc.stop(now + cueDurationSec + 0.08);
       });
-    }
-
-    function updateTonalGuideIntro(nextPhase, fundamentalHz, leadProgress = 0, fadeSec = 1) {
-      const now = ctx.currentTime;
-      const isHold = nextPhase === "holdInhale" || nextPhase === "holdExhale";
-      const semitone = isHold ? tonalGuideIntroSemitones.hold : tonalGuideIntroSemitones.breath;
-      const cueHz = semitoneToFrequency(clamp(fundamentalHz, MIN_FUNDAMENTAL_HZ, MAX_FUNDAMENTAL_HZ), semitone);
-      const guideRootHz = fitFrequencyToRange(cueHz, isHold ? 105 : 115, isHold ? 205 : 230);
-      const key = `${nextPhase}:${guideRootHz.toFixed(3)}`;
-      const amount = clamp(leadProgress, 0, 1);
-
-      if (key !== tonalGuideIntroKey) {
-        tonalGuideIntroKey = key;
-        tonalGuideIntroGain.gain.cancelScheduledValues(now);
-        tonalGuideIntroGain.gain.setValueAtTime(0, now);
-        tonalGuideIntroOsc.frequency.cancelScheduledValues(now);
-        tonalGuideIntroOsc.frequency.setValueAtTime(Math.max(100, tonalGuideIntroOsc.frequency.value), now);
-        tonalGuideIntroOsc.frequency.exponentialRampToValueAtTime(guideRootHz, now + 0.08);
-      }
-
-      const smoothing = clamp(Number(fadeSec) * 0.14, 0.08, 0.28);
-      tonalGuideIntroGain.gain.setTargetAtTime(0.18 * amount, now, smoothing);
-    }
-
-    function resetTonalGuideIntro() {
-      if (!tonalGuideIntroKey) return;
-      const now = ctx.currentTime;
-      tonalGuideIntroKey = "";
-      tonalGuideIntroGain.gain.cancelScheduledValues(now);
-      tonalGuideIntroGain.gain.setTargetAtTime(0, now, 0.08);
     }
 
     function playTonalCadenceChord(eventName, fundamentalHz, strength = 1, phaseDurationSec = 3) {
@@ -740,7 +697,6 @@
     beatA.start();
     beatB.start();
     harmonicVoices.forEach((voice) => voice.osc.start());
-    tonalGuideIntroOsc.start();
 
     return {
       ctx,
@@ -762,8 +718,6 @@
       guideGain,
       tonalGuideGain,
       tonalGuideWet,
-      updateTonalGuideIntro,
-      resetTonalGuideIntro,
       tonalCadenceDry,
       tonalCadenceWet,
       ensureGuideBuffer,
@@ -875,11 +829,6 @@
 
   function ensureLayerAutomation() {
     if (!state.layerAutomation) resetLayerAutomation();
-    Object.keys(layerAutomationTracks).forEach((trackId) => {
-      if (!Array.isArray(state.layerAutomation[trackId]) || !state.layerAutomation[trackId].length) {
-        state.layerAutomation[trackId] = [{ t: 0, v: 1 }, { t: 1, v: 1 }];
-      }
-    });
     return state.layerAutomation;
   }
 
@@ -985,18 +934,9 @@
       at: state.elapsedSec
     });
     state.eventLog = state.eventLog.slice(0, 12);
-    [
-      () => triggerGuideCue(name),
-      () => triggerTonalGuideCue(name),
-      () => triggerTonalCadenceChord(name),
-      () => triggerHapticCue(name)
-    ].forEach((runTrigger) => {
-      try {
-        runTrigger();
-      } catch (error) {
-        console.warn(error);
-      }
-    });
+    triggerGuideCue(name);
+    triggerTonalGuideCue(name);
+    triggerTonalCadenceChord(name);
   }
 
   function triggerGuideCue(eventName) {
@@ -1012,7 +952,33 @@
 
   function triggerTonalGuideCue(eventName) {
     if (!els.guideTonalToggle?.checked || !state.audio) return;
+    const isPhaseStart = eventName === "inhaleStart"
+      || eventName === "holdAfterInhaleStart"
+      || eventName === "exhaleStart"
+      || eventName === "holdAfterExhaleStart";
+    if (isPhaseStart && state.playing && state.elapsedSec > 0.05) return;
     state.audio.playTonalGuide(eventName, selectedFundamental());
+  }
+
+  function phaseStartEventName(phase) {
+    if (phase === "holdInhale") return "holdAfterInhaleStart";
+    if (phase === "exhale") return "exhaleStart";
+    if (phase === "holdExhale") return "holdAfterExhaleStart";
+    return "inhaleStart";
+  }
+
+  function maybeTriggerTonalGuidePreCue(params, phaseProgress, duration) {
+    if (!els.guideTonalToggle?.checked || !state.audio || state.holding) return;
+    if (!Number.isFinite(duration) || duration < 1.2 || phaseProgress < TONAL_GUIDE_PRE_CUE_PHASE) return;
+    const nextPhase = nextPlayablePhase(state.phase, params);
+    const eventName = phaseStartEventName(nextPhase);
+    const cueKey = `${state.phase}:${nextPhase}:${Math.floor(state.elapsedSec / Math.max(0.001, duration))}`;
+    if (state.tonalGuidePreCueKey === cueKey) return;
+    state.tonalGuidePreCueKey = cueKey;
+    state.audio.playTonalGuide(eventName, selectedFundamental(), {
+      preview: true,
+      fadeInSec: clamp(duration * (1 - TONAL_GUIDE_PRE_CUE_PHASE), 0.8, 2.4)
+    });
   }
 
   function triggerTonalCadenceChord(eventName) {
@@ -1023,14 +989,6 @@
     if (strength <= 0.02) return;
     const params = evaluateJourney(journeyProgress);
     state.audio.playTonalCadenceChord(eventName, selectedFundamental(), strength, phaseDuration(params));
-  }
-
-  function cancelHaptics() {
-    state.haptics?.cancel();
-  }
-
-  function triggerHapticCue(eventName) {
-    return createHapticEngine().trigger(eventName);
   }
 
   function phaseDuration(params) {
@@ -1077,6 +1035,7 @@
     let phase = nextPhase;
     for (let i = 0; i < 4; i += 1) {
       state.phase = phase;
+      state.tonalGuidePreCueKey = "";
       if (phaseDuration(params) > 0.001) {
         if (phase === "holdInhale") emitEvent("holdAfterInhaleStart");
         if (phase === "exhale") emitEvent("exhaleStart");
@@ -1087,7 +1046,15 @@
       phase = nextBreathPhase(phase);
     }
     state.phase = "inhale";
+    state.tonalGuidePreCueKey = "";
     emitEvent("inhaleStart");
+  }
+
+  function emitPhaseStart(phase) {
+    if (phase === "holdInhale") emitEvent("holdAfterInhaleStart");
+    else if (phase === "exhale") emitEvent("exhaleStart");
+    else if (phase === "holdExhale") emitEvent("holdAfterExhaleStart");
+    else emitEvent("inhaleStart");
   }
 
   function advanceBreath(dt, params) {
@@ -1125,6 +1092,7 @@
     const fundamental = selectedFundamental();
     const duration = phaseDuration(params);
     const phaseProgress = clamp(state.phaseElapsed / Math.max(0.001, duration), 0, 1);
+    maybeTriggerTonalGuidePreCue(params, phaseProgress, duration);
     const silence = clamp(params.silence, 0, 0.92);
     const presence = 1 - silence;
     const breathVolume = controlValue("breathVolumeInput", 1.65);
@@ -1142,17 +1110,6 @@
     audio.guideGain.gain.setTargetAtTime(controlValue("guideVoiceVolumeInput", 1.15) * layerAutomationValue("guideVoice", journeyProgress), now, 0.05);
     audio.tonalGuideGain.gain.setTargetAtTime(controlValue("guideTonalVolumeInput", 1.2) * layerAutomationValue("guideTonal", journeyProgress), now, 0.05);
     audio.tonalGuideWet.gain.setTargetAtTime(controlValue("guideTonalVolumeInput", 1.2) * layerAutomationValue("guideTonal", journeyProgress) * 0.22, now, 0.08);
-    if (els.guideTonalToggle.checked && duration > 0.001) {
-      const nextPhase = nextPlayablePhase(state.phase, params);
-      const leadProgress = clamp(
-        (phaseProgress - TONAL_GUIDE_INTRO_START) / (1 - TONAL_GUIDE_INTRO_START),
-        0,
-        1
-      );
-      audio.updateTonalGuideIntro(nextPhase, fundamental, leadProgress, duration * (1 - TONAL_GUIDE_INTRO_START));
-    } else {
-      audio.resetTonalGuideIntro?.();
-    }
     if (audio.tonalCadenceDry && audio.tonalCadenceWet) {
       audio.tonalCadenceDry.gain.setTargetAtTime(relationshipMode === TONAL_CADENCE_MODE ? 0.82 : 0, now, 0.08);
       audio.tonalCadenceWet.gain.setTargetAtTime(relationshipMode === TONAL_CADENCE_MODE ? harmonicSpace * 0.13 : 0, now, 0.14);
@@ -1266,19 +1223,203 @@
     if (els.abeTargetValue) els.abeTargetValue.textContent = targetText;
   }
 
+  function abeBridgeReading(result) {
+    if (!result) return null;
+    const maybeHalfCycle = (reading) => {
+      const cycle = Number(reading?.cycleDuration);
+      const confidence = Number(reading?.confidence || 0);
+      return Number.isFinite(cycle)
+        && cycle >= 4
+        && cycle <= 5.4
+        && confidence < 0.58;
+    };
+    const ownRawCycle = Number(result.cycleDuration);
+    const ownCycle = ownRawCycle;
+    const own = Number.isFinite(ownCycle) && ownCycle >= ABE_MIN_START_CYCLE_SEC && ownCycle <= 12.5
+      ? {
+        ...result,
+        cycleDuration: ownCycle,
+        bridgeReason: "selected"
+      }
+      : null;
+    const bridgeCandidates = (Array.isArray(result.candidates) ? result.candidates : [])
+      .filter((candidate) => {
+        const cycle = Number(candidate?.cycleDuration);
+        return Number.isFinite(cycle) && cycle >= ABE_MIN_START_CYCLE_SEC && cycle <= 12.5;
+      })
+      .map((candidate) => ({
+        key: candidate.key || result.key || "candidate",
+        source: result.source || "candidate",
+        confidence: Number(candidate.score ?? candidate.confidence ?? result.confidence ?? 0.18),
+        cycleDuration: Number(candidate.cycleDuration),
+        inhaleDuration: Number(candidate.phaseInhaleDuration),
+        exhaleDuration: Number(candidate.phaseExhaleDuration),
+        phaseConfidence: Number(candidate.phaseConfidence || 0),
+        phaseReliable: Number(candidate.phaseConfidence || 0) >= 0.55,
+        candidates: result.candidates,
+        anchorSec: result.anchorSec,
+        bridgeReason: "tempo_candidate"
+      }))
+      .sort((a, b) => {
+        const aScore = (a.confidence * 0.35) + (clamp(a.cycleDuration / 9, 0, 1.2) * 0.65);
+        const bScore = (b.confidence * 0.35) + (clamp(b.cycleDuration / 9, 0, 1.2) * 0.65);
+        return bScore - aScore;
+      });
+    const candidate = bridgeCandidates[0] || null;
+    if (!own) return candidate;
+    if (!candidate) return own;
+    const longerCandidate = bridgeCandidates.find((item) => (
+      item.cycleDuration >= own.cycleDuration * 1.42
+      && item.cycleDuration <= own.cycleDuration * 2.25
+      && item.confidence >= (Number(own.confidence) || 0) * 0.22
+    ));
+    if (maybeHalfCycle(own) && longerCandidate) {
+      return { ...longerCandidate, bridgeReason: "prefer_longer_candidate" };
+    }
+    if (maybeHalfCycle(own) && !longerCandidate) {
+      return {
+        ...own,
+        cycleDuration: clamp(own.cycleDuration * 2, ABE_MIN_START_CYCLE_SEC, 11.5),
+        inhaleDuration: NaN,
+        exhaleDuration: NaN,
+        phaseReliable: false,
+        bridgeReason: "half_cycle_doubled"
+      };
+    }
+    if ((Number(result.confidence) || 0) >= ABE_BRIDGE_CONFIDENCE) return own;
+    return candidate.confidence >= (Number(result.confidence) || 0) * 0.45 ? candidate : own;
+  }
+
+  function absoluteAbeExtrema(result, type = "peaks") {
+    const warmup = Number(result?.raw?.debug?.warmupSec || 0);
+    const sampleStart = Number(result?.sampleStartSec || 0);
+    const values = Array.isArray(result?.[type]) ? result[type] : [];
+    return values
+      .filter(Number.isFinite)
+      .map((time) => sampleStart + warmup + time)
+      .sort((a, b) => a - b);
+  }
+
+  function abeGraphDurations(result, cycle) {
+    const peaks = absoluteAbeExtrema(result, "peaks");
+    const troughs = absoluteAbeExtrema(result, "troughs");
+    if (peaks.length < 2 || troughs.length < 2) return null;
+    const read = (startTurns, endTurns, syncTurnType) => {
+      const inhaleDurations = [];
+      const exhaleDurations = [];
+      startTurns.forEach((turn) => {
+        const nextEnd = endTurns.find((item) => item > turn);
+        if (Number.isFinite(nextEnd)) inhaleDurations.push(nextEnd - turn);
+      });
+      endTurns.forEach((turn) => {
+        const nextStart = startTurns.find((item) => item > turn);
+        if (Number.isFinite(nextStart)) exhaleDurations.push(nextStart - turn);
+      });
+      const inhale = median(inhaleDurations.filter((value) => value >= 0.6 && value <= 8));
+      const exhale = median(exhaleDurations.filter((value) => value >= 0.6 && value <= 10));
+      if (!Number.isFinite(inhale) || !Number.isFinite(exhale) || inhale <= 0 || exhale <= 0) return null;
+      const graphCycle = inhale + exhale;
+      if (
+        graphCycle < ABE_MIN_GRAPH_CYCLE_SEC
+        || inhale < ABE_MIN_GRAPH_INHALE_SEC
+        || exhale < ABE_MIN_GRAPH_EXHALE_SEC
+      ) return null;
+      return {
+        inhaleDuration: inhale,
+        exhaleDuration: exhale,
+        cycleDuration: graphCycle,
+        confidence: clamp(Math.min(inhaleDurations.length, exhaleDurations.length) / 3, 0, 1),
+        syncTurnType,
+        syncTurns: syncTurnType === "peak" ? peaks : troughs,
+        oppositeSyncTurnType: syncTurnType === "peak" ? "trough" : "peak",
+        oppositeSyncTurns: syncTurnType === "peak" ? troughs : peaks
+      };
+    };
+    const peakAsInhaleTop = read(troughs, peaks, "peak");
+    const troughAsInhaleTop = read(peaks, troughs, "trough");
+    if (ABE_PHONE_ORIENTATION === "top-right" && peakAsInhaleTop) return peakAsInhaleTop;
+    if (ABE_PHONE_ORIENTATION === "top-right-inverted" && troughAsInhaleTop) return troughAsInhaleTop;
+    const options = [peakAsInhaleTop, troughAsInhaleTop].filter(Boolean);
+    if (!options.length) return null;
+    return options.sort((a, b) => {
+      const score = (option) => {
+        const ratio = option.exhaleDuration / Math.max(0.1, option.inhaleDuration);
+        const naturalFit = clamp(1 - (Math.abs(ratio - 1.35) / 0.95), 0, 1);
+        return naturalFit + (option.confidence * 0.2);
+      };
+      return score(b) - score(a);
+    })[0];
+  }
+
+  function abeLatestInhaleTurn(result, graphDurations = null) {
+    const graph = graphDurations || abeGraphDurations(result, Number(result?.cycleDuration));
+    if (!graph) return null;
+    const turns = ABE_EXHALE_SYNC_TURN === "opposite" && Array.isArray(graph.oppositeSyncTurns)
+      ? graph.oppositeSyncTurns
+      : (Array.isArray(graph.syncTurns) ? graph.syncTurns : []);
+    return turns.length ? turns[turns.length - 1] : null;
+  }
+
+  function abeCandidateSummary(result) {
+    const candidates = (Array.isArray(result?.candidates) ? result.candidates : [])
+      .slice(0, 4)
+      .map((candidate) => {
+        const cycle = Number(candidate?.cycleDuration);
+        const score = Number(candidate?.score ?? candidate?.confidence ?? 0);
+        return Number.isFinite(cycle)
+          ? `${candidate.key || "?"} ${cycle.toFixed(1)}s/${Math.round(score * 100)}%`
+          : "";
+      })
+      .filter(Boolean);
+    return candidates.length ? ` Top: ${candidates.join(", ")}.` : "";
+  }
+
   function abePrepValues(result) {
-    const usable = result?.confidence >= ABE_USABLE_CONFIDENCE && Number.isFinite(result.cycleDuration);
+    const bridge = abeBridgeReading(result);
+    const measuredCycle = Number(bridge?.cycleDuration);
+    const usable = Boolean(bridge)
+      && (
+        result?.usable === true
+        || result?.confidence >= ABE_BRIDGE_CONFIDENCE
+        || bridge.bridgeReason === "tempo_candidate"
+        || bridge.bridgeReason === "prefer_longer_candidate"
+        || bridge.bridgeReason === "half_cycle_doubled"
+      )
+      && Number.isFinite(measuredCycle)
+      && measuredCycle >= ABE_MIN_START_CYCLE_SEC;
     const hasCandidate = result && Number.isFinite(result.cycleDuration);
-    const cycle = hasCandidate ? clamp(result.cycleDuration, 3.1, 8.5) : 8.5;
-    const phaseUsable = usable
-      && result.phaseConfidence >= ABE_PHASE_CONFIDENCE
-      && Number.isFinite(result.inhaleDuration)
-      && Number.isFinite(result.exhaleDuration);
-    const startInhale = phaseUsable ? clamp(result.inhaleDuration, 1.2, 3.4) : (hasCandidate ? clamp(cycle * 0.42, 1.2, 3.4) : 3);
-    const startExhale = phaseUsable ? clamp(result.exhaleDuration, 1.7, 5.8) : (hasCandidate ? clamp(cycle * 0.58, 1.7, 5.8) : 5.5);
+    const bridgeCycle = usable ? clamp(measuredCycle, ABE_MIN_START_CYCLE_SEC, 11.5) : ABE_DEFAULT_START_CYCLE_SEC;
+    const graphDurations = usable ? abeGraphDurations(result, bridgeCycle) : null;
+    const cycle = bridgeCycle;
+    const measuredInhale = Number(bridge?.inhaleDuration);
+    const measuredExhale = Number(bridge?.exhaleDuration);
+    const hasMeasuredPhase = false
+      && usable
+      && bridge?.phaseReliable
+      && Number.isFinite(measuredInhale)
+      && Number.isFinite(measuredExhale)
+      && measuredInhale > 0
+      && measuredExhale > 0;
+    const rawStartInhale = hasMeasuredPhase
+        ? clamp(measuredInhale, 1.6, 5.6)
+        : clamp(cycle * ABE_NATURAL_INHALE_SHARE, 1.4, 5.2);
+    const rawStartExhale = hasMeasuredPhase
+        ? clamp(measuredExhale, 2.2, 7.2)
+        : clamp(cycle * ABE_NATURAL_EXHALE_SHARE, 2, 7);
+    const longExhaleRatio = rawStartExhale / Math.max(0.1, rawStartInhale);
+    const longExhaleCycle = rawStartInhale + rawStartExhale;
+    const longExhaleScale = longExhaleRatio >= ABE_MIN_LONG_EXHALE_RATIO && longExhaleCycle < ABE_MIN_LONG_EXHALE_CYCLE_SEC
+      ? ABE_MIN_LONG_EXHALE_CYCLE_SEC / longExhaleCycle
+      : 1;
+    const startInhale = clamp(rawStartInhale * longExhaleScale, 1.4, 6.2);
+    const startExhale = clamp(
+      Math.max(rawStartExhale * longExhaleScale, longExhaleRatio >= ABE_MIN_LONG_EXHALE_RATIO ? startInhale * ABE_MIN_LONG_EXHALE_RATIO : 0),
+      1.8,
+      8.2
+    );
     const endInhale = clamp(Math.max(inputValue("endInhaleInput", 7), startInhale + 2.4, 6.2), 1, 20);
     const endExhale = clamp(Math.max(inputValue("endExhaleInput", 12), startExhale + 4.8, 10.5), 1, 30);
-    return { usable, hasCandidate, phaseUsable, cycle, startInhale, startExhale, endInhale, endExhale };
+    return { usable, hasCandidate, bridge, cycle, graphDurations, startInhale, startExhale, endInhale, endExhale };
   }
 
   function abeBreathLabel(inhaleSec, exhaleSec) {
@@ -1289,21 +1430,36 @@
     return typeof window.DeviceMotionEvent !== "undefined" || typeof window.DeviceOrientationEvent !== "undefined";
   }
 
+  function abeMotionAccessDiagnostic() {
+    return {
+      secureContext: window.isSecureContext,
+      hasDeviceMotion: typeof window.DeviceMotionEvent !== "undefined",
+      hasDeviceOrientation: typeof window.DeviceOrientationEvent !== "undefined",
+      canRequestMotion: typeof window.DeviceMotionEvent?.requestPermission === "function",
+      canRequestOrientation: typeof window.DeviceOrientationEvent?.requestPermission === "function"
+    };
+  }
+
   async function requestAbeMotionAccess() {
-    if (!abeMotionSupported()) return false;
+    if (!abeMotionSupported()) return { granted: false, reason: "motion_api_missing", results: [] };
     const requests = [];
     if (typeof window.DeviceMotionEvent?.requestPermission === "function") {
-      requests.push(window.DeviceMotionEvent.requestPermission.call(window.DeviceMotionEvent));
+      requests.push(window.DeviceMotionEvent.requestPermission());
     }
     if (typeof window.DeviceOrientationEvent?.requestPermission === "function") {
-      requests.push(window.DeviceOrientationEvent.requestPermission.call(window.DeviceOrientationEvent));
+      requests.push(window.DeviceOrientationEvent.requestPermission());
     }
-    if (!requests.length) return true;
+    if (!requests.length) return { granted: true, reason: "permission_api_not_required", results: [] };
     try {
       const results = await Promise.allSettled(requests);
-      return results.every((result) => result.status === "fulfilled" && result.value === "granted");
+      const values = results.map((result) => result.status === "fulfilled" ? result.value : "rejected");
+      return {
+        granted: results.every((result) => result.status === "fulfilled" && result.value === "granted"),
+        reason: values.join(","),
+        results: values
+      };
     } catch {
-      return false;
+      return { granted: false, reason: "permission_exception", results: [] };
     }
   }
 
@@ -1370,156 +1526,195 @@
     });
   }
 
-  function robustAbeSpread(values) {
-    const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
-    if (sorted.length < 2) return 0;
-    const quantile = (ratio) => sorted[Math.floor((sorted.length - 1) * ratio)];
-    return Math.max(0.0001, quantile(0.75) - quantile(0.25));
-  }
-
-  function normalizeAbeSignal(values) {
-    const center = median(values);
-    const spread = robustAbeSpread(values) || 1;
-    return values.map((value) => (value - center) / spread);
-  }
-
-  function resampleAbeSignal(samples, key, sampleRate = ABE_SAMPLE_RATE) {
-    if (samples.length < 2) return { values: [], startSec: 0 };
-    const startSec = samples[0].t;
-    const durationSec = Math.max(0, samples[samples.length - 1].t - startSec);
-    const count = Math.max(1, Math.floor(durationSec * sampleRate));
-    const values = [];
-    let cursor = 0;
-    for (let i = 0; i < count; i += 1) {
-      const t = startSec + ((i / Math.max(1, count - 1)) * durationSec);
-      while (cursor < samples.length - 2 && samples[cursor + 1].t < t) cursor += 1;
-      const a = samples[cursor];
-      const b = samples[Math.min(samples.length - 1, cursor + 1)];
-      const local = (t - a.t) / Math.max(0.001, b.t - a.t);
-      const aValue = Number(a[key]) || 0;
-      const bValue = Number(b[key]) || 0;
-      values.push(aValue + ((bValue - aValue) * local));
-    }
-    return { values, startSec };
-  }
-
-  function findAbeExtrema(signal, sampleRate, direction = 1) {
-    const minGap = Math.round(sampleRate * 2.5);
-    const edgeGuard = Math.round(sampleRate * 1.2);
-    const threshold = Math.max(0.1, robustAbeSpread(signal) * 0.24);
-    const extrema = [];
-    for (let i = Math.max(2, edgeGuard); i < signal.length - Math.max(2, edgeGuard); i += 1) {
-      const value = signal[i] * direction;
-      if (value < threshold) continue;
-      if (value > signal[i - 1] * direction && value >= signal[i + 1] * direction && value > signal[i - 2] * direction && value >= signal[i + 2] * direction) {
-        if (!extrema.length || i - extrema[extrema.length - 1] >= minGap) {
-          extrema.push(i);
-        } else if (value > signal[extrema[extrema.length - 1]] * direction) {
-          extrema[extrema.length - 1] = i;
-        }
-      }
-    }
-    return extrema;
-  }
-
-  function scoreAbeSignal(signal, sampleRate) {
-    const positive = findAbeExtrema(signal, sampleRate, 1);
-    const negative = findAbeExtrema(signal, sampleRate, -1);
-    const peaks = positive.length >= negative.length ? positive : negative;
-    const troughs = positive.length >= negative.length ? negative : positive;
-    if (peaks.length < 3) return { score: 0, peaks, troughs, cycleDuration: NaN, stability: 0 };
-    const intervals = peaks.slice(1).map((peak, index) => (peak - peaks[index]) / sampleRate);
-    const cycleDuration = median(intervals);
-    const deviations = intervals.map((interval) => Math.abs(interval - cycleDuration));
-    const stability = clamp(1 - (median(deviations) / Math.max(0.4, cycleDuration * 0.28)), 0, 1);
-    const physiologic = cycleDuration >= 2.5 && cycleDuration <= 18 ? 1 : 0.25;
-    const amplitude = clamp(robustAbeSpread(signal) / 1.2, 0, 1);
-    const repeat = clamp((peaks.length - 2) / 5, 0, 1);
-    return {
-      score: amplitude * stability * repeat * physiologic,
-      peaks,
-      troughs,
-      cycleDuration,
-      stability
-    };
-  }
-
-  function estimateAbePhaseRatio(peaks, troughs, sampleRate, cycleDuration) {
-    if (peaks.length < 2 || troughs.length < 2) {
-      return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
-    }
-    const riseDurations = [];
-    const fallDurations = [];
-    troughs.forEach((trough) => {
-      const nextPeak = peaks.find((peak) => peak > trough);
-      const nextTrough = troughs.find((item) => item > trough);
-      if (Number.isFinite(nextPeak) && Number.isFinite(nextTrough) && nextPeak < nextTrough) {
-        riseDurations.push((nextPeak - trough) / sampleRate);
-      }
-    });
-    peaks.forEach((peak) => {
-      const nextTrough = troughs.find((trough) => trough > peak);
-      const nextPeak = peaks.find((item) => item > peak);
-      if (Number.isFinite(nextTrough) && Number.isFinite(nextPeak) && nextTrough < nextPeak) {
-        fallDurations.push((nextTrough - peak) / sampleRate);
-      }
-    });
-    const rise = median(riseDurations);
-    const fall = median(fallDurations);
-    if (!Number.isFinite(rise) || !Number.isFinite(fall)) {
-      return { inhaleDuration: NaN, exhaleDuration: NaN, phaseConfidence: 0 };
-    }
-    const total = rise + fall;
-    const durationMatch = Number.isFinite(cycleDuration)
-      ? clamp(1 - (Math.abs(total - cycleDuration) / Math.max(0.5, cycleDuration)), 0, 1)
-      : 0.5;
-    const scale = Number.isFinite(cycleDuration) && total > cycleDuration * 1.08 ? cycleDuration / total : 1;
-    return {
-      inhaleDuration: rise * scale,
-      exhaleDuration: fall * scale,
-      phaseConfidence: clamp(durationMatch * Math.min(riseDurations.length, fallDurations.length) / 3, 0, 1)
-    };
-  }
-
   function analyzeAbeCandidate(samples, key) {
-    const usableSamples = samples.filter((sample) => sample.t >= ABE_WARMUP_SEC && Number.isFinite(sample[key]));
+    const usableSamples = samples.filter((sample) => sample.t >= 3.2 && Number.isFinite(sample[key]));
     if (usableSamples.length < 80) return null;
-    const resampled = resampleAbeSignal(usableSamples, key);
-    const slow = movingAverage(resampled.values, Math.max(3, Math.round(ABE_SAMPLE_RATE * 1.6)));
-    const highpassed = resampled.values.map((value, index) => value - slow[index]);
-    const signal = movingAverage(normalizeAbeSignal(highpassed), Math.max(1, Math.round(ABE_SAMPLE_RATE * 0.22)));
-    const scored = scoreAbeSignal(signal, ABE_SAMPLE_RATE);
-    if (!Number.isFinite(scored.cycleDuration)) return null;
-    const ratio = estimateAbePhaseRatio(scored.peaks, scored.troughs, ABE_SAMPLE_RATE, scored.cycleDuration);
-    const sampleRateQuality = clamp(usableSamples.length / Math.max(1, (usableSamples[usableSamples.length - 1].t - usableSamples[0].t) * 18), 0, 1);
-    const confidence = clamp((scored.score * 0.78) + (sampleRateQuality * 0.22), 0, 1);
-    const peaks = scored.peaks.map((index) => resampled.startSec + (index / ABE_SAMPLE_RATE));
-    const troughs = scored.troughs.map((index) => resampled.startSec + (index / ABE_SAMPLE_RATE));
+    const raw = usableSamples.map((sample) => sample[key]);
+    const smooth = movingAverage(raw, 5);
+    const mean = smooth.reduce((sum, value) => sum + value, 0) / smooth.length;
+    const centered = smooth.map((value) => value - mean);
+    const rms = Math.sqrt(centered.reduce((sum, value) => sum + (value * value), 0) / centered.length);
+    if (rms <= 0.0001) return null;
+    const z = centered.map((value) => value / rms);
+    const range = Math.max(...smooth) - Math.min(...smooth);
+    const minGap = 1.15;
+    const peaks = [];
+    const troughs = [];
+    for (let i = 2; i < z.length - 2; i += 1) {
+      const t = usableSamples[i].t;
+      if (z[i] > 0.55 && z[i] >= z[i - 1] && z[i] >= z[i + 1] && z[i] >= z[i - 2] && z[i] >= z[i + 2]) {
+        if (!peaks.length || t - peaks[peaks.length - 1] >= minGap) peaks.push(t);
+      }
+      if (z[i] < -0.55 && z[i] <= z[i - 1] && z[i] <= z[i + 1] && z[i] <= z[i - 2] && z[i] <= z[i + 2]) {
+        if (!troughs.length || t - troughs[troughs.length - 1] >= minGap) troughs.push(t);
+      }
+    }
+    const periods = [
+      ...peaks.slice(1).map((time, index) => time - peaks[index]),
+      ...troughs.slice(1).map((time, index) => time - troughs[index])
+    ].filter((period) => period >= ABE_MIN_CYCLE_SEC && period <= ABE_MAX_CYCLE_SEC);
+    if (periods.length < 2) return null;
+    const cycleDuration = median(periods);
+    const deviation = median(periods.map((period) => Math.abs(period - cycleDuration)));
+    const regularity = clamp(1 - (deviation / Math.max(0.001, cycleDuration * 0.34)), 0, 1);
+    const extremaBalance = clamp(Math.min(peaks.length, troughs.length) / Math.max(1, Math.max(peaks.length, troughs.length)), 0, 1);
+    const countScore = clamp(periods.length / 6, 0, 1);
+    const amplitudeScore = clamp(range / Math.max(0.18, rms * 3.2), 0, 1);
+    const confidence = clamp((regularity * 0.36) + (countScore * 0.26) + (extremaBalance * 0.18) + (amplitudeScore * 0.2), 0, 1);
     const anchors = [...peaks, ...troughs].sort((a, b) => b - a);
     return {
       key,
       confidence,
-      cycleDuration: scored.cycleDuration,
-      breathsPerMinute: 60 / scored.cycleDuration,
-      inhaleDuration: ratio.inhaleDuration,
-      exhaleDuration: ratio.exhaleDuration,
-      phaseConfidence: ratio.phaseConfidence,
+      cycleDuration,
+      breathsPerMinute: 60 / cycleDuration,
       peaks,
       troughs,
       anchorSec: anchors[0] || usableSamples[usableSamples.length - 1].t,
       sampleCount: usableSamples.length,
-      range: Math.max(...signal) - Math.min(...signal),
-      rms: Math.sqrt(signal.reduce((sum, value) => sum + (value * value), 0) / Math.max(1, signal.length))
+      range,
+      rms
     };
   }
 
+  function chooseAbeResult(candidates) {
+    const top = candidates[0] || null;
+    if (!top) return null;
+    const longCandidates = candidates.filter((candidate) => (
+      candidate.cycleDuration >= 8.4
+      && candidate.cycleDuration <= 11.2
+      && candidate.confidence >= top.confidence * 0.55
+    ));
+    if (top.cycleDuration < 7.2 && longCandidates.length >= 2) {
+      const sorted = [...longCandidates].sort((a, b) => b.confidence - a.confidence);
+      return { ...sorted[0], selectionReason: "prefer_slow_consensus" };
+    }
+    return { ...top, selectionReason: "top_confidence" };
+  }
+
+  function loadCalibratedAbeDetector() {
+    if (state.abe.detector) return Promise.resolve(state.abe.detector);
+    if (state.abe.detectorPromise) return state.abe.detectorPromise;
+    state.abe.detectorPromise = import(ABE_DETECTOR_URL)
+      .then((module) => {
+        state.abe.detector = new module.BreathDetector();
+        state.abe.detectorError = "";
+        return state.abe.detector;
+      })
+      .catch((error) => {
+        console.warn("Calibrated ABE detector could not load.", error);
+        state.abe.detectorError = error?.message || "detector_load_failed";
+        state.abe.detectorPromise = null;
+        return null;
+      });
+    return state.abe.detectorPromise;
+  }
+
+  function calibratedAbeSamples(samples) {
+    return samples
+      .filter((sample) => Number.isFinite(sample.t))
+      .map((sample) => ({ ...sample, t: sample.t * 1000 }));
+  }
+
+  function normalizeCalibratedAbeResult(result, sampleCount, sampleStartSec = 0) {
+    const breath = result?.breath;
+    const motion = result?.motion;
+    const debug = result?.debug;
+    const cycleDuration = Number(breath?.cycleDuration);
+    if (!Number.isFinite(cycleDuration)) return null;
+    const candidates = Array.isArray(debug?.candidates) ? debug.candidates : [];
+    const anchorTimes = [
+      ...(Array.isArray(debug?.peaks) ? debug.peaks : []),
+      ...(Array.isArray(debug?.troughs) ? debug.troughs : [])
+    ].filter(Number.isFinite);
+    const anchorSec = anchorTimes.length
+      ? (sampleStartSec + Number(debug?.warmupSec || 0) + Math.max(...anchorTimes))
+      : null;
+    return {
+      key: motion?.bestKey || debug?.bestKey || "calibrated",
+      source: "calibrated",
+      confidence: Number(breath?.confidence || 0),
+      cycleDuration,
+      breathsPerMinute: Number(breath?.breathsPerMinute || (60 / cycleDuration)),
+      inhaleDuration: Number(breath?.inhaleDuration || 0),
+      exhaleDuration: Number(breath?.exhaleDuration || 0),
+      phaseConfidence: Number(breath?.phaseConfidence || 0),
+      phaseReliable: Boolean(breath?.phaseReliable),
+      usable: Boolean(breath?.usable),
+      selectionReason: motion?.selectionReason || debug?.selectionReason || "calibrated",
+      peaks: Array.isArray(debug?.peaks) ? debug.peaks : [],
+      troughs: Array.isArray(debug?.troughs) ? debug.troughs : [],
+      anchorSec: Number.isFinite(anchorSec) ? anchorSec : undefined,
+      sampleStartSec,
+      sampleCount,
+      candidates,
+      raw: result
+    };
+  }
+
+  function analyzeAbeSamplesWithCalibratedDetector(samples) {
+    const detector = state.abe.detector;
+    if (!detector || samples.length < 80) return null;
+    const sampleStartSec = Number(samples[0]?.t) || 0;
+    const result = detector.analyze(calibratedAbeSamples(samples), {
+      detectionThreshold: 0.2,
+      usableThreshold: 0.32,
+      preferLongExhale: false,
+      minCycleSec: 2.6,
+      edgeGuardSec: 0.8
+    });
+    return normalizeCalibratedAbeResult(result, samples.length, sampleStartSec);
+  }
+
   function analyzeAbeSamples(samples = state.abe.samples) {
+    const calibrated = analyzeAbeSamplesWithCalibratedDetector(samples);
+    if (calibrated) return calibrated;
     const keys = ["gx", "gy", "gz", "gravityMagnitude", "rotationMagnitude", "alpha", "beta", "gamma"];
     const candidates = keys
       .map((key) => analyzeAbeCandidate(samples, key))
       .filter(Boolean)
       .sort((a, b) => b.confidence - a.confidence);
-    return candidates[0] || null;
+    const selected = chooseAbeResult(candidates);
+    return selected ? { ...selected, source: "legacy", candidates } : null;
+  }
+
+  function recentAbeSamples(samples = state.abe.samples, windowSec = ABE_RECENT_WINDOW_SEC) {
+    const last = samples[samples.length - 1];
+    if (!last || !Number.isFinite(last.t)) return samples;
+    const cutoff = Math.max(0, last.t - windowSec);
+    const recent = samples.filter((sample) => sample.t >= cutoff);
+    return recent.length >= 140 ? recent : samples;
+  }
+
+  function analyzeCurrentAbeSamples() {
+    return analyzeAbeSamples(recentAbeSamples());
+  }
+
+  function abeCyclePhase(elapsedSec, result) {
+    const cycle = Number(result?.cycleDuration);
+    if (!Number.isFinite(cycle) || cycle <= 0) return null;
+    const anchor = Number.isFinite(result?.anchorSec) ? result.anchorSec : elapsedSec;
+    return ((elapsedSec - anchor) % cycle + cycle) % cycle / cycle;
+  }
+
+  function abeShouldEnterJourney(elapsedSec, result) {
+    if (elapsedSec < ABE_ENTRY_MIN_SEC) return false;
+    const prep = abePrepValues(result);
+    if (!prep.usable) return elapsedSec >= ABE_ENTRY_MAX_SEC;
+    const peakAt = abeLatestInhaleTurn(result, prep.graphDurations);
+    if (Number.isFinite(peakAt)) {
+      if (!Number.isFinite(state.abe.lastObservedPeakAt)) {
+        state.abe.lastObservedPeakAt = peakAt;
+        return elapsedSec >= ABE_ENTRY_MAX_SEC;
+      }
+      if (peakAt > state.abe.lastObservedPeakAt + 0.18) {
+        state.abe.lastObservedPeakAt = peakAt;
+        if (elapsedSec - peakAt >= 0 && elapsedSec - peakAt <= 1.1) {
+          state.abe.lastSyncedPeakAt = peakAt;
+          return true;
+        }
+      }
+    }
+    return elapsedSec >= ABE_ENTRY_MAX_SEC;
   }
 
   function abePreviewBreathAmp(elapsedSec, result) {
@@ -1538,7 +1733,8 @@
     const breathAmp = abePreviewBreathAmp(elapsedSec, result);
     const confidence = result?.confidence || 0;
     const listeningWeight = result && confidence >= ABE_USABLE_CONFIDENCE ? 1 : 0.62;
-    const natureLevel = 0.012 + (progress * 0.004);
+    const natureVolume = controlValue("natureVolumeInput", 1.6);
+    const natureLevel = (0.012 + (progress * 0.004)) * clamp(natureVolume / 1.6, 0, 2.5);
     const breathLevel = 0.022 * brownFade * (0.32 + (breathAmp * 0.68)) * listeningWeight;
     audio.natureFilter.frequency.setTargetAtTime(3600 + (progress * 2200), now, 0.5);
     const boostedNatureLevel = natureLevel * NATURE_SAMPLE_GAIN;
@@ -1576,7 +1772,6 @@
     els.harmonicLayerToggle.checked = true;
     els.breathVolumeInput.value = "1.28";
     els.guideVoiceVolumeInput.value = "0.42";
-    els.natureVolumeInput.value = "0.2";
     els.harmonicVolumeInput.value = "1.15";
     els.harmonicSpaceInput.value = "2.8";
     els.movementInput.value = prep.usable ? String(clamp(0.14 + ((1 - result.confidence) * 0.14), 0.12, 0.3)) : "0.16";
@@ -1596,7 +1791,6 @@
       guideVoice: [{ t: 0, v: 0.42 }, { t: 0.16, v: 0.32 }, { t: 0.38, v: 0.08 }, { t: 0.56, v: 0.34 }, { t: 0.72, v: 0.12 }, { t: 1, v: 0 }],
       guideTonal: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
       interference: [{ t: 0, v: 0 }, { t: 1, v: 0 }],
-      haptic: [{ t: 0, v: 0.7 }, { t: 0.28, v: 1 }, { t: 0.76, v: 0.72 }, { t: 1, v: 0.36 }],
       harmonic: [{ t: 0, v: 0.32 }, { t: 0.34, v: 0.58 }, { t: 1, v: 0.28 }],
       nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.2 }, { t: 1, v: 0.12 }]
     };
@@ -1619,37 +1813,50 @@
   }
 
   async function finishAbeEntry(result) {
+    const syncAgeSec = Number.isFinite(state.abe.lastSyncedPeakAt)
+      ? Math.max(0, ((performance.now() - state.abe.startedAt) / 1000) - state.abe.lastSyncedPeakAt)
+      : 0;
     cancelAbeEntry();
     state.abe.lastResult = result;
     const prep = applyAbePreparation(result);
+    const sampleCount = state.abe.samples.length;
+    const candidates = result?.candidates?.length || 0;
     const status = prep.usable
-      ? `Start values set from ${result.key}: ${abeBreathLabel(prep.startInhale, prep.startExhale)}. The journey now leads slower.`
-      : `Signal stayed uncertain. Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.`;
+      ? `Synced on exhale from ${prep.bridge?.source || result.source || "motion"} ${prep.bridge?.key || result.key}: ${abeBreathLabel(prep.startInhale, prep.startExhale)}. The journey now leads slower.`
+      : state.abe.motionAllowed
+        ? `Motion was available, but breath stayed uncertain (${sampleCount} samples, ${candidates} candidates). Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.${abeCandidateSummary(result)}`
+        : `Motion was not available. Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.`;
     setAbeStatus(status, prep.usable ? "matched" : "default");
-    await startJourney({ reuseAudio: true });
+    const initialPhase = state.abe.motionAllowed ? "exhale" : "inhale";
+    const phaseOffsetSec = initialPhase === "exhale"
+      ? clamp(syncAgeSec, 0, Math.max(0, prep.startExhale - 0.35))
+      : 0;
+    await startJourney({ reuseAudio: true, initialPhase, phaseOffsetSec });
   }
 
   function tickAbeEntry() {
     if (!state.abe.running) return;
     const elapsedSec = (performance.now() - state.abe.startedAt) / 1000;
-    const progress = clamp(elapsedSec / ABE_DURATION_SEC, 0, 1);
+    const progress = clamp(elapsedSec / ABE_ENTRY_MAX_SEC, 0, 1);
     if (state.abe.samples.length > 100 && Math.round(elapsedSec * 5) % 3 === 0) {
-      state.abe.lastResult = analyzeAbeSamples();
+      state.abe.lastResult = analyzeCurrentAbeSamples();
     }
     const result = state.abe.lastResult;
     const prep = abePrepValues(result);
     applyAbePreviewAudio(progress, elapsedSec, result);
     els.phaseLabel.textContent = progress < ABE_BROWN_START_PROGRESS ? "Settling" : "Listening";
     els.phaseTime.hidden = false;
-    els.phaseTime.textContent = `${Math.ceil(Math.max(0, ABE_DURATION_SEC - elapsedSec))}s`;
-    els.phaseDetail.textContent = progress < ABE_BROWN_START_PROGRESS
+    els.phaseTime.textContent = elapsedSec < ABE_ENTRY_MIN_SEC
+      ? `${Math.ceil(Math.max(0, ABE_ENTRY_MIN_SEC - elapsedSec))}s`
+      : "sync";
+    els.phaseDetail.textContent = elapsedSec < ABE_ENTRY_MIN_SEC
       ? "Keep the phone flat and breathe normally."
-      : "Brown noise is meeting the last breath cycles.";
-    const signal = result?.confidence >= ABE_USABLE_CONFIDENCE
+      : "Brown noise is waiting for your exhale to begin the journey.";
+    const signal = prep.usable
       ? `${Math.round(result.confidence * 100)}%`
       : "gentle";
     setAbeValues(
-      prep.hasCandidate ? abeBreathLabel(prep.startInhale, prep.startExhale) : "measuring",
+      prep.usable ? abeBreathLabel(prep.startInhale, prep.startExhale) : "calm default",
       abeBreathLabel(prep.endInhale, prep.endExhale)
     );
     if (!state.abe.motionAllowed) {
@@ -1657,62 +1864,66 @@
     } else if (elapsedSec > 5 && state.abe.samples.length < 10) {
       setAbeStatus("Motion access is granted, but no movement samples are arriving yet. Keep the page open and phone still.", "waiting");
     } else if (progress < 0.22) {
-      setAbeStatus("Place the phone flat on belly or chest. Let the speaker play quietly.", "place");
+      setAbeStatus("Place the phone straight down with the bottom edge toward your head. Let the speaker play quietly.", "place");
     } else if (progress < ABE_BROWN_START_PROGRESS) {
       setAbeStatus("Stay still enough for the phone to feel the breath. No special breathing yet.", signal);
     } else {
       setAbeStatus(
-        result
-          ? `Candidate: ${result.key} · ${result.breathsPerMinute.toFixed(1)} bpm · ${Math.round(result.confidence * 100)}%.`
-          : "Brown noise is now following a calm default while ABE waits for a clearer signal.",
+        prep.usable
+          ? `Bridge: ${prep.bridge?.source || result.source || "motion"} ${prep.bridge?.key || result.key} · ${(60 / prep.cycle).toFixed(1)} bpm · ${prep.graphDurations ? `graph/${ABE_EXHALE_SYNC_TURN === "opposite" ? prep.graphDurations.oppositeSyncTurnType : prep.graphDurations.syncTurnType}` : "ratio"} ${abeBreathLabel(prep.startInhale, prep.startExhale)} · turn ${Number.isFinite(abeLatestInhaleTurn(result, prep.graphDurations)) ? (elapsedSec - abeLatestInhaleTurn(result, prep.graphDurations)).toFixed(1) : "--"}s.`
+          : `Brown noise is following a calm default unless ABE finds a stable slow rhythm.${abeCandidateSummary(result)}`,
         signal
       );
     }
-    if (elapsedSec >= ABE_DURATION_SEC) {
-      finishAbeEntry(analyzeAbeSamples());
+    if (abeShouldEnterJourney(elapsedSec, result)) {
+      finishAbeEntry(analyzeCurrentAbeSamples());
       return;
     }
     state.abe.rafId = requestAnimationFrame(tickAbeEntry);
   }
 
-  async function startAbeEntry() {
+  async function startAbeEntry(options = {}) {
     try {
       if (state.abe.running) return;
       stopJourney(true);
-      state.eventLog = [];
-      state.elapsedSec = 0;
-      state.phaseElapsed = 0;
       els.abePrepareBtn.disabled = true;
       els.abePrepareBtn.textContent = "Preparing...";
       setAbeValues("measuring", "calm target");
-      setAbeStatus("Asking the phone for motion access while the audio engine wakes up.", "opening");
+      setAbeStatus("Opening motion access and audio from the same start tap.", "opening");
       els.noiseColorSelect.value = "brown";
       els.natureLayerToggle.checked = true;
       els.breathLayerToggle.checked = true;
       state.abe.lastResult = null;
       state.abe.motionAllowed = false;
-      if (!state.audio) {
-        state.audio = makeAudioGraph();
-      }
+      state.abe.exhaleSyncArmed = false;
+      state.abe.lastCyclePhase = null;
+      state.abe.lastSyncedPeakAt = null;
+      state.abe.lastObservedPeakAt = null;
+      loadCalibratedAbeDetector();
+      const motionDiagnostic = abeMotionAccessDiagnostic();
+      state.audio = makeAudioGraph();
       state.audio.setBreathNoiseColor("brown");
-      const audioResume = state.audio.ctx.resume().catch((error) => {
-        console.warn(error);
-      });
-      const motionAllowed = await requestAbeMotionAccess();
-      state.abe.motionAllowed = motionAllowed;
-      await audioResume;
-      void state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
-      if (motionAllowed) startAbeMotionCapture();
-      if (!motionAllowed) {
-        setAbeStatus("Motion access was not granted. ABE will use the default calm start.", "default");
-      }
-      state.abe.running = true;
-      state.abe.startedAt = performance.now();
-      syncEasyTransport();
+      const resumeAudio = state.audio.ctx.resume();
+      const requestMotion = options.motionAccessPromise || requestAbeMotionAccess();
+      await resumeAudio;
       const now = state.audio.ctx.currentTime;
       state.audio.master.gain.cancelScheduledValues(now);
       state.audio.master.gain.setValueAtTime(0, now);
       state.audio.master.gain.linearRampToValueAtTime(MASTER_PEAK * 0.62, now + 2.4);
+      await state.audio.setNatureSource(els.natureSourceSelect.value);
+      const motionAccess = await requestMotion;
+      const motionAllowed = Boolean(motionAccess?.granted);
+      state.abe.motionAllowed = motionAllowed;
+      if (motionAllowed) startAbeMotionCapture();
+      if (!motionAllowed) {
+        const reason = motionDiagnostic.secureContext
+          ? `Motion access was not granted. request=${motionDiagnostic.canRequestMotion || motionDiagnostic.canRequestOrientation ? "available" : "unavailable"} result=${motionAccess?.reason || "unknown"}.`
+          : "Motion access needs HTTPS.";
+        setAbeStatus(`${reason} ABE will use the default calm start.`, "default");
+      }
+      state.abe.running = true;
+      state.abe.startedAt = performance.now();
+      syncEasyTransport();
       els.stopBtn.disabled = false;
       tickAbeEntry();
     } catch (error) {
@@ -1726,6 +1937,10 @@
   async function startJourney(options = {}) {
     try {
       const reuseAudio = Boolean(options?.reuseAudio);
+      const initialPhase = ["inhale", "holdInhale", "exhale", "holdExhale"].includes(options?.initialPhase)
+        ? options.initialPhase
+        : "inhale";
+      const initialPhaseOffset = Math.max(0, Number(options?.phaseOffsetSec) || 0);
       els.playBtn.disabled = true;
       els.phaseLabel.textContent = "Starting";
       els.phaseDetail.textContent = "Opening the audio engine.";
@@ -1737,28 +1952,23 @@
         state.audio = makeAudioGraph();
       }
       await state.audio.ctx.resume();
+      if (els.natureLayerToggle.checked) await state.audio.setNatureSource(els.natureSourceSelect.value);
       state.playing = true;
       state.holding = false;
       state.elapsedSec = 0;
-      state.phase = "inhale";
-      state.phaseElapsed = 0;
-      state.phasePeakSeen = false;
+      state.phase = initialPhase;
+      state.phaseElapsed = initialPhaseOffset;
+      state.tonalGuidePreCueKey = "";
+      state.phasePeakSeen = isMovingBreathPhase(initialPhase)
+        && initialPhaseOffset >= phaseDuration(evaluateJourney(0)) / 2;
       state.eventLog = [];
       state.lastEventAt = 0;
       state.guideRoundRobin = { in: 0, hold: 0, out: 0 };
-      state.audio.resetTonalGuideIntro?.();
       state.voiceReflection.afterReady = false;
-      state.haptics = null;
       updateVoiceReflectionUI();
       state.startedAt = performance.now();
-      if (els.natureLayerToggle.checked) {
-        void state.audio.setNatureSource(els.natureSourceSelect.value).catch((error) => console.warn(error));
-      }
-      if (els.guideLayerToggle.checked) {
-        void state.audio.ensureGuideBuffer().catch((error) => console.warn(error));
-      }
-      if (els.phaseLabel) els.phaseLabel.textContent = "Journey started";
-      emitEvent("inhaleStart");
+      if (els.guideLayerToggle.checked) await state.audio.ensureGuideBuffer();
+      emitPhaseStart(initialPhase);
       const now = state.audio.ctx.currentTime;
       state.audio.master.gain.cancelScheduledValues(now);
       state.audio.master.gain.setValueAtTime(reuseAudio ? (state.audio.master.gain.value || (MASTER_PEAK * 0.62)) : 0, now);
@@ -1782,8 +1992,6 @@
   function stopJourney(immediate = false) {
     cancelAnimationFrame(state.rafId);
     cancelAbeEntry();
-    cancelHaptics();
-    state.haptics = null;
     if (!state.audio) {
       state.playing = false;
       state.holding = false;
@@ -2395,7 +2603,6 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
-          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2404,7 +2611,6 @@
           guideVoice: 0.55,
           guideTonal: 1.35,
           interference: 3.2,
-          haptic: 0.85,
           harmonic: 2.15,
           harmonicSpace: 2.7,
           nature: 0.18
@@ -2420,7 +2626,6 @@
           guideVoice: [{ t: 0, v: 0.44 }, { t: 0.16, v: 0.42 }, { t: 0.3, v: 0.12 }, { t: 0.5, v: 0.36 }, { t: 0.68, v: 0.16 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 1 }, { t: 0.3, v: 0.92 }, { t: 0.8, v: 0.58 }, { t: 1, v: 0.34 }],
           interference: [{ t: 0, v: 0.9 }, { t: 0.22, v: 1 }, { t: 0.72, v: 0.45 }, { t: 1, v: 0.2 }],
-          haptic: [{ t: 0, v: 0.7 }, { t: 0.28, v: 1 }, { t: 0.76, v: 0.72 }, { t: 1, v: 0.36 }],
           harmonic: [{ t: 0, v: 0.28 }, { t: 0.38, v: 0.72 }, { t: 0.78, v: 0.86 }, { t: 1, v: 0.48 }],
           nature: [{ t: 0, v: 0.24 }, { t: 0.6, v: 0.22 }, { t: 1, v: 0.16 }]
         },
@@ -2442,7 +2647,6 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
-          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2451,7 +2655,6 @@
           guideVoice: 0.45,
           guideTonal: 0.95,
           interference: 2.4,
-          haptic: 0.75,
           harmonic: 1.8,
           harmonicSpace: 3.1,
           nature: 0.16
@@ -2467,7 +2670,6 @@
           guideVoice: [{ t: 0, v: 0.34 }, { t: 0.15, v: 0.26 }, { t: 0.42, v: 0.16 }, { t: 0.58, v: 0.25 }, { t: 0.78, v: 0.12 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.72 }, { t: 0.5, v: 0.55 }, { t: 1, v: 0.25 }],
           interference: [{ t: 0, v: 0.52 }, { t: 0.18, v: 0.75 }, { t: 0.82, v: 0.62 }, { t: 1, v: 0.22 }],
-          haptic: [{ t: 0, v: 0.62 }, { t: 0.26, v: 0.92 }, { t: 0.8, v: 0.58 }, { t: 1, v: 0.3 }],
           harmonic: [{ t: 0, v: 0.34 }, { t: 0.5, v: 0.68 }, { t: 1, v: 0.4 }],
           nature: [{ t: 0, v: 0.22 }, { t: 0.64, v: 0.2 }, { t: 1, v: 0.16 }]
         },
@@ -2489,7 +2691,6 @@
           guideVoice: true,
           guideTonal: true,
           interference: true,
-          haptic: false,
           harmonic: true,
           nature: true
         },
@@ -2498,7 +2699,6 @@
           guideVoice: 0.42,
           guideTonal: 0.72,
           interference: 1.85,
-          haptic: 0.7,
           harmonic: 1.65,
           harmonicSpace: 3.6,
           nature: 0.15
@@ -2514,7 +2714,6 @@
           guideVoice: [{ t: 0, v: 0.3 }, { t: 0.16, v: 0.24 }, { t: 0.38, v: 0.12 }, { t: 0.54, v: 0.22 }, { t: 0.72, v: 0.1 }, { t: 1, v: 0 }],
           guideTonal: [{ t: 0, v: 0.62 }, { t: 0.35, v: 0.42 }, { t: 1, v: 0.12 }],
           interference: [{ t: 0, v: 0.42 }, { t: 0.3, v: 0.32 }, { t: 1, v: 0.08 }],
-          haptic: [{ t: 0, v: 0.58 }, { t: 0.32, v: 0.8 }, { t: 0.84, v: 0.5 }, { t: 1, v: 0.24 }],
           harmonic: [{ t: 0, v: 0.42 }, { t: 0.42, v: 0.86 }, { t: 0.78, v: 0.72 }, { t: 1, v: 0.25 }],
           nature: [{ t: 0, v: 0.2 }, { t: 0.66, v: 0.16 }, { t: 1, v: 0.12 }]
         },
@@ -2540,115 +2739,17 @@
     if (changed) writePresets(presets);
   }
 
-  function clonePresetList(presets) {
+  function readPresets() {
     try {
-      return structuredClone(presets);
-    } catch {
-      return JSON.parse(JSON.stringify(presets));
-    }
-  }
-
-  function readPresetsFromLocalStorage() {
-    try {
-      const raw = window.localStorage?.getItem(PRESET_STORAGE_KEY);
-      const parsed = JSON.parse(raw || "[]");
+      const parsed = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || "[]");
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
   }
 
-  function writePresetsToLocalStorage(presets) {
-    try {
-      window.localStorage?.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
-    } catch {
-      // Ignore storage failures and keep the in-memory cache.
-    }
-  }
-
-  function openPresetDb() {
-    if (typeof indexedDB === "undefined") return Promise.resolve(null);
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(PRESET_DB_NAME, 1);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains(PRESET_DB_STORE)) {
-          db.createObjectStore(PRESET_DB_STORE);
-        }
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async function readPresetsFromIndexedDb() {
-    const db = await openPresetDb();
-    if (!db) return null;
-    return new Promise((resolve) => {
-      const tx = db.transaction(PRESET_DB_STORE, "readonly");
-      const store = tx.objectStore(PRESET_DB_STORE);
-      const request = store.get(PRESET_DB_KEY);
-      request.onsuccess = () => {
-        try {
-          const value = request.result;
-          resolve(Array.isArray(value) ? value : null);
-        } catch {
-          resolve(null);
-        }
-      };
-      request.onerror = () => resolve(null);
-      tx.oncomplete = () => db.close();
-      tx.onerror = () => {
-        db.close();
-        resolve(null);
-      };
-    });
-  }
-
-  async function writePresetsToIndexedDb(presets) {
-    const db = await openPresetDb();
-    if (!db) return;
-    return new Promise((resolve) => {
-      const tx = db.transaction(PRESET_DB_STORE, "readwrite");
-      tx.objectStore(PRESET_DB_STORE).put(presets, PRESET_DB_KEY);
-      tx.oncomplete = () => {
-        db.close();
-        resolve();
-      };
-      tx.onerror = () => {
-        db.close();
-        resolve();
-      };
-    });
-  }
-
-  async function hydratePresetStorage() {
-    const [indexedDbPresets, localPresets] = await Promise.all([
-      readPresetsFromIndexedDb().catch(() => null),
-      Promise.resolve(readPresetsFromLocalStorage())
-    ]);
-    const next = Array.isArray(indexedDbPresets) && indexedDbPresets.length
-      ? indexedDbPresets
-      : localPresets;
-    state.presetCache = clonePresetList(next);
-    writePresetsToLocalStorage(state.presetCache);
-    void writePresetsToIndexedDb(state.presetCache);
-    if (navigator.storage?.persist) {
-      navigator.storage.persist().catch(() => {});
-    }
-    return state.presetCache;
-  }
-
-  function readPresets() {
-    if (Array.isArray(state.presetCache)) return state.presetCache;
-    state.presetCache = readPresetsFromLocalStorage();
-    return state.presetCache;
-  }
-
   function writePresets(presets) {
-    state.presetCache = clonePresetList(Array.isArray(presets) ? presets : []);
-    writePresetsToLocalStorage(state.presetCache);
-    void writePresetsToIndexedDb(state.presetCache);
+    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
   }
 
   function setPresetStatus(message) {
@@ -2892,7 +2993,6 @@
         guideVoice: els.guideLayerToggle.checked,
         guideTonal: els.guideTonalToggle.checked,
         interference: els.beatLayerToggle.checked,
-        haptic: false,
         harmonic: els.harmonicLayerToggle.checked,
         nature: els.natureLayerToggle.checked
       },
@@ -2901,7 +3001,6 @@
         guideVoice: Number(els.guideVoiceVolumeInput.value),
         guideTonal: Number(els.guideTonalVolumeInput.value),
         interference: Number(els.beatVolumeInput.value),
-        haptic: 0,
         harmonic: Number(els.harmonicVolumeInput.value),
         harmonicSpace: Number(els.harmonicSpaceInput.value),
         nature: Number(els.natureVolumeInput.value)
@@ -2920,7 +3019,6 @@
     if (els.presetSelect) els.presetSelect.innerHTML = options;
     if (els.easyPresetSelect) els.easyPresetSelect.innerHTML = options;
     if (els.loadPresetBtn) els.loadPresetBtn.disabled = presets.length === 0;
-    if (els.duplicatePresetBtn) els.duplicatePresetBtn.disabled = presets.length === 0;
     if (els.deletePresetBtn) els.deletePresetBtn.disabled = presets.length === 0;
   }
 
@@ -2941,28 +3039,6 @@
     setPresetStatus(`Saved "${name}".`);
   }
 
-  function duplicateSelectedPreset() {
-    const preset = presetById(els.presetSelect.value);
-    if (!preset) return;
-    const presets = readPresets();
-    const baseName = `${preset.name || "Preset"} Copy`;
-    let name = baseName;
-    let index = 2;
-    while (presets.some((item) => (item.name || "").trim().toLowerCase() === name.toLowerCase())) {
-      name = `${baseName} ${index}`;
-      index += 1;
-    }
-    const duplicate = clonePresetList([preset])[0] || { ...preset };
-    duplicate.id = `preset-${Date.now()}`;
-    duplicate.name = name;
-    duplicate.savedAt = new Date().toISOString();
-    presets.push(duplicate);
-    writePresets(presets);
-    renderPresetSelect();
-    syncPresetSelectors(duplicate.id);
-    setPresetStatus(`Duplicated "${preset.name}" as "${name}".`);
-  }
-
   function applyPreset(preset) {
     if (!preset) return;
     syncPresetSelectors(preset.id);
@@ -2981,7 +3057,6 @@
       els.guideLayerToggle.checked = Boolean(preset.toggles.guideVoice);
       els.guideTonalToggle.checked = Boolean(preset.toggles.guideTonal);
       els.beatLayerToggle.checked = Boolean(preset.toggles.interference);
-      els.hapticLayerToggle.checked = false;
       els.harmonicLayerToggle.checked = Boolean(preset.toggles.harmonic);
       els.natureLayerToggle.checked = Boolean(preset.toggles.nature);
     }
@@ -2990,7 +3065,6 @@
       if (Number.isFinite(preset.volumes.guideVoice)) els.guideVoiceVolumeInput.value = String(preset.volumes.guideVoice);
       if (Number.isFinite(preset.volumes.guideTonal)) els.guideTonalVolumeInput.value = String(preset.volumes.guideTonal);
       if (Number.isFinite(preset.volumes.interference)) els.beatVolumeInput.value = String(preset.volumes.interference);
-      els.hapticVolumeInput.value = "0";
       if (Number.isFinite(preset.volumes.harmonic)) els.harmonicVolumeInput.value = String(preset.volumes.harmonic);
       if (Number.isFinite(preset.volumes.harmonicSpace)) els.harmonicSpaceInput.value = String(preset.volumes.harmonicSpace);
       if (Number.isFinite(preset.volumes.nature)) els.natureVolumeInput.value = String(preset.volumes.nature);
@@ -3144,13 +3218,12 @@
     els.guideVoiceVolumeValue.textContent = `${Math.round(controlValue("guideVoiceVolumeInput", 1.15) * 100)}%`;
     els.guideTonalVolumeValue.textContent = `${Math.round(controlValue("guideTonalVolumeInput", 1.2) * 100)}%`;
     els.beatVolumeValue.textContent = `${Math.round(controlValue("beatVolumeInput", 2.2) * 100)}%`;
-    if (els.hapticVolumeValue) els.hapticVolumeValue.textContent = "Off";
     els.harmonicVolumeValue.textContent = `${Math.round(controlValue("harmonicVolumeInput", 2.4) * 100)}%`;
     els.harmonicSpaceValue.textContent = `${Math.round(controlValue("harmonicSpaceInput", 2.2) * 100)}%`;
     els.natureVolumeValue.textContent = `${Math.round(controlValue("natureVolumeInput", 1.6) * 100)}%`;
   }
 
-  async function bind() {
+  function bind() {
     [
       "easyModeBtn",
       "advancedModeBtn",
@@ -3175,7 +3248,6 @@
       "presetSelect",
       "savePresetBtn",
       "loadPresetBtn",
-      "duplicatePresetBtn",
       "deletePresetBtn",
       "presetStatus",
       "abePrepareBtn",
@@ -3232,9 +3304,6 @@
       "interferenceRoutingSelect",
       "beatVolumeInput",
       "beatVolumeValue",
-      "hapticLayerToggle",
-      "hapticVolumeInput",
-      "hapticVolumeValue",
       "harmonicLayerToggle",
       "harmonicVolumeInput",
       "harmonicVolumeValue",
@@ -3278,14 +3347,15 @@
     });
 
     els.journeySelect.innerHTML = journeys.map((journey) => `<option value="${journey.id}">${journey.name}</option>`).join("");
-    await hydratePresetStorage();
     ensureBuiltInPresets();
     renderPresetSelect();
     els.savePresetBtn.addEventListener("click", savePreset);
     els.loadPresetBtn.addEventListener("click", loadSelectedPreset);
-    els.duplicatePresetBtn.addEventListener("click", duplicateSelectedPreset);
     els.deletePresetBtn.addEventListener("click", deleteSelectedPreset);
-    els.abePrepareBtn.addEventListener("click", startAbeEntry);
+    els.abePrepareBtn.addEventListener("click", () => {
+      const motionAccessPromise = requestAbeMotionAccess();
+      startAbeEntry({ motionAccessPromise });
+    });
     els.presetSelect.addEventListener("change", () => {
       syncPresetSelectors(els.presetSelect.value);
     });
@@ -3451,8 +3521,6 @@
       els.beatLayerToggle,
       els.interferenceRoutingSelect,
       els.beatVolumeInput,
-      els.hapticLayerToggle,
-      els.hapticVolumeInput,
       els.harmonicLayerToggle,
       els.harmonicVolumeInput,
       els.harmonicSpaceInput,
@@ -3480,8 +3548,9 @@
     });
     els.playBtn.addEventListener("click", startJourney);
     els.easyStartBtn.addEventListener("click", () => {
+      const motionAccessPromise = requestAbeMotionAccess();
       if (state.playing || state.abe.running) stopJourney(true);
-      startAbeEntry();
+      startAbeEntry({ motionAccessPromise });
     });
     els.easyStopBtn.addEventListener("click", () => {
       stopJourney();
