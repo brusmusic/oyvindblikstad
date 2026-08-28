@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resonance Atlas | ReSonance Lab</title>
+  <meta name="description" content="Resonance Atlas is a private beta from ReSonance Lab: a mobile map for sound journeys, body tuning and personal resonance.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://oyvindblikstad.com/resonance-atlas/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ReSonance Lab">
+  <meta property="og:title" content="Resonance Atlas | ReSonance Lab">
+  <meta property="og:description" content="A mobile map for sound journeys, body tuning and personal resonance. Beta access is opening gradually.">
+  <meta property="og:url" content="https://oyvindblikstad.com/resonance-atlas/">
+  <meta property="og:image" content="https://oyvindblikstad.com/assets/resonancelab/resonance-lab-mark.svg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Resonance Atlas | ReSonance Lab">
+  <meta name="twitter:description" content="A mobile map for sound journeys, body tuning and personal resonance.">
+  <link rel="icon" href="../assets/resonancelab/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260828-1">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="../">
+        <img src="../assets/resonancelab/resonance-lab-mark.svg" alt="ReSonance Lab mark">
+        <span>ReSonance Lab</span>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="../">Home</a>
+        <a href="../about/">Øyvind</a>
+        <a href="../resonance_atlas/">Beta login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Private beta opening</p>
+          <h1>Resonance Atlas</h1>
+          <p class="lead">
+            A mobile map for tuning journeys: part listening room, part body compass, part quiet experiment in how sound can meet the nervous system.
+          </p>
+          <div class="actions">
+            <a class="button" href="../resonance_atlas/">Beta login</a>
+            <a class="button secondary" href="#newsletter">Join the list</a>
+          </div>
+        </div>
+
+        <div class="atlas-field" aria-hidden="true">
+          <div class="field-ring ring-one"></div>
+          <div class="field-ring ring-two"></div>
+          <div class="field-ring ring-three"></div>
+          <span class="node you">You</span>
+          <span class="node calm">Calm</span>
+          <span class="node focus">Focus</span>
+          <span class="node ground">Ground</span>
+          <span class="node drift">Drift</span>
+        </div>
+      </section>
+
+      <section class="section intro">
+        <div class="text-stack">
+          <p class="eyebrow">What it is</p>
+          <h2>A field of sound journeys that starts where you are.</h2>
+          <p>
+            Resonance Atlas is being built as a simple phone-based entrance into ReSonance Lab's tuning work. You choose a room, listen, and let the journey move through low-frequency relationships designed in Tuner Composer.
+          </p>
+          <p>
+            The first beta is intentionally small: a visual atlas, a set of guided sound states, and a way to find a personal starting frequency before the journey begins.
+          </p>
+        </div>
+        <div class="note">
+          <span>Current beta</span>
+          <strong>Mobile-first sound journeys</strong>
+          <p>Best tested with headphones or a connected resonance mat. Access is limited while the system is tuned.</p>
+        </div>
+      </section>
+
+      <section class="section paths">
+        <article>
+          <span>01</span>
+          <h3>Choose a room</h3>
+          <p>Calm, focus, ground, release or explore. The map is a way to enter by felt direction rather than a technical setting.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Find your point</h3>
+          <p>The journey can begin from a frequency that feels right now, then unfold through subtle left/right relationships.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>Listen as practice</h3>
+          <p>The goal is not entertainment alone, but a repeatable listening ritual for body, attention and state.</p>
+        </article>
+      </section>
+
+      <section class="section beta">
+        <div>
+          <p class="eyebrow">For beta testers</p>
+          <h2>The private atlas is available by invitation.</h2>
+          <p>
+            If you already have access, use the beta login. If you are curious about testing, the newsletter list is the best place to start.
+          </p>
+        </div>
+        <a class="button" href="../resonance_atlas/">Open beta login</a>
+      </section>
+
+      <section class="section newsletter" id="newsletter">
+        <div class="newsletter-copy">
+          <p class="eyebrow">Stay close</p>
+          <h2>Follow the development of Resonance Atlas.</h2>
+          <p>
+            Join the interest list for beta openings, listening notes and updates from ReSonance Lab.
+          </p>
+        </div>
+        <form id="newsletterForm" class="newsletter-form">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+          <label for="note">Optional note</label>
+          <textarea id="note" name="note" rows="3" placeholder="Tell me what draws you to the Atlas."></textarea>
+          <button type="submit">Join the list</button>
+          <p id="formStatus" class="status" role="status"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Made at ReSonance Lab</span>
+      <span><a href="mailto:oyvindblikstad@gmail.com">oyvindblikstad@gmail.com</a></span>
+    </footer>
+  </div>
+  <script src="newsletter.js?v=20260828-1"></script>
+</body>
+</html>
