@@ -189,13 +189,13 @@
       <div class="room-menu">${journeys}</div>
       ${room.id === "you" ? `
         <div class="you-tuner-panel">
-          <span class="you-frequency-readout"><strong data-you-frequency>${YOU_SWEEP_DEFAULT_HZ.toFixed(2)}</strong> Hz</span>
+          <span class="you-frequency-readout" aria-hidden="true"><strong data-you-frequency>${YOU_SWEEP_DEFAULT_HZ.toFixed(2)}</strong></span>
           <span class="you-sweep-clock" aria-hidden="true">
             <i></i>
           </span>
           <label class="finetune-control frequency-control">
-            <span>Frequency</span>
-            <input type="range" min="${YOU_SWEEP_MIN_HZ}" max="${YOU_SWEEP_MAX_HZ}" step="0.01" value="${YOU_SWEEP_DEFAULT_HZ}" data-you-frequency-slider>
+            <span class="visually-hidden">Frequency</span>
+            <input type="range" min="${YOU_SWEEP_MIN_HZ}" max="${YOU_SWEEP_MAX_HZ}" step="0.01" value="${YOU_SWEEP_DEFAULT_HZ}" aria-label="Frequency color spectrum" data-you-frequency-slider>
           </label>
           <div class="you-step-controls">
             <button type="button" data-you-step="-0.03" aria-label="Frequency down">↓</button>
