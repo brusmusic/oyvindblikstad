@@ -91,6 +91,47 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function hexToRgb(hex) {
+    const clean = hex.replace("#", "");
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex({ r, g, b }) {
+    return `#${[r, g, b].map((channel) => Math.round(channel).toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function mixColor(from, to, amount) {
+    const a = hexToRgb(from);
+    const b = hexToRgb(to);
+    return rgbToHex({
+      r: a.r + ((b.r - a.r) * amount),
+      g: a.g + ((b.g - a.g) * amount),
+      b: a.b + ((b.b - a.b) * amount)
+    });
+  }
+
+  function spectrumColorForFrequency(frequency) {
+    const stops = [
+      { p: 0, color: "#6957d8" },
+      { p: 0.18, color: "#3d9ee3" },
+      { p: 0.36, color: "#52d6c2" },
+      { p: 0.54, color: "#d4df78" },
+      { p: 0.72, color: "#f0b35f" },
+      { p: 1, color: "#e6608f" }
+    ];
+    const ratio = clamp((frequency - YOU_SWEEP_MIN_HZ) / (YOU_SWEEP_MAX_HZ - YOU_SWEEP_MIN_HZ), 0, 1);
+    const nextIndex = stops.findIndex((stop) => stop.p >= ratio);
+    if (nextIndex <= 0) return stops[0].color;
+    const before = stops[nextIndex - 1];
+    const after = stops[nextIndex];
+    const span = Math.max(0.0001, after.p - before.p);
+    return mixColor(before.color, after.color, (ratio - before.p) / span);
+  }
+
   function nowSeconds() {
     return performance.now() / 1000;
   }
@@ -308,6 +349,7 @@
     if (value) value.textContent = state.youTuner.selectedFrequency.toFixed(2);
     if (pauseButton) pauseButton.textContent = state.youTuner.phase === "paused" ? "Resume" : "Hold";
     el.style.setProperty("--you-sweep-angle", `${youClockAngle()}deg`);
+    el.style.setProperty("--you-spectrum-color", spectrumColorForFrequency(state.youTuner.selectedFrequency));
     const active = state.youTuner.phase === "sweeping" || state.youTuner.phase === "paused";
     panel.hidden = !active;
     panel.style.opacity = active ? "1" : "0";

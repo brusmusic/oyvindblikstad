@@ -250,6 +250,7 @@ h2 {
   --room-color: #9ad4c8;
   --journey-progress: 0deg;
   --you-sweep-angle: 180deg;
+  --you-spectrum-color: #6957d8;
   position: absolute;
   width: calc(var(--room-size) * 1px);
   height: calc(var(--room-size) * 1px);
@@ -482,10 +483,10 @@ h2 {
   appearance: none;
   border: 2px solid rgba(8, 15, 15, 0.72);
   border-radius: 50%;
-  background: #f7fffd;
+  background: var(--you-spectrum-color);
   box-shadow:
     0 0 0 1px rgba(247, 255, 253, 0.7),
-    0 0 18px rgba(247, 255, 253, 0.56);
+    0 0 18px var(--you-spectrum-color);
 }
 
 .frequency-control input[type="range"]::-moz-range-track {
@@ -500,10 +501,10 @@ h2 {
   height: 20px;
   border: 2px solid rgba(8, 15, 15, 0.72);
   border-radius: 50%;
-  background: #f7fffd;
+  background: var(--you-spectrum-color);
   box-shadow:
     0 0 0 1px rgba(247, 255, 253, 0.7),
-    0 0 18px rgba(247, 255, 253, 0.56);
+    0 0 18px var(--you-spectrum-color);
 }
 
 .you-tuner-panel {
@@ -586,6 +587,14 @@ h2 {
   font-weight: 900;
   line-height: 1;
   padding: 0 10px;
+}
+
+.you-tuner-panel button[data-you-start] {
+  border-color: color-mix(in srgb, var(--you-spectrum-color), white 28%);
+  background: var(--you-spectrum-color);
+  box-shadow:
+    inset 0 0 0 1px rgba(247, 255, 253, 0.16),
+    0 0 22px color-mix(in srgb, var(--you-spectrum-color), transparent 46%);
 }
 
 .you-step-controls {
