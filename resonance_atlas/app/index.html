@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>Resonance Atlas 1.2</title>
+    <link rel="stylesheet" href="atlas-3d.css?v=20260828-wake-lock-1">
+    <script>
+      if (sessionStorage.getItem("resonance-atlas-access") !== "granted") {
+        window.location.replace("../");
+      }
+    </script>
+  </head>
+  <body>
+    <main class="atlas3d-app">
+      <header class="atlas3d-topbar">
+        <div>
+          <p class="eyebrow">Tuner prototype 1.2</p>
+          <h1>Resonance Atlas</h1>
+          <p class="subline">Every journey starts and stops with you.</p>
+        </div>
+        <div class="topbar-actions"></div>
+      </header>
+
+      <section class="atlas3d-stage" id="atlasStage" aria-label="Spatial resonance atlas">
+        <svg class="field-lines flower-lines" viewBox="0 0 1000 700" aria-hidden="true">
+          <g class="flower-rays">
+            <path d="M500 350 C500 214 500 112 500 10"></path>
+            <path d="M500 350 C630 230 764 126 940 40"></path>
+            <path d="M500 350 C664 350 812 350 995 350"></path>
+            <path d="M500 350 C630 470 764 574 940 660"></path>
+            <path d="M500 350 C500 486 500 588 500 690"></path>
+            <path d="M500 350 C370 470 236 574 60 660"></path>
+            <path d="M500 350 C336 350 188 350 5 350"></path>
+            <path d="M500 350 C370 230 236 126 60 40"></path>
+          </g>
+          <g class="flower-rings">
+            <circle cx="500" cy="350" r="112"></circle>
+            <circle cx="500" cy="238" r="112"></circle>
+            <circle cx="597" cy="294" r="112"></circle>
+            <circle cx="597" cy="406" r="112"></circle>
+            <circle cx="500" cy="462" r="112"></circle>
+            <circle cx="403" cy="406" r="112"></circle>
+            <circle cx="403" cy="294" r="112"></circle>
+            <circle cx="500" cy="126" r="112"></circle>
+            <circle cx="694" cy="238" r="112"></circle>
+            <circle cx="694" cy="462" r="112"></circle>
+            <circle cx="500" cy="574" r="112"></circle>
+            <circle cx="306" cy="462" r="112"></circle>
+            <circle cx="306" cy="238" r="112"></circle>
+          </g>
+          <g class="flower-core">
+            <circle cx="500" cy="350" r="226"></circle>
+            <circle cx="500" cy="350" r="338"></circle>
+          </g>
+        </svg>
+
+        <div class="field-depth" id="fieldDepth"></div>
+        <svg class="network-lines" id="networkLines" aria-hidden="true"></svg>
+        <div class="room-layer" id="roomLayer"></div>
+
+        <section class="room-invitation is-hidden" id="roomInvitation" aria-live="polite">
+          <p class="eyebrow" id="roomType">Resonance room</p>
+          <h2 id="roomTitle">You</h2>
+          <p id="roomText">Choose a field to enter.</p>
+          <div class="room-actions">
+            <button class="secondary" id="returnBtn" type="button">Return to You</button>
+            <button class="secondary" id="bookmarkBtn" type="button">Bookmark</button>
+            <button class="primary" id="beginBtn" type="button">Begin</button>
+          </div>
+        </section>
+
+        <section class="journey-status is-hidden" id="journeyStatus" aria-live="polite">
+          <p class="eyebrow" id="journeyRoom">Journey</p>
+          <h2 id="journeyTitle">Entering</h2>
+          <p id="journeyText">Stay with the movement of the room.</p>
+          <div class="progress-line" aria-label="Journey progress">
+            <span id="journeyProgress"></span>
+          </div>
+          <div class="journey-actions">
+            <button class="secondary" id="pauseBtn" type="button">Hold</button>
+            <button class="primary" id="endBtn" type="button">Return</button>
+          </div>
+        </section>
+
+        <p class="stage-hint" id="stageHint">Drag to rotate. Select a room to move closer.</p>
+      </section>
+    </main>
+
+    <script src="../journeys/library.js?v=20260828-wake-lock-1"></script>
+    <script src="../tuner-player.js?v=20260828-wake-lock-1"></script>
+    <script src="atlas-3d-data.js?v=20260828-wake-lock-1"></script>
+    <script src="atlas-3d.js?v=20260828-wake-lock-1"></script>
+  </body>
+</html>

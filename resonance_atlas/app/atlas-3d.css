@@ -1,0 +1,885 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1717;
+  --surface: rgba(19, 29, 29, 0.78);
+  --line: rgba(207, 234, 225, 0.18);
+  --text: #f2f6f2;
+  --muted: #aebbb7;
+  --mint: #9ad4c8;
+  --gold: #d5b96e;
+  --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(244, 196, 83, 0.12), transparent 18rem),
+    radial-gradient(circle at 28% 64%, rgba(236, 82, 146, 0.1), transparent 26rem),
+    radial-gradient(circle at 72% 58%, rgba(69, 184, 232, 0.11), transparent 28rem),
+    linear-gradient(150deg, #080d0d 0%, #111518 48%, #100d12 100%);
+  color: var(--text);
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.atlas3d-app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: clamp(18px, 3vw, 42px);
+  gap: 18px;
+}
+
+.atlas3d-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--mint);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 6vw, 5.8rem);
+  line-height: 0.9;
+}
+
+h2 {
+  font-size: clamp(1.9rem, 5vw, 4.6rem);
+  line-height: 0.94;
+}
+
+.subline {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.topbar-actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #d9f2ec;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.atlas3d-stage {
+  position: relative;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(245, 203, 83, 0.14), transparent 22%),
+    conic-gradient(from 90deg at 50% 50%, rgba(244, 117, 72, 0.14), rgba(61, 182, 229, 0.16), rgba(227, 83, 178, 0.12), rgba(244, 197, 83, 0.14), rgba(244, 117, 72, 0.14)),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    rgba(5, 8, 9, 0.68);
+  background-size: auto, auto, 72px 72px, 72px 72px, auto;
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: grab;
+}
+
+.atlas3d-stage.is-flower-layout {
+  cursor: default;
+}
+
+.atlas3d-stage.is-static-layout {
+  touch-action: manipulation;
+}
+
+.atlas3d-stage:active {
+  cursor: grabbing;
+}
+
+.atlas3d-stage.is-flower-layout:active {
+  cursor: default;
+}
+
+.field-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.flower-lines {
+  opacity: 0.84;
+  mix-blend-mode: screen;
+}
+
+.flower-lines .flower-rings circle,
+.flower-lines .flower-core circle {
+  fill: none;
+  stroke: rgba(244, 223, 141, 0.22);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 7px rgba(245, 191, 84, 0.22));
+  animation: fieldBreath 10s ease-in-out infinite;
+}
+
+.flower-lines .flower-rings circle:nth-child(3n + 1) {
+  stroke: rgba(71, 200, 232, 0.22);
+}
+
+.flower-lines .flower-rings circle:nth-child(3n + 2) {
+  stroke: rgba(236, 82, 146, 0.2);
+}
+
+.flower-lines .flower-core circle {
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1;
+}
+
+.flower-lines .flower-rays path {
+  fill: none;
+  stroke: rgba(247, 198, 88, 0.18);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 10px rgba(247, 198, 88, 0.24));
+  animation: fieldBreath 7s ease-in-out infinite;
+}
+
+.flower-lines .flower-rays path:nth-child(even) {
+  stroke: rgba(61, 182, 229, 0.18);
+  animation-delay: -2s;
+}
+
+.field-lines path {
+  fill: none;
+  stroke: rgba(154, 212, 200, 0.22);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  animation: fieldBreath 9s ease-in-out infinite;
+}
+
+.field-lines path:nth-child(2) {
+  stroke: rgba(213, 185, 110, 0.18);
+  animation-delay: -1.8s;
+}
+
+.field-lines path:nth-child(3) {
+  stroke: rgba(142, 167, 255, 0.18);
+  animation-delay: -3.2s;
+}
+
+.field-depth,
+.room-layer,
+.network-lines {
+  position: absolute;
+  inset: 0;
+}
+
+.network-lines {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0.74;
+}
+
+.network-lines line {
+  stroke: rgba(246, 210, 113, 0.24);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.network-lines circle {
+  fill: rgba(246, 210, 113, 0.58);
+}
+
+.field-depth::before,
+.field-depth::after {
+  content: "";
+  position: absolute;
+  inset: 11% 18%;
+  border: 1px solid rgba(154, 212, 200, 0.12);
+  border-radius: 50%;
+  transform: rotate(-12deg);
+  animation: slowTurn 30s linear infinite;
+}
+
+.field-depth::after {
+  inset: 17% 27%;
+  border-color: rgba(240, 154, 134, 0.12);
+  transform: rotate(22deg);
+  animation-duration: 42s;
+  animation-direction: reverse;
+}
+
+.room-field {
+  --room-color: #9ad4c8;
+  --journey-progress: 0deg;
+  --you-sweep-angle: 180deg;
+  position: absolute;
+  width: calc(var(--room-size) * 1px);
+  height: calc(var(--room-size) * 1px);
+  border: 1px solid color-mix(in srgb, var(--room-color), white 22%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--room-color), transparent 62%), transparent 32%),
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--room-color), transparent 86%), transparent 72%);
+  box-shadow:
+    inset 0 0 42px color-mix(in srgb, var(--room-color), transparent 74%),
+    0 0 44px color-mix(in srgb, var(--room-color), transparent 84%);
+  transform-origin: center;
+  transition: opacity 220ms ease, filter 220ms ease, box-shadow 220ms ease;
+  appearance: none;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.is-flower-layout .room-field {
+  border-width: 1.5px;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--room-color), white 22%) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--room-color), transparent 68%), transparent 48%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.09), transparent 72%);
+  box-shadow:
+    inset 0 0 24px color-mix(in srgb, var(--room-color), transparent 74%),
+    0 0 32px color-mix(in srgb, var(--room-color), transparent 70%);
+}
+
+.is-flower-layout .room-field::before {
+  inset: 10%;
+  border-color: color-mix(in srgb, var(--room-color), white 10%);
+  opacity: 0.52;
+}
+
+.is-flower-layout .room-field::after {
+  inset: 23%;
+  opacity: 0.58;
+  transform: rotate(60deg) scaleX(1.34);
+}
+
+.room-field[data-room-id="you"] {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(242, 246, 242, 0.96), rgba(154, 212, 200, 0.68) 24%, rgba(154, 212, 200, 0.16) 58%, transparent 73%),
+    radial-gradient(circle, rgba(154, 212, 200, 0.18), transparent 74%);
+  box-shadow:
+    inset 0 0 36px rgba(255, 255, 255, 0.28),
+    0 0 72px rgba(154, 212, 200, 0.42);
+}
+
+.is-flower-layout .room-field[data-room-id="you"] {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 244, 180, 0.98) 0 4px, rgba(154, 212, 200, 0.74) 8%, rgba(154, 212, 200, 0.18) 45%, transparent 74%),
+    radial-gradient(circle, rgba(245, 198, 83, 0.2), transparent 76%);
+  box-shadow:
+    inset 0 0 32px rgba(255, 255, 255, 0.24),
+    0 0 72px rgba(245, 198, 83, 0.34),
+    0 0 104px rgba(61, 182, 229, 0.14);
+}
+
+.room-field::before,
+.room-field::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 1px solid color-mix(in srgb, var(--room-color), transparent 72%);
+  border-radius: 50%;
+}
+
+.room-field::after {
+  inset: 27%;
+  transform: rotate(31deg) scaleX(1.22);
+}
+
+.room-field.is-playing::before {
+  inset: 4%;
+  border: 0;
+  background: conic-gradient(
+    from -90deg,
+    color-mix(in srgb, var(--room-color), white 14%) 0deg,
+    color-mix(in srgb, var(--room-color), transparent 44%) var(--journey-progress),
+    transparent var(--journey-progress),
+    transparent 360deg
+  );
+  filter: blur(9px);
+  opacity: 0.52;
+}
+
+.room-field.is-playing::after {
+  inset: 10%;
+  border-color: color-mix(in srgb, var(--room-color), white 18%);
+  background:
+    conic-gradient(
+      from -90deg,
+      rgba(242, 246, 242, 0.62) 0deg,
+      color-mix(in srgb, var(--room-color), white 20%) var(--journey-progress),
+      rgba(255, 255, 255, 0.1) var(--journey-progress),
+      rgba(255, 255, 255, 0.04) 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 58%, black 60%);
+  mask: radial-gradient(circle, transparent 58%, black 60%);
+  transform: none;
+}
+
+.room-field .room-name {
+  position: relative;
+  z-index: 2;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-size: clamp(0.82rem, 1.6vw, 1.05rem);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.45);
+}
+
+.is-flower-layout .room-field .room-name {
+  font-size: clamp(0.68rem, 1.1vw, 0.88rem);
+  letter-spacing: 0.07em;
+}
+
+.room-field[data-room-id="you"] .room-name {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.is-flower-layout .room-field[data-room-id="you"] .room-name {
+  font-size: clamp(0.92rem, 1.5vw, 1.18rem);
+}
+
+.room-menu {
+  position: absolute;
+  z-index: 5;
+  inset: 28% 14% 14%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.room-menu button {
+  min-height: 30px;
+  border: 1px solid color-mix(in srgb, var(--room-color), white 30%);
+  border-radius: 999px;
+  color: #f7fffd;
+  background: color-mix(in srgb, var(--room-color), rgba(7, 15, 15, 0.68) 78%);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1;
+  padding: 0 10px;
+}
+
+.is-flower-layout .room-menu {
+  inset: 26% 10% 10%;
+  gap: 6px;
+}
+
+.is-flower-layout .room-menu button {
+  min-height: 27px;
+  font-size: 0.61rem;
+  padding: 0 8px;
+}
+
+.finetune-control {
+  display: grid;
+  gap: 5px;
+  color: #f7fffd;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.finetune-control strong {
+  color: color-mix(in srgb, var(--room-color), white 36%);
+  font-size: 0.68rem;
+}
+
+.finetune-control input {
+  width: 100%;
+  accent-color: var(--room-color);
+  cursor: pointer;
+}
+
+.you-tuner-panel {
+  position: absolute;
+  z-index: 8;
+  inset: 22% 14% 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.you-frequency-readout {
+  color: rgba(247, 255, 253, 0.82);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.you-frequency-readout strong {
+  color: #f7fffd;
+  font-size: 1.16rem;
+  font-weight: 950;
+}
+
+.you-sweep-clock {
+  position: relative;
+  width: min(82px, 34%);
+  aspect-ratio: 1;
+  align-self: center;
+  border-radius: 50%;
+  border: 1px solid rgba(247, 255, 253, 0.38);
+  background:
+    radial-gradient(circle, rgba(247, 255, 253, 0.22) 0 3px, transparent 4px),
+    conic-gradient(from 180deg, rgba(247, 255, 253, 0.36) 0deg, color-mix(in srgb, var(--room-color), white 24%) calc(var(--you-sweep-angle) - 180deg), rgba(255, 255, 255, 0.08) calc(var(--you-sweep-angle) - 180deg), rgba(255, 255, 255, 0.08) 360deg);
+  box-shadow: inset 0 0 22px rgba(8, 15, 15, 0.32);
+}
+
+.you-sweep-clock::before,
+.you-sweep-clock::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 7px;
+  background: rgba(247, 255, 253, 0.52);
+  transform: translateX(-50%);
+}
+
+.you-sweep-clock::before {
+  top: 4px;
+}
+
+.you-sweep-clock::after {
+  bottom: 4px;
+}
+
+.you-sweep-clock i {
+  position: absolute;
+  left: calc(50% - 1px);
+  top: 50%;
+  width: 2px;
+  height: 42%;
+  border-radius: 99px;
+  background: #f7fffd;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--room-color), white 10%);
+  transform-origin: 50% 0%;
+  transform: rotate(var(--you-sweep-angle));
+}
+
+.you-tuner-panel button {
+  min-height: 29px;
+  border: 1px solid color-mix(in srgb, var(--room-color), white 30%);
+  border-radius: 999px;
+  color: #071211;
+  background: color-mix(in srgb, var(--room-color), white 22%);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0 10px;
+}
+
+.you-step-controls {
+  display: grid;
+  grid-template-columns: 34px minmax(68px, 1fr) 34px;
+  gap: 6px;
+}
+
+.you-step-controls button {
+  padding: 0 6px;
+}
+
+.you-tuner-panel .you-return-button {
+  color: #f7fffd;
+  background: rgba(8, 15, 15, 0.5);
+}
+
+.room-field[data-room-id="you"][data-you-phase="sweeping"] .room-menu,
+.room-field[data-room-id="you"][data-you-phase="paused"] .room-menu {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.room-field[data-room-id="you"][data-you-phase="sweeping"] .you-tuner-panel,
+.room-field[data-room-id="you"][data-you-phase="paused"] .you-tuner-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.room-field.is-selected .room-name {
+  transform: translateY(-38px);
+}
+
+.room-field.is-selected .room-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.room-field.is-selected[data-room-id="you"][data-you-phase="sweeping"] .room-menu,
+.room-field.is-selected[data-room-id="you"][data-you-phase="paused"] .room-menu {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.room-field.is-selected[data-room-id="you"][data-you-phase="sweeping"] .you-tuner-panel,
+.room-field.is-selected[data-room-id="you"][data-you-phase="paused"] .you-tuner-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.room-playback {
+  position: absolute;
+  z-index: 7;
+  inset: 17%;
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.playback-clock {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--room-color), white 28%);
+  background:
+    radial-gradient(circle, rgba(8, 15, 15, 0.16), rgba(8, 15, 15, 0.45) 48%, transparent 50%),
+    conic-gradient(
+      from -90deg,
+      rgba(242, 246, 242, 0.78) 0deg,
+      color-mix(in srgb, var(--room-color), white 18%) var(--journey-progress),
+      rgba(255, 255, 255, 0.08) var(--journey-progress),
+      rgba(255, 255, 255, 0.08) 360deg
+    );
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.26);
+}
+
+.playback-title,
+.playback-time,
+.playback-actions {
+  position: relative;
+  z-index: 2;
+}
+
+.playback-title {
+  max-width: 78%;
+  color: #f7fffd;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.playback-time {
+  color: color-mix(in srgb, var(--room-color), white 42%);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.playback-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.playback-actions button {
+  min-height: 28px;
+  border: 1px solid color-mix(in srgb, var(--room-color), white 28%);
+  border-radius: 999px;
+  color: #f7fffd;
+  background: rgba(8, 15, 15, 0.62);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 850;
+  padding: 0 9px;
+}
+
+.room-field.is-playing .room-name,
+.room-field.is-playing .room-menu {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.room-field.is-playing .room-playback {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.room-field.is-hovered,
+.room-field:focus-visible {
+  outline: none;
+  filter: saturate(1.18) brightness(1.15);
+  box-shadow:
+    inset 0 0 56px color-mix(in srgb, var(--room-color), transparent 58%),
+    0 0 64px color-mix(in srgb, var(--room-color), transparent 68%);
+}
+
+.is-flower-layout .room-field.is-hovered,
+.is-flower-layout .room-field:focus-visible {
+  filter: saturate(1.22) brightness(1.18);
+  box-shadow:
+    inset 0 0 34px color-mix(in srgb, var(--room-color), transparent 58%),
+    0 0 52px color-mix(in srgb, var(--room-color), transparent 56%),
+    0 0 96px color-mix(in srgb, var(--room-color), transparent 78%);
+}
+
+.room-field.is-muted {
+  opacity: 0.28 !important;
+  filter: blur(1.8px) saturate(0.7);
+  pointer-events: none;
+}
+
+.room-field.is-selected {
+  opacity: 1 !important;
+  filter: saturate(1.25) brightness(1.18);
+  box-shadow:
+    inset 0 0 70px color-mix(in srgb, var(--room-color), transparent 48%),
+    0 0 88px color-mix(in srgb, var(--room-color), transparent 58%);
+}
+
+.is-flower-layout .room-field.is-selected {
+  box-shadow:
+    inset 0 0 46px color-mix(in srgb, var(--room-color), transparent 52%),
+    0 0 82px color-mix(in srgb, var(--room-color), transparent 54%),
+    0 0 150px color-mix(in srgb, var(--room-color), transparent 78%);
+}
+
+.room-invitation,
+.journey-status {
+  position: absolute;
+  left: clamp(16px, 5vw, 64px);
+  bottom: clamp(18px, 6vw, 64px);
+  z-index: 30;
+  width: min(460px, calc(100% - 32px));
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(12, 20, 20, 0.76);
+  backdrop-filter: blur(18px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.room-invitation.is-hidden,
+.journey-status.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+}
+
+.room-invitation p,
+.journey-status p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.room-actions,
+.journey-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+button.primary,
+button.secondary {
+  min-height: 46px;
+  border-radius: 8px;
+  padding: 0 18px;
+  border: 1px solid rgba(201, 230, 222, 0.25);
+  cursor: pointer;
+}
+
+button.primary {
+  color: #0b1715;
+  background: var(--mint);
+  font-weight: 850;
+}
+
+button.secondary {
+  color: #d7eeea;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.progress-line {
+  height: 6px;
+  margin-top: 18px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.progress-line span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+}
+
+.journey-active .field-lines path {
+  animation-duration: 4.8s;
+}
+
+.is-static-layout .flower-lines .flower-rings circle,
+.is-static-layout .flower-lines .flower-core circle,
+.is-static-layout .flower-lines .flower-rays path,
+.is-static-layout .field-lines path,
+.is-static-layout .field-depth::before,
+.is-static-layout .field-depth::after {
+  animation: none;
+}
+
+.stage-hint {
+  position: absolute;
+  right: clamp(16px, 4vw, 48px);
+  bottom: clamp(18px, 4vw, 42px);
+  z-index: 20;
+  color: rgba(224, 239, 235, 0.58);
+  font-size: 0.88rem;
+  pointer-events: none;
+}
+
+@keyframes fieldBreath {
+  0%, 100% {
+    opacity: 0.46;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.012);
+  }
+}
+
+@keyframes slowTurn {
+  from {
+    transform: rotate(0deg) scaleX(1.28);
+  }
+  to {
+    transform: rotate(360deg) scaleX(1.28);
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .atlas3d-app {
+    min-height: 100svh;
+    padding: 16px;
+  }
+
+  .atlas3d-topbar {
+    flex-direction: column;
+  }
+
+  .atlas3d-stage {
+    min-height: 68svh;
+    border-radius: 6px;
+  }
+
+  .topbar-actions {
+    justify-content: flex-start;
+  }
+
+  .stage-hint {
+    display: none;
+  }
+
+  .room-invitation,
+  .journey-status {
+    left: 12px;
+    bottom: 12px;
+    width: calc(100% - 24px);
+    padding: 18px;
+  }
+}
+
+@media (max-width: 760px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  body {
+    background:
+      radial-gradient(circle at 50% 46%, rgba(244, 196, 83, 0.1), transparent 16rem),
+      linear-gradient(150deg, #080d0d 0%, #111518 54%, #100d12 100%);
+  }
+
+  .atlas3d-stage {
+    background:
+      radial-gradient(circle at 50% 48%, rgba(245, 203, 83, 0.1), transparent 20%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      rgba(5, 8, 9, 0.74);
+    background-size: auto, 88px 88px, 88px 88px, auto;
+  }
+
+  .field-depth {
+    display: none;
+  }
+
+  .flower-lines {
+    opacity: 0.68;
+  }
+
+  .network-lines {
+    opacity: 0.5;
+  }
+
+  .room-field,
+  .room-field.is-selected,
+  .is-flower-layout .room-field.is-selected,
+  .room-field.is-hovered,
+  .room-field:focus-visible {
+    filter: none;
+  }
+}
