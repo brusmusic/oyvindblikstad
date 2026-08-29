@@ -262,6 +262,12 @@
       rafId: 0,
       audio: null
     };
+    const lastTargets = {
+      lHz: null,
+      rHz: null,
+      leftGain: null,
+      rightGain: null
+    };
 
     function nowSeconds() {
       return performance.now() / 1000;
@@ -341,21 +347,44 @@
       if (!audio) return;
       const now = audio.ctx.currentTime;
       const current = currentMasterLevel(audio, now);
-      audio.master.gain.cancelScheduledValues(now);
-      audio.master.gain.setValueAtTime(current, now);
-      audio.master.gain.linearRampToValueAtTime(clamp(target, 0, 0.9), now + Math.max(0.01, seconds));
-      audio.masterLevel = target;
+      const nextTarget = clamp(target, 0, 0.9);
+      if (Math.abs((audio.masterRamp?.targetValue ?? audio.masterLevel) - nextTarget) < 0.001) return;
+      if (typeof audio.master.gain.cancelAndHoldAtTime === "function") {
+        audio.master.gain.cancelAndHoldAtTime(now);
+      } else {
+        audio.master.gain.cancelScheduledValues(now);
+        audio.master.gain.setValueAtTime(current, now);
+      }
+      audio.master.gain.linearRampToValueAtTime(nextTarget, now + Math.max(0.01, seconds));
+      audio.masterLevel = nextTarget;
       audio.masterRamp = {
         startTime: now,
         startValue: current,
-        targetValue: target,
+        targetValue: nextTarget,
         duration: seconds
       };
     }
 
-    function setParamTarget(param, value, when, timeConstant, min = 0) {
+    function holdParamAtCurrentValue(param, when) {
+      if (typeof param.cancelAndHoldAtTime === "function") {
+        param.cancelAndHoldAtTime(when);
+        return;
+      }
       param.cancelScheduledValues(when);
+      param.setValueAtTime(param.value, when);
+    }
+
+    function setParamTarget(param, value, when, timeConstant, min = 0) {
+      holdParamAtCurrentValue(param, when);
       param.setTargetAtTime(Math.max(min, value), when, timeConstant);
+    }
+
+    function targetChanged(key, value, threshold, force) {
+      if (force || lastTargets[key] === null || Math.abs(lastTargets[key] - value) >= threshold) {
+        lastTargets[key] = value;
+        return true;
+      }
+      return false;
     }
 
     function updateAudio(force = false) {
@@ -364,10 +393,18 @@
       const values = evaluateAt(state.journey, state.currentTime);
       const now = audio.ctx.currentTime;
       const smoothing = force ? 0.01 : 0.035;
-      setParamTarget(audio.left.oscillator.frequency, values.lHz, now, smoothing, MIN_FREQ_HZ);
-      setParamTarget(audio.right.oscillator.frequency, values.rHz, now, smoothing, MIN_FREQ_HZ);
-      setParamTarget(audio.left.gain.gain, values.leftGain, now, 0.055);
-      setParamTarget(audio.right.gain.gain, values.rightGain, now, 0.055);
+      if (targetChanged("lHz", values.lHz, 0.01, force)) {
+        setParamTarget(audio.left.oscillator.frequency, values.lHz, now, smoothing, MIN_FREQ_HZ);
+      }
+      if (targetChanged("rHz", values.rHz, 0.01, force)) {
+        setParamTarget(audio.right.oscillator.frequency, values.rHz, now, smoothing, MIN_FREQ_HZ);
+      }
+      if (targetChanged("leftGain", values.leftGain, 0.002, force)) {
+        setParamTarget(audio.left.gain.gain, values.leftGain, now, 0.055);
+      }
+      if (targetChanged("rightGain", values.rightGain, 0.002, force)) {
+        setParamTarget(audio.right.gain.gain, values.rightGain, now, 0.055);
+      }
     }
 
     function fadeAndDestroyAudio(seconds) {

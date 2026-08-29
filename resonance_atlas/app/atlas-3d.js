@@ -645,25 +645,54 @@
     merger.connect(master).connect(ctx.destination);
     left.start();
     right.start();
-    state.youTuner.audio = { ctx, left, right, master, updateTimer: 0 };
+    state.youTuner.audio = {
+      ctx,
+      left,
+      right,
+      master,
+      updateTimer: 0,
+      leftTargetHz: null,
+      rightTargetHz: null,
+      masterTarget: 0
+    };
     return state.youTuner.audio;
   }
 
-  function rampYouMaster(value, seconds) {
-    const audio = state.youTuner.audio;
-    if (!audio) return;
-    const time = audio.ctx.currentTime;
-    audio.master.gain.cancelScheduledValues(time);
-    audio.master.gain.setValueAtTime(audio.master.gain.value, time);
-    audio.master.gain.linearRampToValueAtTime(value, time + seconds);
+  function holdAudioParam(param, time) {
+    if (typeof param.cancelAndHoldAtTime === "function") {
+      param.cancelAndHoldAtTime(time);
+      return;
+    }
+    const heldValue = param.value;
+    param.cancelScheduledValues(time);
+    param.setValueAtTime(heldValue, time);
   }
 
-  function setYouAudioFrequency(frequency, bindiff = 0) {
+  function rampYouMaster(value, seconds, options = {}) {
+    const audio = state.youTuner.audio;
+    if (!audio) return;
+    const target = clamp(value, 0, 0.9);
+    if (!options.force && Math.abs((audio.masterTarget ?? audio.master.gain.value) - target) < 0.001) return;
+    const time = audio.ctx.currentTime;
+    holdAudioParam(audio.master.gain, time);
+    audio.master.gain.linearRampToValueAtTime(target, time + Math.max(0.01, seconds));
+    audio.masterTarget = target;
+  }
+
+  function setYouAudioFrequency(frequency, bindiff = 0, options = {}) {
     const audio = state.youTuner.audio;
     if (!audio) return;
     const time = audio.ctx.currentTime;
-    audio.left.frequency.setTargetAtTime(frequency, time, 0.025);
-    audio.right.frequency.setTargetAtTime(frequency + bindiff, time, 0.025);
+    const leftTarget = Math.max(0.1, frequency);
+    const rightTarget = Math.max(0.1, frequency + bindiff);
+    if (options.force || audio.leftTargetHz === null || Math.abs(audio.leftTargetHz - leftTarget) >= 0.005) {
+      audio.left.frequency.setTargetAtTime(leftTarget, time, 0.025);
+      audio.leftTargetHz = leftTarget;
+    }
+    if (options.force || audio.rightTargetHz === null || Math.abs(audio.rightTargetHz - rightTarget) >= 0.005) {
+      audio.right.frequency.setTargetAtTime(rightTarget, time, 0.025);
+      audio.rightTargetHz = rightTarget;
+    }
   }
 
   function startYouSweep(room) {
@@ -679,11 +708,11 @@
     const sweep = getSweepPosition();
     state.youTuner.sweepDirection = sweep.direction;
     state.youTuner.selectedFrequency = sweep.frequency;
-    setYouAudioFrequency(state.youTuner.selectedFrequency);
+    setYouAudioFrequency(state.youTuner.selectedFrequency, 0, { force: true });
     syncYouTunerPanel(roomEls.get(room.id));
     window.clearInterval(audio.updateTimer);
     audio.updateTimer = window.setInterval(() => updateYouSweep(room), 50);
-    rampYouMaster(0.2, 3);
+    rampYouMaster(0.2, 3, { force: true });
     roomText.textContent = "Listen for the point that feels right. Hold to adjust, then press Let's go.";
     refreshRoomMenu(room);
   }
@@ -905,7 +934,10 @@
       paused: false,
       currentTime: 0,
       startedAt: 0,
-      rafId: 0
+      rafId: 0,
+      lastLHz: null,
+      lastDiffHz: null,
+      lastMaster: null
     };
 
     function snapshot() {
@@ -918,12 +950,24 @@
       };
     }
 
-    function applyAtCurrentTime() {
+    function targetChanged(key, value, threshold, force) {
+      if (force || playerState[key] === null || Math.abs(playerState[key] - value) >= threshold) {
+        playerState[key] = value;
+        return true;
+      }
+      return false;
+    }
+
+    function applyAtCurrentTime(force = false) {
       const values = playerApi.evaluateAt(playerState.journey, playerState.currentTime);
-      setYouAudioFrequency(values.lHz, values.signedDiffHz);
+      const leftChanged = targetChanged("lastLHz", values.lHz, 0.005, force);
+      const diffChanged = targetChanged("lastDiffHz", values.signedDiffHz, 0.005, force);
+      if (leftChanged || diffChanged) setYouAudioFrequency(values.lHz, values.signedDiffHz, { force });
       if (state.youTuner.audio) {
         const master = clamp(values.masterAmplitude * YOU_JOURNEY_MASTER_GAIN, 0, YOU_JOURNEY_MASTER_GAIN);
-        rampYouMaster(master, 0.08);
+        if (targetChanged("lastMaster", master, 0.002, force)) {
+          rampYouMaster(master, 0.08, { force });
+        }
       }
       callbacks.onTick?.({
         ...snapshot(),
@@ -965,7 +1009,7 @@
         playerState.paused = false;
         playerState.currentTime = 0;
         playerState.startedAt = nowSeconds();
-        applyAtCurrentTime();
+        applyAtCurrentTime(true);
         stopLoop();
         playerState.rafId = requestAnimationFrame(tick);
       },
@@ -975,14 +1019,14 @@
         playerState.playing = false;
         playerState.paused = true;
         stopLoop();
-        applyAtCurrentTime();
+        applyAtCurrentTime(true);
       },
       resume() {
         if (!playerState.paused) return;
         playerState.playing = true;
         playerState.paused = false;
         playerState.startedAt = nowSeconds() - playerState.currentTime;
-        applyAtCurrentTime();
+        applyAtCurrentTime(true);
         stopLoop();
         playerState.rafId = requestAnimationFrame(tick);
       },
