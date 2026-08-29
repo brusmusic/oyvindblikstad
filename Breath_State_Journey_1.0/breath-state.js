@@ -36,6 +36,9 @@
   const ABE_MIN_GRAPH_EXHALE_SEC = 2.2;
   const ABE_NATURAL_INHALE_SHARE = 0.38196601125;
   const ABE_NATURAL_EXHALE_SHARE = 0.61803398875;
+  const ABE_PICKUP_INHALE_MIN_SEC = 0.9;
+  const ABE_PICKUP_INHALE_MAX_SEC = 2.2;
+  const ABE_PICKUP_INHALE_SHARE = 0.44;
   const ABE_MIN_LONG_EXHALE_CYCLE_SEC = 9.6;
   const ABE_MIN_LONG_EXHALE_RATIO = 2.2;
   const ABE_DEFAULT_START_CYCLE_SEC = 8.5;
@@ -1426,6 +1429,17 @@
     return `${inhaleSec.toFixed(1)} in / ${exhaleSec.toFixed(1)} out`;
   }
 
+  function abePickupInhaleOffset(prep, syncAgeSec = 0) {
+    const inhaleSec = Math.max(1.2, Number(prep?.startInhale) || 3);
+    const pickupSec = clamp(
+      inhaleSec * ABE_PICKUP_INHALE_SHARE,
+      ABE_PICKUP_INHALE_MIN_SEC,
+      Math.min(ABE_PICKUP_INHALE_MAX_SEC, Math.max(0.65, inhaleSec - 0.2))
+    );
+    const remainingPickupSec = clamp(pickupSec - Math.max(0, syncAgeSec), 0.35, pickupSec);
+    return clamp(inhaleSec - remainingPickupSec, 0, Math.max(0, inhaleSec - 0.12));
+  }
+
   function abeMotionSupported() {
     return typeof window.DeviceMotionEvent !== "undefined" || typeof window.DeviceOrientationEvent !== "undefined";
   }
@@ -1822,15 +1836,13 @@
     const sampleCount = state.abe.samples.length;
     const candidates = result?.candidates?.length || 0;
     const status = prep.usable
-      ? `Synced on exhale from ${prep.bridge?.source || result.source || "motion"} ${prep.bridge?.key || result.key}: ${abeBreathLabel(prep.startInhale, prep.startExhale)}. The journey now leads slower.`
+      ? `Synced from ${prep.bridge?.source || result.source || "motion"} ${prep.bridge?.key || result.key}: ${abeBreathLabel(prep.startInhale, prep.startExhale)}. The breath wave enters on the last inhale before release.`
       : state.abe.motionAllowed
         ? `Motion was available, but breath stayed uncertain (${sampleCount} samples, ${candidates} candidates). Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.${abeCandidateSummary(result)}`
         : `Motion was not available. Starting with default values: ${abeBreathLabel(prep.startInhale, prep.startExhale)}.`;
     setAbeStatus(status, prep.usable ? "matched" : "default");
-    const initialPhase = state.abe.motionAllowed ? "exhale" : "inhale";
-    const phaseOffsetSec = initialPhase === "exhale"
-      ? clamp(syncAgeSec, 0, Math.max(0, prep.startExhale - 0.35))
-      : 0;
+    const initialPhase = "inhale";
+    const phaseOffsetSec = state.abe.motionAllowed ? abePickupInhaleOffset(prep, syncAgeSec) : 0;
     await startJourney({ reuseAudio: true, initialPhase, phaseOffsetSec });
   }
 
