@@ -547,7 +547,10 @@
   function returnToYou() {
     const hasYouAudio = Boolean(state.youTuner.audio);
     releaseJourneyWakeLock();
-    if (state.player) state.player.end();
+    if (state.player) {
+      state.player.end();
+      return;
+    }
     stopYouSweep({ fadeSeconds: hasYouAudio ? YOU_MANUAL_END_FADE_SECONDS : 0.18 });
     state.youTuner.phase = "idle";
     refreshRoomMenu(findRoom("you"));

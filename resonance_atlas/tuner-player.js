@@ -260,6 +260,7 @@
       currentTime: 0,
       startedAt: 0,
       rafId: 0,
+      endTimer: 0,
       audio: null
     };
     const lastTargets = {
@@ -420,6 +421,19 @@
       }, Math.max(80, (seconds * 1000) + 80));
     }
 
+    function clearEndTimer() {
+      window.clearTimeout(state.endTimer);
+      state.endTimer = 0;
+    }
+
+    function afterFade(seconds, callback) {
+      clearEndTimer();
+      state.endTimer = window.setTimeout(() => {
+        state.endTimer = 0;
+        callback();
+      }, Math.max(0, seconds * 1000));
+    }
+
     function startLoop() {
       if (state.rafId) return;
       const tick = () => {
@@ -448,6 +462,7 @@
       state.paused = false;
       state.currentTime = 0;
       state.startedAt = nowSeconds();
+      clearEndTimer();
       const audio = ensureAudio();
       audio.ctx.resume().catch(() => {});
       updateAudio(true);
@@ -470,6 +485,7 @@
       state.playing = true;
       state.paused = false;
       state.startedAt = nowSeconds() - state.currentTime;
+      clearEndTimer();
       const audio = ensureAudio();
       audio.ctx.resume().catch(() => {});
       updateAudio(true);
@@ -479,11 +495,12 @@
 
     function end() {
       if (!state.journey) return;
+      const endedState = snapshot();
       state.playing = false;
       state.paused = false;
       fadeAndDestroyAudio(MANUAL_END_FADE_SECONDS);
       emitState("ended");
-      callbacks.onEnded?.(snapshot());
+      afterFade(MANUAL_END_FADE_SECONDS, () => callbacks.onEnded?.(endedState));
     }
 
     function completeNaturally() {
@@ -491,9 +508,10 @@
       state.playing = false;
       state.paused = false;
       state.currentTime = state.journey.durationSec;
+      const completeState = snapshot();
       fadeAndDestroyAudio(NATURAL_END_FADE_SECONDS);
       emitState("complete");
-      callbacks.onComplete?.(snapshot());
+      afterFade(NATURAL_END_FADE_SECONDS, () => callbacks.onComplete?.(completeState));
     }
 
     return {
