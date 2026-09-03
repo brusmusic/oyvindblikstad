@@ -11,7 +11,9 @@
   const YOU_SWEEP_DEFAULT_HZ = 39;
   const YOU_SWEEP_CYCLE_SEC = 20;
   const YOU_JOURNEY_MASTER_GAIN = 0.2;
+  const YOU_START_FADE_SECONDS = 2;
   const YOU_MANUAL_END_FADE_SECONDS = 2;
+  const YOU_NATURAL_END_FADE_SECONDS = 2;
   const FLOWER_MODE = data.layoutMode === "flower";
   const STATIC_FLOWER_MODE = FLOWER_MODE;
 
@@ -653,9 +655,24 @@
       updateTimer: 0,
       leftTargetHz: null,
       rightTargetHz: null,
-      masterTarget: 0
+      masterTarget: 0,
+      masterRamp: {
+        startTime: ctx.currentTime,
+        startValue: 0,
+        targetValue: 0,
+        duration: 0
+      }
     };
     return state.youTuner.audio;
+  }
+
+  function currentYouMasterLevel(audio = state.youTuner.audio, time = audio?.ctx.currentTime || 0) {
+    if (!audio) return 0;
+    const ramp = audio.masterRamp;
+    if (!ramp || ramp.duration <= 0) return audio.masterTarget || 0;
+    const progress = clamp((time - ramp.startTime) / ramp.duration, 0, 1);
+    if (progress >= 1) return ramp.targetValue;
+    return ramp.startValue + ((ramp.targetValue - ramp.startValue) * progress);
   }
 
   function holdAudioParam(param, time) {
@@ -674,9 +691,17 @@
     const target = clamp(value, 0, 0.9);
     if (!options.force && Math.abs((audio.masterTarget ?? audio.master.gain.value) - target) < 0.001) return;
     const time = audio.ctx.currentTime;
+    const current = currentYouMasterLevel(audio, time);
     holdAudioParam(audio.master.gain, time);
+    audio.master.gain.setValueAtTime(current, time);
     audio.master.gain.linearRampToValueAtTime(target, time + Math.max(0.01, seconds));
     audio.masterTarget = target;
+    audio.masterRamp = {
+      startTime: time,
+      startValue: current,
+      targetValue: target,
+      duration: seconds
+    };
   }
 
   function setYouAudioFrequency(frequency, bindiff = 0, options = {}) {
@@ -712,7 +737,7 @@
     syncYouTunerPanel(roomEls.get(room.id));
     window.clearInterval(audio.updateTimer);
     audio.updateTimer = window.setInterval(() => updateYouSweep(room), 50);
-    rampYouMaster(0.2, 3, { force: true });
+    rampYouMaster(0.2, YOU_START_FADE_SECONDS, { force: true });
     roomText.textContent = "Listen for the point that feels right. Hold to adjust, then press Let's go.";
     refreshRoomMenu(room);
   }
@@ -731,7 +756,7 @@
     if (!audio) return;
     window.clearInterval(audio.updateTimer);
     if (options.keepPreview) return;
-    rampYouMaster(0, options.fadeSeconds ?? 0.18);
+    rampYouMaster(0, options.fadeSeconds ?? YOU_MANUAL_END_FADE_SECONDS, { force: true });
   }
 
   function pauseYouSweep() {
@@ -756,7 +781,7 @@
     );
     window.clearInterval(audio.updateTimer);
     audio.updateTimer = window.setInterval(() => updateYouSweep(room), 50);
-    rampYouMaster(0.2, 0.08);
+    rampYouMaster(0.2, YOU_START_FADE_SECONDS, { force: true });
     updateYouSweep(room);
   }
 
@@ -921,7 +946,7 @@
       if (audio) {
         audio.ctx.resume().catch(() => {});
         setYouAudioFrequency(state.youTuner.selectedFrequency, 0);
-        rampYouMaster(0.2, 0.08);
+        rampYouMaster(0.2, YOU_START_FADE_SECONDS, { force: true });
       }
       console.warn("YOU journey start failed", error);
     }
@@ -937,7 +962,8 @@
       rafId: 0,
       lastLHz: null,
       lastDiffHz: null,
-      lastMaster: null
+      lastMaster: null,
+      lastAudioAt: 0
     };
 
     function snapshot() {
@@ -960,13 +986,15 @@
 
     function applyAtCurrentTime(force = false) {
       const values = playerApi.evaluateAt(playerState.journey, playerState.currentTime);
-      const leftChanged = targetChanged("lastLHz", values.lHz, 0.005, force);
-      const diffChanged = targetChanged("lastDiffHz", values.signedDiffHz, 0.005, force);
-      if (leftChanged || diffChanged) setYouAudioFrequency(values.lHz, values.signedDiffHz, { force });
-      if (state.youTuner.audio) {
+      const audio = state.youTuner.audio;
+      if (audio && (force || audio.ctx.currentTime - playerState.lastAudioAt >= 0.08)) {
+        playerState.lastAudioAt = audio.ctx.currentTime;
+        const leftChanged = targetChanged("lastLHz", values.lHz, 0.005, force);
+        const diffChanged = targetChanged("lastDiffHz", values.signedDiffHz, 0.005, force);
+        if (leftChanged || diffChanged) setYouAudioFrequency(values.lHz, values.signedDiffHz, { force });
         const master = clamp(values.masterAmplitude * YOU_JOURNEY_MASTER_GAIN, 0, YOU_JOURNEY_MASTER_GAIN);
         if (targetChanged("lastMaster", master, 0.002, force)) {
-          rampYouMaster(master, 0.08, { force });
+          rampYouMaster(master, force ? YOU_START_FADE_SECONDS : 0.12, { force });
         }
       }
       callbacks.onTick?.({
@@ -993,7 +1021,7 @@
         playerState.playing = false;
         playerState.paused = false;
         playerState.rafId = 0;
-        rampYouMaster(0, 1.2);
+        rampYouMaster(0, YOU_NATURAL_END_FADE_SECONDS, { force: true });
         callbacks.onComplete?.(snapshot());
         return;
       }
@@ -1035,7 +1063,7 @@
         playerState.playing = false;
         playerState.paused = false;
         stopLoop();
-        rampYouMaster(0, 2);
+        rampYouMaster(0, YOU_MANUAL_END_FADE_SECONDS, { force: true });
         callbacks.onEnded?.(snapshot());
       },
       getState: snapshot

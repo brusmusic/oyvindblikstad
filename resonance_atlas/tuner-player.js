@@ -3,9 +3,9 @@
 
   const MIN_FREQ_HZ = 0.1;
   const MASTER_GAIN = 0.22;
-  const FADE_IN_SECONDS = 0.14;
+  const FADE_IN_SECONDS = 2;
   const MANUAL_END_FADE_SECONDS = 2;
-  const NATURAL_END_FADE_SECONDS = 1.2;
+  const NATURAL_END_FADE_SECONDS = 2;
   const DEFAULT_TRANSITION_SEC = 5;
 
   function clamp(value, min, max) {
@@ -266,7 +266,8 @@
       lHz: null,
       rHz: null,
       leftGain: null,
-      rightGain: null
+      rightGain: null,
+      audioUpdateAt: 0
     };
 
     function nowSeconds() {
@@ -342,13 +343,13 @@
       return ramp.startValue + ((ramp.targetValue - ramp.startValue) * progress);
     }
 
-    function rampMaster(target, seconds) {
+    function rampMaster(target, seconds, options = {}) {
       const audio = state.audio;
       if (!audio) return;
       const now = audio.ctx.currentTime;
       const current = currentMasterLevel(audio, now);
       const nextTarget = clamp(target, 0, 0.9);
-      if (Math.abs((audio.masterRamp?.targetValue ?? audio.masterLevel) - nextTarget) < 0.001) return;
+      if (!options.force && Math.abs((audio.masterRamp?.targetValue ?? audio.masterLevel) - nextTarget) < 0.001) return;
       if (typeof audio.master.gain.cancelAndHoldAtTime === "function") {
         audio.master.gain.cancelAndHoldAtTime(now);
       } else {
@@ -365,17 +366,7 @@
       };
     }
 
-    function holdParamAtCurrentValue(param, when) {
-      if (typeof param.cancelAndHoldAtTime === "function") {
-        param.cancelAndHoldAtTime(when);
-        return;
-      }
-      param.cancelScheduledValues(when);
-      param.setValueAtTime(param.value, when);
-    }
-
     function setParamTarget(param, value, when, timeConstant, min = 0) {
-      holdParamAtCurrentValue(param, when);
       param.setTargetAtTime(Math.max(min, value), when, timeConstant);
     }
 
@@ -390,9 +381,11 @@
     function updateAudio(force = false) {
       const audio = state.audio;
       if (!audio || !state.journey) return;
-      const values = evaluateAt(state.journey, state.currentTime);
       const now = audio.ctx.currentTime;
-      const smoothing = force ? 0.01 : 0.035;
+      if (!force && now - lastTargets.audioUpdateAt < 0.08) return;
+      lastTargets.audioUpdateAt = now;
+      const values = evaluateAt(state.journey, state.currentTime);
+      const smoothing = force ? 0.035 : 0.08;
       if (targetChanged("lHz", values.lHz, 0.01, force)) {
         setParamTarget(audio.left.oscillator.frequency, values.lHz, now, smoothing, MIN_FREQ_HZ);
       }
@@ -411,7 +404,7 @@
       const audio = state.audio;
       if (!audio) return;
       clearTimeout(audio.destroyTimer);
-      rampMaster(0, seconds);
+      rampMaster(0, seconds, { force: true });
       audio.destroyTimer = window.setTimeout(() => {
         try {
           audio.left.oscillator.stop();
@@ -457,8 +450,8 @@
       state.startedAt = nowSeconds();
       const audio = ensureAudio();
       audio.ctx.resume().catch(() => {});
-      rampMaster(MASTER_GAIN, FADE_IN_SECONDS);
       updateAudio(true);
+      rampMaster(MASTER_GAIN, FADE_IN_SECONDS, { force: true });
       emitState("playing");
       startLoop();
     }
