@@ -261,6 +261,13 @@
       startedAt: 0,
       rafId: 0,
       endTimer: 0,
+      tuneOffsetHz: 0,
+      tuneRamp: {
+        startTime: 0,
+        startOffset: 0,
+        targetOffset: 0,
+        duration: 0
+      },
       audio: null
     };
     const lastTargets = {
@@ -344,6 +351,39 @@
       return ramp.startValue + ((ramp.targetValue - ramp.startValue) * progress);
     }
 
+    function currentTuneOffset(now = state.audio?.ctx.currentTime || 0) {
+      const ramp = state.tuneRamp;
+      if (!ramp || ramp.duration <= 0) return state.tuneOffsetHz;
+      const progress = clamp((now - ramp.startTime) / ramp.duration, 0, 1);
+      if (progress >= 1) return ramp.targetOffset;
+      return ramp.startOffset + ((ramp.targetOffset - ramp.startOffset) * progress);
+    }
+
+    function setTuneOffset(offsetHz, seconds = 2) {
+      const targetOffset = ensureNumber(offsetHz, 0);
+      const audio = state.audio;
+      if (!audio) {
+        state.tuneOffsetHz = targetOffset;
+        state.tuneRamp = {
+          startTime: 0,
+          startOffset: targetOffset,
+          targetOffset,
+          duration: 0
+        };
+        return;
+      }
+      const now = audio.ctx.currentTime;
+      const currentOffset = currentTuneOffset(now);
+      state.tuneOffsetHz = targetOffset;
+      state.tuneRamp = {
+        startTime: now,
+        startOffset: currentOffset,
+        targetOffset,
+        duration: Math.max(0.01, seconds)
+      };
+      updateAudio(true);
+    }
+
     function rampMaster(target, seconds, options = {}) {
       const audio = state.audio;
       if (!audio) return;
@@ -355,8 +395,8 @@
         audio.master.gain.cancelAndHoldAtTime(now);
       } else {
         audio.master.gain.cancelScheduledValues(now);
-        audio.master.gain.setValueAtTime(current, now);
       }
+      audio.master.gain.setValueAtTime(current, now);
       audio.master.gain.linearRampToValueAtTime(nextTarget, now + Math.max(0.01, seconds));
       audio.masterLevel = nextTarget;
       audio.masterRamp = {
@@ -386,12 +426,15 @@
       if (!force && now - lastTargets.audioUpdateAt < 0.08) return;
       lastTargets.audioUpdateAt = now;
       const values = evaluateAt(state.journey, state.currentTime);
+      const tuneOffset = currentTuneOffset(now);
       const smoothing = force ? 0.035 : 0.08;
-      if (targetChanged("lHz", values.lHz, 0.01, force)) {
-        setParamTarget(audio.left.oscillator.frequency, values.lHz, now, smoothing, MIN_FREQ_HZ);
+      const leftHz = values.lHz + tuneOffset;
+      const rightHz = values.rHz + tuneOffset;
+      if (targetChanged("lHz", leftHz, 0.01, force)) {
+        setParamTarget(audio.left.oscillator.frequency, leftHz, now, smoothing, MIN_FREQ_HZ);
       }
-      if (targetChanged("rHz", values.rHz, 0.01, force)) {
-        setParamTarget(audio.right.oscillator.frequency, values.rHz, now, smoothing, MIN_FREQ_HZ);
+      if (targetChanged("rHz", rightHz, 0.01, force)) {
+        setParamTarget(audio.right.oscillator.frequency, rightHz, now, smoothing, MIN_FREQ_HZ);
       }
       if (targetChanged("leftGain", values.leftGain, 0.002, force)) {
         setParamTarget(audio.left.gain.gain, values.leftGain, now, 0.055);
@@ -519,6 +562,7 @@
       pause,
       resume,
       end,
+      setTuneOffset,
       evaluateAt: (journey, t) => evaluateAt(normalizeJourney(journey), t),
       getState: snapshot
     };

@@ -14,19 +14,20 @@
   const YOU_START_FADE_SECONDS = 2;
   const YOU_MANUAL_END_FADE_SECONDS = 2;
   const YOU_NATURAL_END_FADE_SECONDS = 2;
+  const GLOBAL_TUNE_RAMP_SECONDS = 2;
   const FLOWER_MODE = data.layoutMode === "flower";
   const STATIC_FLOWER_MODE = FLOWER_MODE;
+  const GLOBAL_TUNE_SETTINGS_KEY = "resonance-atlas.global-tune.v1";
+  const flowerExtents = data.rooms.reduce((bounds, room) => ({
+    left: Math.max(bounds.left, Math.abs(room.position[0]) + room.radius),
+    top: Math.max(bounds.top, Math.abs(Math.min(0, room.position[1])) + room.radius),
+    bottom: Math.max(bounds.bottom, Math.max(0, room.position[1]) + room.radius)
+  }), { left: 0, top: 0, bottom: 0 });
 
   const stage = document.getElementById("atlasStage");
   const layer = document.getElementById("roomLayer");
   const networkLines = document.getElementById("networkLines");
-  const invitation = document.getElementById("roomInvitation");
-  const roomType = document.getElementById("roomType");
-  const roomTitle = document.getElementById("roomTitle");
-  const roomText = document.getElementById("roomText");
-  const beginBtn = document.getElementById("beginBtn");
-  const returnBtn = document.getElementById("returnBtn");
-  const bookmarkBtn = document.getElementById("bookmarkBtn");
+  const doNotDisturbReminder = document.getElementById("doNotDisturbReminder");
   const status = document.getElementById("journeyStatus");
   const journeyRoom = document.getElementById("journeyRoom");
   const journeyTitle = document.getElementById("journeyTitle");
@@ -35,6 +36,9 @@
   const pauseBtn = document.getElementById("pauseBtn");
   const endBtn = document.getElementById("endBtn");
   const hint = document.getElementById("stageHint");
+  const adminGlobalTuneWrap = document.getElementById("adminGlobalTuneWrap");
+  const adminGlobalTuneToggle = document.getElementById("adminGlobalTuneToggle");
+  const adminGlobalTuneRange = document.getElementById("adminGlobalTuneRange");
 
   const state = {
     yaw: -0.28,
@@ -60,25 +64,13 @@
       sweepDirection: 1,
       audio: null
     },
-    bookmarks: readBookmarks(),
+    activeGlobalTune: null,
     player: null
   };
 
   const roomEls = new Map();
   const projectedRooms = new Map();
   let resizeRenderTimer = 0;
-
-  function readBookmarks() {
-    try {
-      return JSON.parse(window.localStorage.getItem(data.stateKey) || "{}").bookmarks || [];
-    } catch {
-      return [];
-    }
-  }
-
-  function writeBookmarks() {
-    window.localStorage.setItem(data.stateKey, JSON.stringify({ bookmarks: state.bookmarks }));
-  }
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -91,6 +83,181 @@
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function readStoredYouTune() {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("wavewest.session.v1") || "{}");
+      const hz = Number(saved.resonanceHz) + Number(saved.fineTuneHz || 0);
+      if (Number.isFinite(hz)) return round(clamp(hz, YOU_SWEEP_MIN_HZ, YOU_SWEEP_MAX_HZ), 2);
+    } catch {
+      // Ignore stale or partial session data.
+    }
+    return state.youTuner.selectedFrequency;
+  }
+
+  function rememberYouTune(frequency) {
+    const hz = round(clamp(frequency, YOU_SWEEP_MIN_HZ, YOU_SWEEP_MAX_HZ), 2);
+    try {
+      const existing = JSON.parse(window.localStorage.getItem("wavewest.session.v1") || "{}");
+      window.localStorage.setItem("wavewest.session.v1", JSON.stringify({
+        ...existing,
+        resonanceHz: hz,
+        fineTuneHz: 0,
+        source: "atlas-1.31-you",
+        updatedAt: new Date().toISOString()
+      }));
+    } catch {
+      // Local storage may be unavailable in private or restricted contexts.
+    }
+    return hz;
+  }
+
+  function readStoredGlobalTune() {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(GLOBAL_TUNE_SETTINGS_KEY) || "null");
+      if (!saved) return { enabled: true, targetHz: readStoredYouTune(), hasSavedSettings: false };
+      const savedHz = Number(saved.targetHz);
+      return {
+        enabled: saved.enabled !== false,
+        targetHz: Number.isFinite(savedHz)
+          ? round(clamp(savedHz, YOU_SWEEP_MIN_HZ, YOU_SWEEP_MAX_HZ), 2)
+          : readStoredYouTune(),
+        hasSavedSettings: true
+      };
+    } catch {
+      return { enabled: true, targetHz: readStoredYouTune(), hasSavedSettings: false };
+    }
+  }
+
+  function writeGlobalTuneSettings() {
+    if (!adminGlobalTuneToggle || !adminGlobalTuneRange) return;
+    try {
+      window.localStorage.setItem(GLOBAL_TUNE_SETTINGS_KEY, JSON.stringify({
+        enabled: adminGlobalTuneToggle.checked,
+        targetHz: round(Number(adminGlobalTuneRange.value), 2),
+        updatedAt: new Date().toISOString()
+      }));
+    } catch {
+      // Local storage may be unavailable in private or restricted contexts.
+    }
+  }
+
+  function updateGlobalTuneColor() {
+    if (!adminGlobalTuneRange) return;
+    adminGlobalTuneRange.style.setProperty("--global-tune-color", spectrumColorForFrequency(Number(adminGlobalTuneRange.value)));
+  }
+
+  function setupGlobalTune() {
+    if (!adminGlobalTuneWrap) return;
+    const stored = readStoredGlobalTune();
+    if (adminGlobalTuneToggle) adminGlobalTuneToggle.checked = stored.enabled;
+    if (adminGlobalTuneRange) adminGlobalTuneRange.value = String(stored.targetHz);
+    updateGlobalTuneColor();
+    adminGlobalTuneToggle?.addEventListener("change", () => {
+      writeGlobalTuneSettings();
+      syncActiveGlobalTune();
+    });
+    adminGlobalTuneRange?.addEventListener("input", () => {
+      updateGlobalTuneColor();
+      writeGlobalTuneSettings();
+      syncActiveGlobalTune();
+    });
+    if (!stored.hasSavedSettings) writeGlobalTuneSettings();
+  }
+
+  function readGlobalTuneSettings() {
+    if (!adminGlobalTuneToggle?.checked) return { enabled: false };
+    const targetHz = Number(adminGlobalTuneRange?.value);
+    if (!Number.isFinite(targetHz)) return { enabled: false };
+    return {
+      enabled: true,
+      targetHz: round(clamp(targetHz, YOU_SWEEP_MIN_HZ, YOU_SWEEP_MAX_HZ), 2),
+      anchor: "root"
+    };
+  }
+
+  function getTrackValueRange(track) {
+    if (!Array.isArray(track?.curve)) return null;
+    const values = track.curve.map((point) => Number(point.v)).filter(Number.isFinite);
+    if (!values.length) return null;
+    return { min: Math.min(...values), max: Math.max(...values) };
+  }
+
+  function findAnchorHz(journey, settings) {
+    const architecture = journey.meta?.lab?.sonicArchitecture || journey.meta?.sonicArchitecture || {};
+    const preferred = settings.anchor === "tactile"
+      ? architecture.tactileHapticHz
+      : architecture.fundamentalRootHz;
+    if (Number.isFinite(Number(preferred))) return Number(preferred);
+    const signalL = journey.tracks?.find((track) => track.id === "signal_l");
+    const first = Number(signalL?.curve?.[0]?.v);
+    return Number.isFinite(first) ? first : null;
+  }
+
+  function shouldTransposeTrack(track) {
+    if (!track || track.id === "r_offset") return false;
+    return track.unit === "Hz" && (track.id === "signal_l" || track.id === "signal_r" || track.role === "main" || track.role === "affected");
+  }
+
+  function applyGlobalTune(journey) {
+    const settings = readGlobalTuneSettings();
+    if (!journey?.tracks?.length) return { journey, applied: false };
+    const tunedJourney = clone(journey);
+    const anchorHz = findAnchorHz(tunedJourney, settings);
+    if (!Number.isFinite(anchorHz)) return { journey, applied: false };
+    const transposable = tunedJourney.tracks.filter(shouldTransposeTrack);
+    if (!transposable.length) return { journey, applied: false };
+    const ranges = transposable.map(getTrackValueRange).filter(Boolean);
+    const minValue = Math.min(...ranges.map((range) => range.min));
+    const maxValue = Math.max(...ranges.map((range) => range.max));
+    const minTransposeHz = 20 - minValue;
+    const maxTransposeHz = 120 - maxValue;
+    const requestedTransposeHz = settings.enabled ? settings.targetHz - anchorHz : 0;
+    const transposeHz = round(clamp(requestedTransposeHz, minTransposeHz, maxTransposeHz), 4);
+    transposable.forEach((track) => {
+      track.curve = track.curve.map((point) => ({
+        ...point,
+        v: round(Number(point.v) + transposeHz, 4)
+      }));
+    });
+    if (settings.enabled && transposeHz !== 0) tunedJourney.meta = {
+      ...(tunedJourney.meta || {}),
+      lab: {
+        ...(tunedJourney.meta?.lab || {}),
+        globalTune: {
+          enabled: true,
+          source: "atlas-1.31",
+          anchor: settings.anchor,
+          anchorHz,
+          targetHz: settings.targetHz,
+          requestedTransposeHz: round(requestedTransposeHz, 4),
+          transposeHz,
+          preservesBindiff: true
+        }
+      }
+    };
+    return {
+      journey: tunedJourney,
+      applied: settings.enabled && transposeHz !== 0,
+      enabled: settings.enabled,
+      anchorHz,
+      transposeHz,
+      minTransposeHz,
+      maxTransposeHz,
+      targetHz: settings.targetHz
+    };
+  }
+
+  function syncActiveGlobalTune() {
+    const active = state.activeGlobalTune;
+    if (!active || !state.player?.setTuneOffset) return;
+    const settings = readGlobalTuneSettings();
+    const requestedOffset = settings.enabled ? settings.targetHz - active.anchorHz : 0;
+    const targetOffset = clamp(requestedOffset, active.minTransposeHz, active.maxTransposeHz);
+    const liveOffset = targetOffset - active.initialOffsetHz;
+    active.targetOffsetHz = targetOffset;
+    state.player.setTuneOffset(liveOffset, GLOBAL_TUNE_RAMP_SECONDS);
   }
 
   function hexToRgb(hex) {
@@ -171,14 +338,24 @@
     const [x, y, z] = room.position;
     const selected = state.selectedId === room.id;
     const minSide = Math.min(rect.width, rect.height);
-    const layoutScale = clamp(minSide / 760, 0.52, 1.28);
+    const availableWidth = Math.max(1, rect.width - 48);
+    const availableHeight = Math.max(1, rect.height - 48);
+    const layoutScale = clamp(
+      Math.min(
+        availableWidth / (flowerExtents.left * 2),
+        availableHeight / (flowerExtents.top + flowerExtents.bottom)
+      ),
+      0.42,
+      1.28
+    );
+    const centerY = (rect.height / 2) + ((flowerExtents.top - flowerExtents.bottom) * layoutScale / 2);
     const depth = 1 + (z / 1200);
     const breathe = STATIC_FLOWER_MODE ? 1 : 1 + (Math.sin((time / 1400) + (x * 0.02) + (y * 0.01)) * 0.012);
     const maxSelectedScale = Math.max(0.72, (minSide - 32) / Math.max(1, room.radius * 2));
     const selectedBoost = selected ? Math.min(1.82, maxSelectedScale) : 1;
     return {
       x: selected ? rect.width / 2 : (rect.width / 2) + (x * layoutScale),
-      y: selected ? rect.height / 2 : (rect.height / 2) + (y * layoutScale),
+      y: selected ? rect.height / 2 : centerY + (y * layoutScale),
       z,
       scale: clamp(depth * breathe * selectedBoost, 0.72, 2.22),
       opacity: selected ? 1 : clamp(0.62 + ((z + 90) / 560), 0.48, 0.94)
@@ -251,9 +428,7 @@
       <div class="room-playback" aria-live="polite">
         <span class="playback-title">${room.name}</span>
         <span class="playback-clock" aria-hidden="true"></span>
-        <span class="playback-time">0%</span>
         <div class="playback-actions">
-          <button type="button" data-playback-action="hold">Hold</button>
           <button type="button" data-playback-action="return">Return</button>
         </div>
       </div>`;
@@ -292,7 +467,6 @@
       const actionButton = event.target.closest("[data-playback-action]");
       if (!actionButton) return;
       event.stopPropagation();
-      if (actionButton.dataset.playbackAction === "hold") togglePause();
       if (actionButton.dataset.playbackAction === "return") returnToYou();
     });
     button.addEventListener("pointerenter", () => {
@@ -366,6 +540,7 @@
   function updateYouManualFrequency(roomEl, value) {
     if (state.youTuner.phase === "sweeping") pauseYouSweep();
     state.youTuner.selectedFrequency = round(clamp(value, YOU_SWEEP_MIN_HZ, YOU_SWEEP_MAX_HZ), 2);
+    rememberYouTune(state.youTuner.selectedFrequency);
     syncYouTunerPanel(roomEl);
     setYouAudioFrequency(state.youTuner.selectedFrequency);
   }
@@ -376,7 +551,7 @@
 
   function getYouActionLabel(action) {
     if (action.kind !== "youTuner") return action.label;
-    return "Find frequency";
+    return "Find your resonance";
   }
 
   function render(time = performance.now()) {
@@ -422,22 +597,18 @@
     render();
   }
 
-  function setRoomPlayback(roomId, progress, label = "") {
+  function setRoomPlayback(roomId, progress) {
     const el = roomEls.get(roomId);
     if (!el) return;
     const percent = clamp(progress, 0, 1);
     el.style.setProperty("--journey-progress", `${percent * 360}deg`);
-    const time = el.querySelector(".playback-time");
-    if (time) time.textContent = label || `${Math.round(percent * 100)}%`;
   }
 
   function showRoomPlayback(room, title) {
     const el = roomEls.get(room.id);
     if (!el) return;
     const titleEl = el.querySelector(".playback-title");
-    const holdButton = el.querySelector('[data-playback-action="hold"]');
     if (titleEl) titleEl.textContent = title || room.name;
-    if (holdButton) holdButton.textContent = "Hold";
     setRoomPlayback(room.id, 0);
     el.classList.add("is-playing");
   }
@@ -445,8 +616,6 @@
   function hideRoomPlayback(roomId) {
     const el = roomEls.get(roomId);
     if (!el) return;
-    const holdButton = el.querySelector('[data-playback-action="hold"]');
-    if (holdButton) holdButton.textContent = "Hold";
     el.classList.remove("is-playing");
     setRoomPlayback(roomId, 0);
   }
@@ -489,10 +658,6 @@
   }
 
   function setPlaybackHoldLabel(label) {
-    if (state.playingId) {
-      const holdButton = roomEls.get(state.playingId)?.querySelector('[data-playback-action="hold"]');
-      if (holdButton) holdButton.textContent = label;
-    }
     pauseBtn.textContent = label;
   }
 
@@ -530,13 +695,6 @@
     if (!room || state.playingId) return;
     state.selectedId = id;
     orientUniverseTo(room);
-    invitation.classList.remove("is-hidden");
-    roomType.textContent = room.type === "origin" ? "Origin" : "Resonance room";
-    roomTitle.textContent = room.name;
-    roomText.textContent = room.phrase;
-    beginBtn.hidden = true;
-    bookmarkBtn.hidden = room.id === "you";
-    bookmarkBtn.textContent = state.bookmarks.includes(room.id) ? "Bookmarked" : "Bookmark";
     refreshRoomMenu(room);
     rerenderStaticLayout();
     hint.textContent = STATIC_FLOWER_MODE
@@ -558,12 +716,11 @@
     state.playingId = null;
     stage.classList.remove("journey-active");
     roomEls.forEach((_, roomId) => hideRoomPlayback(roomId));
-    invitation.classList.add("is-hidden");
     status.classList.add("is-hidden");
     journeyProgress.style.width = "0%";
     pauseBtn.textContent = "Hold";
     hint.textContent = STATIC_FLOWER_MODE
-      ? "Select a point in the field. Every journey starts and ends with you."
+      ? "Select a point in the field. Every journey starts with you."
       : "Drag to rotate. Select a room to move closer.";
     rerenderStaticLayout();
   }
@@ -578,21 +735,29 @@
       window.location.href = action.href;
       return;
     }
-    const journey = library[action.journeyId];
+    const tuned = applyGlobalTune(library[action.journeyId]);
+    const journey = tuned.journey;
     if (!journey || !playerApi) {
-      roomText.textContent = "This room is ready visually. Its journey is not connected yet.";
       return;
     }
-    invitation.classList.add("is-hidden");
     status.classList.add("is-hidden");
     stage.classList.add("journey-active");
     state.playingId = room.id;
+    state.activeGlobalTune = Number.isFinite(tuned.anchorHz) ? {
+      anchorHz: tuned.anchorHz,
+      initialOffsetHz: tuned.transposeHz || 0,
+      targetOffsetHz: tuned.transposeHz || 0,
+      minTransposeHz: tuned.minTransposeHz ?? -100,
+      maxTransposeHz: tuned.maxTransposeHz ?? 100
+    } : null;
     requestJourneyWakeLock();
     rerenderStaticLayout();
     showRoomPlayback(room, action.label || journey.name || room.name);
     journeyRoom.textContent = room.name;
     journeyTitle.textContent = action.label || journey.name || room.name;
-    journeyText.textContent = room.phrase;
+    journeyText.textContent = tuned.applied
+      ? `${room.phrase} The field is tuned to your chosen point.`
+      : room.phrase;
     state.player = playerApi.createPlayer({
       onTick: (snapshot) => {
         journeyProgress.style.width = `${Math.round(snapshot.progress * 100)}%`;
@@ -602,6 +767,7 @@
       onEnded: () => completeJourney(room)
     });
     await state.player.start(clone(journey));
+    syncActiveGlobalTune();
   }
 
   function getSweepFrequency() {
@@ -726,7 +892,6 @@
   function startYouSweep(room) {
     const audio = ensureYouAudio();
     if (!audio) {
-      roomText.textContent = "Audio could not start in this browser.";
       return;
     }
     audio.ctx.resume().catch(() => {});
@@ -736,12 +901,12 @@
     const sweep = getSweepPosition();
     state.youTuner.sweepDirection = sweep.direction;
     state.youTuner.selectedFrequency = sweep.frequency;
+    rememberYouTune(state.youTuner.selectedFrequency);
     setYouAudioFrequency(state.youTuner.selectedFrequency, 0, { force: true });
     syncYouTunerPanel(roomEls.get(room.id));
     window.clearInterval(audio.updateTimer);
     audio.updateTimer = window.setInterval(() => updateYouSweep(room), 50);
     rampYouMaster(0.2, YOU_START_FADE_SECONDS, { force: true });
-    roomText.textContent = "Listen for the point that feels right. Hold to adjust, then press Let's go.";
     refreshRoomMenu(room);
   }
 
@@ -750,6 +915,7 @@
     const sweep = getSweepPosition();
     state.youTuner.sweepDirection = sweep.direction;
     state.youTuner.selectedFrequency = round(sweep.frequency, 2);
+    rememberYouTune(state.youTuner.selectedFrequency);
     setYouAudioFrequency(state.youTuner.selectedFrequency);
     syncYouTunerPanel(roomEls.get(room.id));
   }
@@ -769,6 +935,7 @@
     state.youTuner.sweepElapsedSec = nowSeconds() - state.youTuner.sweepStartedAt;
     state.youTuner.sweepDirection = sweep.direction;
     state.youTuner.phase = "paused";
+    rememberYouTune(state.youTuner.selectedFrequency);
     if (audio) window.clearInterval(audio.updateTimer);
     setYouAudioFrequency(state.youTuner.selectedFrequency);
   }
@@ -908,12 +1075,12 @@
 
   async function beginYouJourney(room) {
     if (!playerApi) {
-      roomText.textContent = "The Tuner engine is not available here.";
       return;
     }
     const roomEl = roomEls.get(room.id);
     try {
       stopYouSweep({ keepPreview: true });
+      rememberYouTune(state.youTuner.selectedFrequency);
       const journey = createYouDefaultJourney(state.youTuner.selectedFrequency);
       state.player = createContinuousYouPlayer(journey, {
         onTick: (snapshot) => {
@@ -924,7 +1091,6 @@
         onEnded: () => completeJourney(room)
       });
       await state.player.start();
-      invitation.classList.add("is-hidden");
       status.classList.add("is-hidden");
       stage.classList.add("journey-active");
       state.playingId = room.id;
@@ -942,7 +1108,6 @@
       stage.classList.remove("journey-active");
       hideRoomPlayback(room.id);
       state.youTuner.phase = "paused";
-      roomText.textContent = "Journey could not start. Adjust frequency or press Let's go again.";
       refreshRoomMenu(room);
       syncYouTunerPanel(roomEl);
       const audio = ensureYouAudio();
@@ -1079,28 +1244,16 @@
     stage.classList.remove("journey-active");
     status.classList.add("is-hidden");
     hideRoomPlayback(room.id);
-    invitation.classList.remove("is-hidden");
     state.playingId = null;
     state.player = null;
-    roomType.textContent = "Return";
-    roomTitle.textContent = "YOU";
-    roomText.textContent = `${room.name} has returned to the center.`;
-    beginBtn.hidden = true;
-    state.selectedId = "you";
-    orientUniverseTo(findRoom("you"));
+    state.activeGlobalTune = null;
+    state.selectedId = null;
+    journeyProgress.style.width = "0%";
+    pauseBtn.textContent = "Hold";
+    hint.textContent = STATIC_FLOWER_MODE
+      ? "Select a point in the field. Every journey starts with you."
+      : "Drag to rotate. Select a room to move closer.";
     rerenderStaticLayout();
-  }
-
-  function toggleBookmark() {
-    const id = state.selectedId;
-    if (!id || id === "you") return;
-    if (state.bookmarks.includes(id)) {
-      state.bookmarks = state.bookmarks.filter((item) => item !== id);
-    } else {
-      state.bookmarks = [...state.bookmarks, id];
-    }
-    writeBookmarks();
-    bookmarkBtn.textContent = state.bookmarks.includes(id) ? "Bookmarked" : "Bookmark";
   }
 
   function togglePause() {
@@ -1117,7 +1270,7 @@
 
   function attachStageGestures() {
     stage.addEventListener("pointerdown", (event) => {
-      if (event.target.closest(".room-field, .room-invitation, .journey-status")) return;
+      if (event.target.closest(".room-field, .journey-status")) return;
       if (FLOWER_MODE) return;
       state.dragging = true;
       state.dragStart = {
@@ -1142,7 +1295,7 @@
       state.dragStart = null;
     });
     stage.addEventListener("click", (event) => {
-      if (event.target.closest(".room-field, .room-invitation, .journey-status")) return;
+      if (event.target.closest(".room-field, .journey-status")) return;
       if (state.selectedId || state.playingId) returnToYou();
     });
     window.addEventListener("keydown", (event) => {
@@ -1158,12 +1311,25 @@
     if (FLOWER_MODE) {
       stage.classList.add("is-flower-layout");
       stage.classList.add("is-static-layout");
-      hint.textContent = "Select a point in the field. Every journey starts and ends with you.";
+      hint.textContent = "Select a point in the field. Every journey starts with you.";
     }
+    setupGlobalTune();
     data.rooms.forEach(makeRoom);
     attachStageGestures();
-    returnBtn.addEventListener("click", returnToYou);
-    bookmarkBtn.addEventListener("click", toggleBookmark);
+    doNotDisturbReminder?.addEventListener("click", (event) => {
+      const { clientX, clientY } = event;
+      doNotDisturbReminder.classList.add("is-hidden");
+      if (event.target !== doNotDisturbReminder) return;
+      const underlyingTarget = document.elementFromPoint(clientX, clientY);
+      const roomTarget = underlyingTarget?.closest?.(".room-field");
+      const forwardTarget = underlyingTarget?.closest?.("button") || roomTarget;
+      if (forwardTarget) forwardTarget.dispatchEvent(new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        clientX,
+        clientY
+      }));
+    });
     pauseBtn.addEventListener("click", togglePause);
     endBtn.addEventListener("click", returnToYou);
     document.addEventListener("visibilitychange", restoreJourneyWakeLock);
@@ -1171,6 +1337,7 @@
       window.clearTimeout(resizeRenderTimer);
       resizeRenderTimer = window.setTimeout(rerenderStaticLayout, 80);
     });
+    enterRoom("you");
     render();
   }
 
