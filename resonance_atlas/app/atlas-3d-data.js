@@ -102,7 +102,7 @@ window.RESONANCE_ATLAS_3D_DATA = {
       position: [118, 236, 32],
       radius: 86,
       state: { activation: -0.7, attention: -0.1, regulation: 0.7 },
-      journeyIds: ["vagal_reset", "breath_sync"]
+      journeyIds: ["vagal_reset", "sleep_ready"]
     },
     {
       id: "drift",
@@ -114,7 +114,7 @@ window.RESONANCE_ATLAS_3D_DATA = {
       position: [0, 354, -48],
       radius: 86,
       state: { activation: -1, attention: -0.7, regulation: -0.2 },
-      journeyIds: ["sleep_ready", "repair"]
+      journeyIds: ["repair"]
     }
   ],
   journeys: {
@@ -138,17 +138,6 @@ window.RESONANCE_ATLAS_3D_DATA = {
       description: "Let the system settle.",
       duration: 300,
       composerData: { libraryId: "vagal_reset" }
-    },
-    breath_sync: {
-      id: "breath_sync",
-      label: "Breath Sync",
-      room: "calm",
-      type: "destination",
-      kind: "journey",
-      journeyId: "breath_sync",
-      description: "A breathing-led settling journey.",
-      duration: 300,
-      composerData: { libraryId: "breath_sync" }
     },
     ground: {
       id: "ground",
@@ -241,12 +230,12 @@ window.RESONANCE_ATLAS_3D_DATA = {
     sleep_ready: {
       id: "sleep_ready",
       label: "Sleep Ready",
-      room: "drift",
+      room: "calm",
       type: "destination",
       kind: "journey",
       journeyId: "sleep_ready",
-      description: "Let wakefulness fade.",
-      duration: 300,
+      description: "A seated vibration journey before bed.",
+      duration: 1800,
       composerData: { libraryId: "sleep_ready" }
     },
     repair: {
