@@ -41,8 +41,8 @@
         [1116, 0.06, "spline"], [1476, 0.03, "ease"], [1800, 0.02, "hold"]
       ]),
       track("amplitude", "Master amplitude", "automation", "amplitude", "linear", "#f0c96b", [
-        [0, 0, "ease"], [180, 0.2016, "ease"], [432, 0.28, "spline"],
-        [900, 0.2296, "spline"], [1332, 0.1568, "spline"], [1620, 0.0784, "ease"], [1800, 0, "ease"]
+        [0, 0, "ease"], [51.44, 0.81, "ease"], [403, 0.925, "spline"],
+        [912.52, 0.899, "spline"], [1316.49, 0.795, "spline"], [1642.32, 0.584, "ease"], [1800, 0, "ease"]
       ]),
       track("amplitude_l", "Amplitude L", "automation", "amplitudeLeft", "linear", "#5fd0ff", [
         [0, 0.9, "ease"], [756, 0.88, "spline"], [1476, 0.86, "ease"], [1800, 0.84, "hold"]
@@ -98,7 +98,7 @@
           harmony: ["warm-root", "low-body-anchor", "near-unison-landing"],
           rhythm: "none"
         },
-        globalTune: { enabled: false, source: "manual-or-you", anchor: "root", anchorHz: 50, targetHz: 50, transposeHz: 0, preservesBindiff: true },
+        globalTune: { enabled: false, source: "manual", anchor: "root", anchorHz: 50, targetHz: 50, transposeHz: 0, preservesBindiff: true },
         usageGuidance: { suggestedDurationMinutes: 30, mode: "adaptive-ready", bestUse: ["in a chair before bed", "after evening activity", "when the mind is active but the body is tired"], stopIf: ["arousal increases", "restlessness", "dizziness", "nausea", "pain increases", "palpitations", "strong discomfort"] },
         phases: [
           { id: "arrival", label: "Seated arrival", startSeconds: 0, durationSeconds: 216, intention: "meet the current state without demanding change", mode: "linked" },
