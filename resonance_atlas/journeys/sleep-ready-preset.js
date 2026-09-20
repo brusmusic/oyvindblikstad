@@ -55,7 +55,7 @@
       { id: "sleep_ready_arrival", name: "Seated arrival", start: 0, end: 216, mode: "linked", transitionSec: 0, rules: { r: { type: "signedOffset", sourceTrackId: "signal_l", offsetTrackId: "r_offset" } } },
       { id: "sleep_ready_orientation", name: "Lower the field", start: 216, end: 576, mode: "linked", transitionSec: 5, rules: { r: { type: "signedOffset", sourceTrackId: "signal_l", offsetTrackId: "r_offset" } } },
       { id: "sleep_ready_regulation", name: "Quiet descent", start: 576, end: 1224, mode: "linked", transitionSec: 5, rules: { r: { type: "signedOffset", sourceTrackId: "signal_l", offsetTrackId: "r_offset" } } },
-      { id: "sleep_ready_settling", name: "Near-still landing", start: 1224, end: 1620, mode: "hold", transitionSec: 5, rules: {} },
+      { id: "sleep_ready_settling", name: "Near-still landing", start: 1224, end: 1620, mode: "linked", transitionSec: 5, rules: { r: { type: "signedOffset", sourceTrackId: "signal_l", offsetTrackId: "r_offset" } } },
       { id: "sleep_ready_integration", name: "Fade before bed", start: 1620, end: 1800, mode: "hold", transitionSec: 5, rules: {} }
     ],
     relations: [{ id: "linked_signed_offset", type: "signedOffset", sourceTrackId: "signal_l", targetTrackId: "signal_r", offsetTrackId: "r_offset" }],
@@ -104,7 +104,7 @@
           { id: "arrival", label: "Seated arrival", startSeconds: 0, durationSeconds: 216, intention: "meet the current state without demanding change", mode: "linked" },
           { id: "orientation", label: "Lower the field", startSeconds: 216, durationSeconds: 360, intention: "reduce movement and mental pull gradually", mode: "linked" },
           { id: "regulation", label: "Quiet descent", startSeconds: 576, durationSeconds: 648, intention: "move toward a slower, softer body state", mode: "linked" },
-          { id: "settling", label: "Near-still landing", startSeconds: 1224, durationSeconds: 396, intention: "hold predictably with minimal bindiff", mode: "hold" },
+          { id: "settling", label: "Near-still landing", startSeconds: 1224, durationSeconds: 396, intention: "continue the linked movement with minimal bindiff", mode: "linked" },
           { id: "integration", label: "Fade before bed", startSeconds: 1620, durationSeconds: 180, intention: "end quietly before leaving the chair", mode: "hold" }
         ],
         adaptive: { mode: "adaptive-ready", supportedInputs: ["You-frequency"], futureRule: "If the user's state becomes more activated, do not add movement; reduce intensity and narrow bindiff." },
