@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Borte.</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171717;
+      --paper: #fff8ea;
+      --paper-2: #f6efe1;
+      --red: #ef3e36;
+      --yellow: #ffd447;
+      --blue: #2867ff;
+      --green: #30b86f;
+      --pink: #ff6b9a;
+      --shadow: rgba(23, 23, 23, .18);
+      --word-size: 4.2rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255, 212, 71, .34), transparent 24rem),
+        radial-gradient(circle at 82% 78%, rgba(48, 184, 111, .2), transparent 22rem),
+        linear-gradient(135deg, var(--paper), var(--paper-2));
+      color: var(--ink);
+      font-family: ui-rounded, "Arial Rounded MT Bold", "Avenir Next Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      position: relative;
+      display: grid;
+      min-height: 100%;
+      place-items: center;
+      padding: 1.25rem;
+      isolation: isolate;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .38;
+      background-image:
+        linear-gradient(90deg, rgba(23, 23, 23, .035) 1px, transparent 1px),
+        linear-gradient(rgba(23, 23, 23, .035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+    }
+
+    .panel {
+      width: min(42rem, 100%);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 1.5rem;
+      font-size: 4.25rem;
+      line-height: .9;
+      letter-spacing: 0;
+    }
+
+    .question {
+      margin: 0 0 1.1rem;
+      font-size: 1.45rem;
+      font-weight: 850;
+    }
+
+    .promise {
+      margin: 1rem 0 0;
+      font-size: .92rem;
+      font-weight: 760;
+      opacity: .72;
+    }
+
+    .form {
+      display: grid;
+      gap: .9rem;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 4.1rem;
+      padding: .85rem 1rem;
+      border: .2rem solid var(--ink);
+      border-radius: .45rem;
+      outline: 0;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: .35rem .35rem 0 var(--ink);
+      color: var(--ink);
+      font-size: 1.35rem;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .input:focus {
+      background: #fff;
+      box-shadow: .18rem .18rem 0 var(--ink);
+      transform: translate(.17rem, .17rem);
+    }
+
+    .button {
+      min-height: 4.2rem;
+      border: .2rem solid var(--ink);
+      border-radius: 999px;
+      background: var(--red);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: .35rem .35rem 0 var(--ink);
+      font-size: 1.2rem;
+      font-weight: 950;
+      text-transform: uppercase;
+      transition: transform .12s ease, box-shadow .12s ease, background .18s ease;
+      touch-action: manipulation;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      background: #ff554d;
+      transform: translate(.08rem, .08rem);
+      box-shadow: .25rem .25rem 0 var(--ink);
+    }
+
+    .button:active {
+      transform: translate(.32rem, .32rem);
+      box-shadow: .05rem .05rem 0 var(--ink);
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 1rem;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .stage.is-active {
+      display: grid;
+    }
+
+    .word {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      max-width: min(92vw, 70rem);
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .08em;
+      transform: translateZ(0);
+      filter: drop-shadow(.12em .12em 0 rgba(23, 23, 23, .13));
+      font-size: var(--word-size);
+      font-weight: 1000;
+      line-height: .98;
+      text-align: center;
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+
+    .letter {
+      --x: 0px;
+      --y: 0px;
+      --r: 0deg;
+      --delay: 0ms;
+      --dur: 1000ms;
+      --scale: 1;
+      position: relative;
+      display: inline-block;
+      min-width: .32em;
+      transform-origin: 50% 70%;
+      animation-delay: var(--delay);
+      animation-duration: var(--dur);
+      animation-fill-mode: forwards;
+      animation-timing-function: cubic-bezier(.2, .72, .1, 1);
+      white-space: pre;
+    }
+
+    .letter.space {
+      min-width: .44em;
+    }
+
+    .done {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 1.25rem;
+      text-align: center;
+      background: rgba(255, 248, 234, .88);
+      backdrop-filter: blur(12px);
+    }
+
+    .done.is-visible {
+      display: grid;
+      animation: arrive .28s ease both;
+    }
+
+    .done h2 {
+      margin: 0 0 1.1rem;
+      font-size: 2.25rem;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .done .button {
+      min-width: min(18rem, 100%);
+      background: var(--blue);
+    }
+
+    .spark,
+    .puff,
+    .rain,
+    .droplet,
+    .wind-line,
+    .scrap,
+    .smoke,
+    .confetti {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .boom {
+      position: absolute;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      width: min(22rem, 78vw);
+      aspect-ratio: 1;
+      color: #fff;
+      font-size: 4.2rem;
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-shadow: .08em .08em 0 var(--ink);
+      transform: scale(0) rotate(-8deg);
+      animation: boom .9s cubic-bezier(.15, 1.2, .2, 1) forwards;
+    }
+
+    .boom::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: conic-gradient(from 8deg, var(--yellow), var(--red), var(--pink), var(--yellow), var(--blue), var(--yellow));
+      clip-path: polygon(50% 0, 58% 27%, 84% 11%, 72% 39%, 100% 46%, 73% 57%, 91% 83%, 61% 72%, 51% 100%, 41% 72%, 11% 86%, 28% 58%, 0 49%, 28% 39%, 15% 13%, 42% 27%);
+      filter: drop-shadow(.4rem .4rem 0 var(--ink));
+    }
+
+    .bomb {
+      position: absolute;
+      z-index: 7;
+      left: 50%;
+      top: calc(50% - 9.5rem);
+      width: 5.5rem;
+      aspect-ratio: 1;
+      border: .22rem solid var(--ink);
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 26%, #6b6b6b, #151515 54%);
+      box-shadow: .28rem .28rem 0 var(--ink);
+      transform: translate(-50%, -170%) rotate(-8deg);
+      animation: bombDrop .42s cubic-bezier(.2, 1.35, .3, 1) forwards;
+    }
+
+    .bomb::before {
+      content: "";
+      position: absolute;
+      right: .35rem;
+      top: -.68rem;
+      width: 1.45rem;
+      height: 1.1rem;
+      border: .2rem solid var(--ink);
+      border-radius: .35rem .35rem 0 0;
+      background: #5a4b42;
+      transform: rotate(18deg);
+    }
+
+    .bomb::after {
+      content: "";
+      position: absolute;
+      right: -2.15rem;
+      top: -1.45rem;
+      width: 2.6rem;
+      height: 2rem;
+      border-top: .26rem dashed var(--ink);
+      border-radius: 50%;
+      transform: rotate(-10deg);
+      animation: fuseBurn .78s .34s linear forwards;
+    }
+
+    .fuse-flame {
+      position: absolute;
+      right: -2.2rem;
+      top: -1.65rem;
+      width: 1rem;
+      aspect-ratio: 1;
+      border-radius: 50% 50% 50% 0;
+      background: var(--yellow);
+      box-shadow: 0 0 0 .15rem var(--red), 0 0 1.2rem var(--yellow);
+      transform: rotate(-25deg);
+      animation: flame .18s infinite alternate, flameMove .78s .34s linear forwards;
+    }
+
+    .spark {
+      z-index: 7;
+      left: 50%;
+      top: 50%;
+      width: .65rem;
+      height: .65rem;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 0 .12rem var(--ink);
+      animation: particle 900ms ease-out forwards;
+    }
+
+    .puff,
+    .smoke {
+      z-index: 3;
+      border-radius: 50%;
+      background: rgba(40, 40, 40, .16);
+      filter: blur(.5px);
+      animation: puff 1300ms ease-out forwards;
+    }
+
+    .rain {
+      z-index: 2;
+      top: -8rem;
+      width: .22rem;
+      height: 5.8rem;
+      border-radius: 999px;
+      background: linear-gradient(transparent, rgba(40, 103, 255, .88));
+      animation: rainFall var(--dur) linear forwards;
+    }
+
+    .splash {
+      position: absolute;
+      z-index: 5;
+      width: .72rem;
+      height: .28rem;
+      border: .12rem solid rgba(40, 103, 255, .78);
+      border-top: 0;
+      border-radius: 0 0 999px 999px;
+      animation: splash 720ms ease-out forwards;
+    }
+
+    .droplet {
+      z-index: 4;
+      width: .28rem;
+      height: 1.1rem;
+      border-radius: 999px;
+      background: rgba(40, 103, 255, .72);
+      animation: drip 1400ms ease-in forwards;
+    }
+
+    .black-hole {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      top: 50%;
+      width: 4rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #020202 0 34%, transparent 35%),
+        conic-gradient(var(--blue), var(--pink), var(--yellow), var(--green), var(--blue));
+      box-shadow: 0 0 0 .22rem var(--ink), 0 0 3rem rgba(40, 103, 255, .45);
+      transform: translate(-50%, -50%) scale(.3);
+      animation: holeGrow 1850ms cubic-bezier(.2, 1, .2, 1) forwards;
+    }
+
+    .orbit {
+      position: absolute;
+      z-index: 1;
+      left: 50%;
+      top: 50%;
+      width: 14rem;
+      aspect-ratio: 1;
+      border: .14rem solid rgba(23, 23, 23, .14);
+      border-left-color: var(--blue);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: spin 850ms linear infinite;
+    }
+
+    .eraser {
+      position: absolute;
+      z-index: 8;
+      left: -12rem;
+      top: calc(50% - 4rem);
+      width: 10rem;
+      height: 4.8rem;
+      border: .2rem solid var(--ink);
+      border-radius: .45rem;
+      background: linear-gradient(90deg, var(--pink) 0 62%, #f4d8b7 63%);
+      box-shadow: .28rem .28rem 0 var(--ink);
+      transform: rotate(-8deg);
+      animation: eraseMove 1450ms cubic-bezier(.2, .85, .2, 1) forwards;
+    }
+
+    .erase-dust {
+      position: absolute;
+      z-index: 5;
+      width: .55rem;
+      height: .55rem;
+      border-radius: 50%;
+      background: rgba(23, 23, 23, .22);
+      animation: dust 900ms ease-out forwards;
+    }
+
+    .wind-line {
+      z-index: 2;
+      left: -10rem;
+      width: 9rem;
+      height: .22rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(23, 23, 23, .5), transparent);
+      animation: gust var(--dur) ease-in forwards;
+    }
+
+    .melt-puddle {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      top: calc(50% + 4.8rem);
+      width: 1rem;
+      height: .35rem;
+      border-radius: 50%;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--green), var(--blue));
+      transform: translateX(-50%) scaleX(.2);
+      animation: puddle 1550ms 550ms ease-out forwards;
+    }
+
+    .shredder {
+      position: absolute;
+      z-index: 8;
+      left: 50%;
+      top: calc(50% + 5.4rem);
+      width: min(30rem, 86vw);
+      height: 4.8rem;
+      border: .22rem solid var(--ink);
+      border-radius: .5rem;
+      background:
+        repeating-linear-gradient(90deg, rgba(23, 23, 23, .18) 0 .45rem, transparent .45rem .9rem),
+        #d8dde6;
+      box-shadow: .32rem .32rem 0 var(--ink);
+      transform: translateX(-50%);
+    }
+
+    .shredder::before {
+      content: "";
+      position: absolute;
+      left: 1.2rem;
+      right: 1.2rem;
+      top: .62rem;
+      height: .55rem;
+      border-radius: 999px;
+      background: var(--ink);
+    }
+
+    .scrap {
+      z-index: 2;
+      width: .42rem;
+      height: 2.6rem;
+      border: .12rem solid rgba(23, 23, 23, .45);
+      border-radius: .12rem;
+      background: rgba(255, 255, 255, .85);
+      animation: scrapFall 1250ms ease-in forwards;
+    }
+
+    .stamp {
+      position: absolute;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      width: min(23rem, 82vw);
+      height: 8rem;
+      border: .42rem solid var(--red);
+      color: var(--red);
+      font-size: 3.8rem;
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      transform: rotate(-11deg) scale(2.3);
+      opacity: 0;
+      animation: stampDown 950ms cubic-bezier(.18, 1.2, .2, 1) forwards;
+      mix-blend-mode: multiply;
+    }
+
+    .confetti {
+      z-index: 6;
+      width: .55rem;
+      height: 1.05rem;
+      border: .1rem solid rgba(23, 23, 23, .25);
+      background: var(--yellow);
+      animation: confetti 1200ms ease-out forwards;
+    }
+
+    .shake {
+      animation: shake 420ms ease both;
+    }
+
+    .explode {
+      animation-name: explodeLetter;
+    }
+
+    .rain-wash {
+      color: rgba(23, 23, 23, .78);
+      animation-name: rainWash;
+      animation-timing-function: cubic-bezier(.5, 0, .9, .2);
+    }
+
+    .sucked {
+      animation-name: sucked;
+      animation-timing-function: cubic-bezier(.72, 0, .92, .3);
+    }
+
+    .erased {
+      animation-name: erased;
+      animation-timing-function: linear;
+    }
+
+    .winded {
+      animation-name: winded;
+      animation-timing-function: cubic-bezier(.2, .8, .15, 1);
+    }
+
+    .melted {
+      animation-name: melted;
+      animation-timing-function: cubic-bezier(.55, 0, .9, .25);
+    }
+
+    .shredded {
+      animation-name: shredded;
+      animation-timing-function: cubic-bezier(.3, .9, .4, 1);
+    }
+
+    .smoked {
+      animation-name: smoked;
+      animation-timing-function: ease-out;
+    }
+
+    .stamped {
+      animation-name: stamped;
+      animation-timing-function: cubic-bezier(.45, 0, .85, .2);
+    }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: scale(.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0) rotate(0); }
+      18% { transform: translate(-.25rem, .1rem) rotate(-1deg); }
+      38% { transform: translate(.22rem, -.12rem) rotate(1deg); }
+      58% { transform: translate(-.16rem, .08rem) rotate(-.7deg); }
+      78% { transform: translate(.14rem, .06rem) rotate(.5deg); }
+    }
+
+    @keyframes bombDrop {
+      0% { transform: translate(-50%, -170%) rotate(-8deg); }
+      75% { transform: translate(-50%, 0) rotate(4deg); }
+      100% { transform: translate(-50%, -10%) rotate(0); }
+    }
+
+    @keyframes fuseBurn {
+      to { width: .35rem; opacity: .25; }
+    }
+
+    @keyframes flame {
+      to { transform: rotate(-18deg) scale(1.22); background: #fff47a; }
+    }
+
+    @keyframes flameMove {
+      to { right: -.1rem; top: -.75rem; opacity: 0; }
+    }
+
+    @keyframes boom {
+      0% { opacity: 0; transform: scale(.15) rotate(-14deg); }
+      42% { opacity: 1; transform: scale(1) rotate(-8deg); }
+      100% { opacity: 0; transform: scale(1.24) rotate(-5deg); }
+    }
+
+    @keyframes particle {
+      to {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(.1);
+      }
+    }
+
+    @keyframes explodeLetter {
+      0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(.15); }
+    }
+
+    @keyframes puff {
+      to { opacity: 0; transform: translate(var(--x), var(--y)) scale(2.8); }
+    }
+
+    @keyframes rainFall {
+      to { transform: translateY(calc(100vh + 16rem)); opacity: .15; }
+    }
+
+    @keyframes splash {
+      to { opacity: 0; transform: translateY(.7rem) scale(2.2); }
+    }
+
+    @keyframes rainWash {
+      0% { opacity: 1; filter: blur(0); transform: translateY(0) skewY(0); }
+      45% { opacity: .78; filter: blur(.03em); transform: translateY(.22em) skewY(5deg); }
+      100% { opacity: 0; filter: blur(.2em); transform: translateY(var(--y)) skewY(22deg) scaleY(1.7); }
+    }
+
+    @keyframes drip {
+      to { opacity: 0; transform: translateY(9rem) scaleY(2.2); }
+    }
+
+    @keyframes holeGrow {
+      0% { transform: translate(-50%, -50%) scale(.2) rotate(0); }
+      55% { transform: translate(-50%, -50%) scale(1.3) rotate(210deg); }
+      100% { transform: translate(-50%, -50%) scale(.08) rotate(520deg); opacity: 0; }
+    }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes sucked {
+      0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+      60% { opacity: 1; transform: translate(calc(var(--x) * .45), calc(var(--y) * .45)) rotate(var(--r)) scale(.64); }
+      100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(calc(var(--r) * 2)) scale(0); }
+    }
+
+    @keyframes eraseMove {
+      0% { transform: translateX(0) rotate(-8deg); }
+      100% { transform: translateX(calc(100vw + 24rem)) rotate(4deg); }
+    }
+
+    @keyframes erased {
+      0% { opacity: 1; clip-path: inset(0 0 0 0); }
+      40% { opacity: .8; }
+      100% { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(.7rem); }
+    }
+
+    @keyframes dust {
+      to { opacity: 0; transform: translate(var(--x), var(--y)) scale(.1); }
+    }
+
+    @keyframes gust {
+      to { transform: translateX(calc(100vw + 20rem)); opacity: 0; }
+    }
+
+    @keyframes winded {
+      0% { opacity: 1; transform: translateX(0) translateY(0) rotate(0); }
+      100% { opacity: 0; transform: translateX(var(--x)) translateY(var(--y)) rotate(var(--r)); }
+    }
+
+    @keyframes melted {
+      0% { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0); }
+      56% { opacity: .88; transform: translateY(1.1em) scaleY(1.75); filter: blur(.03em); }
+      100% { opacity: 0; transform: translateY(3.5em) scaleY(.16); filter: blur(.12em); }
+    }
+
+    @keyframes puddle {
+      0% { opacity: 0; transform: translateX(-50%) scaleX(.2); }
+      30% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) scaleX(22); }
+    }
+
+    @keyframes shredded {
+      0% { opacity: 1; transform: translateY(0) scaleY(1); clip-path: inset(0 0 0 0); }
+      65% { opacity: 1; transform: translateY(2.8em) scaleY(1.15); clip-path: inset(0 0 24% 0); }
+      100% { opacity: 0; transform: translateY(5.8em) scaleY(.2); clip-path: inset(0 0 100% 0); }
+    }
+
+    @keyframes scrapFall {
+      to { opacity: 0; transform: translateY(12rem) rotate(var(--r)); }
+    }
+
+    @keyframes smoked {
+      0% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+      100% { opacity: 0; filter: blur(.25em); transform: translate(var(--x), -4.8rem) scale(1.8) rotate(var(--r)); }
+    }
+
+    @keyframes stampDown {
+      0% { opacity: 0; transform: rotate(-11deg) scale(2.3); }
+      32% { opacity: 1; transform: rotate(-11deg) scale(.94); }
+      48% { transform: rotate(-11deg) scale(1.03); }
+      100% { opacity: 0; transform: rotate(-11deg) scale(1.04); }
+    }
+
+    @keyframes stamped {
+      0% { opacity: 1; transform: scale(1); }
+      42% { opacity: .28; transform: scale(.96); }
+      100% { opacity: 0; transform: scale(.86) rotate(var(--r)); filter: blur(.05em); }
+    }
+
+    @keyframes confetti {
+      to { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 3.4rem;
+      }
+
+      .question {
+        font-size: 1.18rem;
+      }
+
+      .input {
+        min-height: 3.9rem;
+        font-size: 1.12rem;
+      }
+
+      .button {
+        min-height: 4rem;
+        font-size: 1.05rem;
+      }
+
+      .done h2 {
+        font-size: 1.85rem;
+      }
+
+      .boom {
+        font-size: 3.25rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <div class="grain" aria-hidden="true"></div>
+
+    <section class="panel" id="entry">
+      <h1>Borte.</h1>
+      <p class="question">Hva vil du ta bort?</p>
+      <form class="form" id="form" autocomplete="off">
+        <input class="input" id="annoyance" name="annoyance" maxlength="48" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Skriv det her" aria-label="Hva vil du ta bort?">
+        <button class="button" type="submit">Bort</button>
+      </form>
+      <p class="promise">Skriv det. Fjern det. Ingenting lagres.</p>
+    </section>
+
+    <section class="stage" id="stage" aria-hidden="true">
+      <div class="word" id="word"></div>
+    </section>
+
+    <section class="done" id="done" aria-hidden="true">
+      <div>
+        <h2>Sånn. Nå er det borte.</h2>
+        <button class="button" id="again" type="button">Noe mer?</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.querySelector("#form");
+      const input = document.querySelector("#annoyance");
+      const entry = document.querySelector("#entry");
+      const stage = document.querySelector("#stage");
+      const word = document.querySelector("#word");
+      const done = document.querySelector("#done");
+      const again = document.querySelector("#again");
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const effects = [
+        bombEffect,
+        rainEffect,
+        blackHoleEffect,
+        eraserEffect,
+        windEffect,
+        meltEffect,
+        shredderEffect,
+        smokeEffect,
+        stampEffect
+      ];
+
+      let running = false;
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (running) return;
+
+        const text = input.value.trim().replace(/\s+/g, " ");
+        if (!text) {
+          input.focus();
+          input.classList.remove("shake");
+          void input.offsetWidth;
+          input.classList.add("shake");
+          return;
+        }
+
+        destroy(text);
+      });
+
+      again.addEventListener("click", reset);
+
+      function destroy(text) {
+        running = true;
+        entry.hidden = true;
+        done.classList.remove("is-visible");
+        done.setAttribute("aria-hidden", "true");
+        stage.classList.add("is-active");
+        stage.setAttribute("aria-hidden", "false");
+        stage.replaceChildren(word);
+        buildWord(text);
+
+        if (prefersReduced) {
+          setTimeout(finish, 260);
+          return;
+        }
+
+        const chosen = effects[Math.floor(Math.random() * effects.length)];
+        chosen();
+      }
+
+      function reset() {
+        running = false;
+        input.value = "";
+        clearStage();
+        done.classList.remove("is-visible");
+        done.setAttribute("aria-hidden", "true");
+        entry.hidden = false;
+        requestAnimationFrame(() => input.focus());
+      }
+
+      function finish(delay = 0) {
+        window.setTimeout(() => {
+          clearStage();
+          stage.classList.remove("is-active");
+          stage.setAttribute("aria-hidden", "true");
+          done.classList.add("is-visible");
+          done.setAttribute("aria-hidden", "false");
+          again.focus();
+        }, delay);
+      }
+
+      function clearStage() {
+        stage.querySelectorAll(":scope > :not(.word)").forEach((node) => node.remove());
+        word.replaceChildren();
+        word.className = "word";
+      }
+
+      function buildWord(text) {
+        word.replaceChildren();
+        const size = text.length > 30 ? "2.25rem" : text.length > 18 ? "3rem" : "4.2rem";
+        document.documentElement.style.setProperty("--word-size", size);
+
+        [...text].forEach((char, index) => {
+          const span = document.createElement("span");
+          span.className = char === " " ? "letter space" : "letter";
+          span.textContent = char === " " ? "\u00a0" : char;
+          span.style.setProperty("--delay", `${index * 24}ms`);
+          word.append(span);
+        });
+      }
+
+      function letters() {
+        return [...word.querySelectorAll(".letter")];
+      }
+
+      function random(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(random(min, max + 1));
+      }
+
+      function addNode(className, parent = stage) {
+        const node = document.createElement("div");
+        node.className = className;
+        parent.append(node);
+        return node;
+      }
+
+      function rectCenter(el) {
+        const box = el.getBoundingClientRect();
+        return {
+          x: box.left + box.width / 2,
+          y: box.top + box.height / 2
+        };
+      }
+
+      function bombEffect() {
+        word.classList.add("shake");
+        const bomb = addNode("bomb");
+        addNode("fuse-flame", bomb);
+
+        setTimeout(() => {
+          bomb.remove();
+          addNode("boom").textContent = "BOOM";
+          createParticles(54, "spark", 260);
+          createParticles(12, "puff", 190);
+
+          letters().forEach((letter, index) => {
+            const angle = random(0, Math.PI * 2);
+            const distance = random(130, 420);
+            letter.classList.add("explode");
+            letter.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+            letter.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+            letter.style.setProperty("--r", `${randomInt(-760, 760)}deg`);
+            letter.style.setProperty("--delay", `${index * 8}ms`);
+            letter.style.setProperty("--dur", `${randomInt(760, 1100)}ms`);
+          });
+        }, 1180);
+
+        finish(2350);
+      }
+
+      function rainEffect() {
+        const rainCount = window.innerWidth < 560 ? 70 : 120;
+        for (let i = 0; i < rainCount; i += 1) {
+          const drop = addNode("rain");
+          drop.style.left = `${random(-8, 108)}vw`;
+          drop.style.setProperty("--dur", `${randomInt(620, 1120)}ms`);
+          drop.style.animationDelay = `${randomInt(0, 780)}ms`;
+        }
+
+        for (let i = 0; i < 28; i += 1) {
+          const splash = addNode("splash");
+          splash.style.left = `${random(8, 92)}vw`;
+          splash.style.top = `${random(44, 66)}vh`;
+          splash.style.animationDelay = `${randomInt(520, 1500)}ms`;
+        }
+
+        letters().forEach((letter, index) => {
+          letter.classList.add("rain-wash");
+          letter.style.setProperty("--delay", `${420 + index * 34}ms`);
+          letter.style.setProperty("--dur", `${randomInt(1180, 1650)}ms`);
+          letter.style.setProperty("--y", `${randomInt(110, 290)}px`);
+
+          if (!letter.classList.contains("space")) {
+            const drop = addNode("droplet");
+            const center = rectCenter(letter);
+            drop.style.left = `${center.x}px`;
+            drop.style.top = `${center.y + random(16, 46)}px`;
+            drop.style.animationDelay = `${randomInt(700, 1450)}ms`;
+          }
+        });
+
+        finish(2750);
+      }
+
+      function blackHoleEffect() {
+        addNode("black-hole");
+        addNode("orbit");
+        addNode("orbit").style.animationDirection = "reverse";
+
+        const center = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2
+        };
+
+        letters().forEach((letter, index) => {
+          const point = rectCenter(letter);
+          letter.classList.add("sucked");
+          letter.style.setProperty("--x", `${center.x - point.x}px`);
+          letter.style.setProperty("--y", `${center.y - point.y}px`);
+          letter.style.setProperty("--r", `${randomInt(-900, 900)}deg`);
+          letter.style.setProperty("--delay", `${220 + index * 28}ms`);
+          letter.style.setProperty("--dur", `${randomInt(1100, 1500)}ms`);
+        });
+
+        createParticles(24, "confetti", 160, 380);
+        finish(2350);
+      }
+
+      function eraserEffect() {
+        addNode("eraser");
+        const wordBox = word.getBoundingClientRect();
+        for (let i = 0; i < 38; i += 1) {
+          const dust = addNode("erase-dust");
+          dust.style.left = `${random(wordBox.left, wordBox.right)}px`;
+          dust.style.top = `${random(wordBox.top, wordBox.bottom)}px`;
+          dust.style.animationDelay = `${randomInt(420, 1180)}ms`;
+          dust.style.setProperty("--x", `${randomInt(-36, 36)}px`);
+          dust.style.setProperty("--y", `${randomInt(24, 92)}px`);
+        }
+
+        letters().forEach((letter, index) => {
+          letter.classList.add("erased");
+          letter.style.setProperty("--delay", `${360 + index * 24}ms`);
+          letter.style.setProperty("--dur", `${randomInt(820, 1180)}ms`);
+        });
+
+        finish(2200);
+      }
+
+      function windEffect() {
+        for (let i = 0; i < 18; i += 1) {
+          const line = addNode("wind-line");
+          line.style.top = `${random(22, 76)}vh`;
+          line.style.setProperty("--dur", `${randomInt(760, 1350)}ms`);
+          line.style.animationDelay = `${randomInt(0, 520)}ms`;
+        }
+
+        letters().forEach((letter, index) => {
+          letter.classList.add("winded");
+          letter.style.setProperty("--x", `${randomInt(260, 760)}px`);
+          letter.style.setProperty("--y", `${randomInt(-180, 190)}px`);
+          letter.style.setProperty("--r", `${randomInt(240, 1180)}deg`);
+          letter.style.setProperty("--delay", `${index * 32}ms`);
+          letter.style.setProperty("--dur", `${randomInt(980, 1450)}ms`);
+        });
+
+        finish(2250);
+      }
+
+      function meltEffect() {
+        addNode("melt-puddle");
+        letters().forEach((letter, index) => {
+          letter.classList.add("melted");
+          letter.style.color = ["#ef3e36", "#2867ff", "#30b86f", "#171717", "#ff6b9a"][index % 5];
+          letter.style.setProperty("--delay", `${index * 34}ms`);
+          letter.style.setProperty("--dur", `${randomInt(1250, 1700)}ms`);
+        });
+
+        finish(2550);
+      }
+
+      function shredderEffect() {
+        addNode("shredder");
+        const wordBox = word.getBoundingClientRect();
+
+        for (let i = 0; i < 52; i += 1) {
+          const scrap = addNode("scrap");
+          scrap.style.left = `${random(wordBox.left, wordBox.right)}px`;
+          scrap.style.top = `${window.innerHeight / 2 + random(70, 115)}px`;
+          scrap.style.animationDelay = `${randomInt(760, 1450)}ms`;
+          scrap.style.setProperty("--r", `${randomInt(-260, 260)}deg`);
+        }
+
+        letters().forEach((letter, index) => {
+          letter.classList.add("shredded");
+          letter.style.setProperty("--delay", `${180 + index * 28}ms`);
+          letter.style.setProperty("--dur", `${randomInt(1100, 1520)}ms`);
+        });
+
+        finish(2550);
+      }
+
+      function smokeEffect() {
+        createParticles(24, "smoke", 120, 360);
+        letters().forEach((letter, index) => {
+          letter.classList.add("smoked");
+          letter.style.setProperty("--x", `${randomInt(-130, 130)}px`);
+          letter.style.setProperty("--r", `${randomInt(-120, 120)}deg`);
+          letter.style.setProperty("--delay", `${index * 42}ms`);
+          letter.style.setProperty("--dur", `${randomInt(1250, 1800)}ms`);
+        });
+
+        finish(2600);
+      }
+
+      function stampEffect() {
+        const stamp = addNode("stamp");
+        stamp.textContent = "Borte";
+        createParticles(34, "confetti", 220);
+
+        letters().forEach((letter, index) => {
+          letter.classList.add("stamped");
+          letter.style.setProperty("--r", `${randomInt(-18, 18)}deg`);
+          letter.style.setProperty("--delay", `${520 + index * 12}ms`);
+          letter.style.setProperty("--dur", `${randomInt(760, 980)}ms`);
+        });
+
+        finish(1900);
+      }
+
+      function createParticles(count, className, spread = 200, delay = 0) {
+        for (let i = 0; i < count; i += 1) {
+          const particle = addNode(className);
+          const angle = random(0, Math.PI * 2);
+          const distance = random(spread * .28, spread);
+          const size = random(.35, 1.35);
+          particle.style.left = `${window.innerWidth / 2}px`;
+          particle.style.top = `${window.innerHeight / 2}px`;
+          particle.style.width = `${size}rem`;
+          particle.style.height = className === "confetti" ? `${size * 1.8}rem` : `${size}rem`;
+          particle.style.background = ["#ffd447", "#ef3e36", "#2867ff", "#30b86f", "#ff6b9a"][i % 5];
+          particle.style.animationDelay = `${delay + randomInt(0, 160)}ms`;
+          particle.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+          particle.style.setProperty("--r", `${randomInt(-720, 720)}deg`);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
