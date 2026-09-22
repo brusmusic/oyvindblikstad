@@ -223,6 +223,54 @@
       letter-spacing: 0;
     }
 
+    .upsell {
+      display: none;
+      width: min(28rem, 100%);
+      margin: 0 auto 1rem;
+      padding: 1rem;
+      border: .2rem solid var(--ink);
+      border-radius: .5rem;
+      background: rgba(255, 255, 255, .82);
+      box-shadow: .28rem .28rem 0 var(--ink);
+    }
+
+    .upsell.is-visible {
+      display: block;
+      animation: arrive .28s ease both;
+    }
+
+    .upsell p {
+      margin: 0;
+      font-weight: 850;
+      line-height: 1.25;
+    }
+
+    .upsell .price {
+      display: block;
+      margin-top: .45rem;
+      color: var(--red);
+      font-size: 1.45rem;
+      font-weight: 1000;
+    }
+
+    .upsell-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .6rem;
+      margin-top: .9rem;
+    }
+
+    .upsell-actions .button {
+      min-height: 3.2rem;
+      box-shadow: .2rem .2rem 0 var(--ink);
+      font-size: .88rem;
+    }
+
+    .button.secondary {
+      background: #fff;
+      color: var(--ink);
+    }
+
     .done .button {
       min-width: min(18rem, 100%);
       background: var(--blue);
@@ -745,6 +793,10 @@
         font-size: 1.85rem;
       }
 
+      .upsell-actions {
+        grid-template-columns: 1fr;
+      }
+
       .boom {
         font-size: 3.25rem;
       }
@@ -782,6 +834,17 @@
     <section class="done" id="done" aria-hidden="true">
       <div>
         <h2>Sånn. Nå er det borte.</h2>
+        <div class="upsell" id="upsell" aria-live="polite">
+          <p>
+            Du har tatt bort 3 ting.
+            <span class="price">Abonner for $99/mnd</span>
+            og fjern 100 ting til.
+          </p>
+          <div class="upsell-actions">
+            <button class="button" id="subscribe" type="button">Abonner</button>
+            <button class="button secondary" id="skipSubscribe" type="button">Ikke nå</button>
+          </div>
+        </div>
         <button class="button" id="again" type="button">Noe mer?</button>
       </div>
     </section>
@@ -796,6 +859,9 @@
       const word = document.querySelector("#word");
       const done = document.querySelector("#done");
       const again = document.querySelector("#again");
+      const upsell = document.querySelector("#upsell");
+      const subscribe = document.querySelector("#subscribe");
+      const skipSubscribe = document.querySelector("#skipSubscribe");
       const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const effects = [
@@ -811,6 +877,9 @@
       ];
 
       let running = false;
+      let removedCount = 0;
+      let bonusRemovals = 0;
+      let upsellShown = false;
 
       form.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -829,6 +898,15 @@
       });
 
       again.addEventListener("click", reset);
+      skipSubscribe.addEventListener("click", hideUpsell);
+      subscribe.addEventListener("click", () => {
+        bonusRemovals = 100;
+        upsellShown = true;
+        upsell.querySelector("p").innerHTML = 'Premium Borte er aktivert. <span class="price">100 ekstra ting</span> kan forsvinne.';
+        subscribe.hidden = true;
+        skipSubscribe.textContent = "Perfekt";
+        again.textContent = "Ta bort mer";
+      });
 
       function destroy(text) {
         running = true;
@@ -855,19 +933,39 @@
         clearStage();
         done.classList.remove("is-visible");
         done.setAttribute("aria-hidden", "true");
+        hideUpsell();
         entry.hidden = false;
         requestAnimationFrame(() => input.focus());
       }
 
       function finish(delay = 0) {
         window.setTimeout(() => {
+          removedCount += 1;
           clearStage();
           stage.classList.remove("is-active");
           stage.setAttribute("aria-hidden", "true");
+          if (shouldShowUpsell()) {
+            showUpsell();
+          }
           done.classList.add("is-visible");
           done.setAttribute("aria-hidden", "false");
-          again.focus();
+          (upsell.classList.contains("is-visible") ? subscribe : again).focus();
         }, delay);
+      }
+
+      function shouldShowUpsell() {
+        return removedCount >= 3 && bonusRemovals === 0 && !upsellShown;
+      }
+
+      function showUpsell() {
+        upsellShown = true;
+        upsell.classList.add("is-visible");
+        again.hidden = true;
+      }
+
+      function hideUpsell() {
+        upsell.classList.remove("is-visible");
+        again.hidden = false;
       }
 
       function clearStage() {
