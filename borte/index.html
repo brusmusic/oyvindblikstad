@@ -239,6 +239,27 @@
       animation: arrive .28s ease both;
     }
 
+    .upsell.is-removing {
+      display: block;
+      pointer-events: none;
+    }
+
+    .upsell.vanish-pop {
+      animation: paywallPop 760ms cubic-bezier(.2, .9, .15, 1) forwards;
+    }
+
+    .upsell.vanish-rain {
+      animation: paywallRain 950ms cubic-bezier(.5, 0, .9, .2) forwards;
+    }
+
+    .upsell.vanish-erase {
+      animation: paywallErase 900ms linear forwards;
+    }
+
+    .upsell.vanish-suck {
+      animation: paywallSuck 860ms cubic-bezier(.72, 0, .92, .3) forwards;
+    }
+
     .upsell p {
       margin: 0;
       font-weight: 850;
@@ -255,7 +276,7 @@
 
     .upsell-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: .6rem;
       margin-top: .9rem;
     }
@@ -268,6 +289,11 @@
 
     .button.secondary {
       background: #fff;
+      color: var(--ink);
+    }
+
+    .button.remove-subscription {
+      background: var(--yellow);
       color: var(--ink);
     }
 
@@ -766,6 +792,27 @@
       to { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); }
     }
 
+    @keyframes paywallPop {
+      0% { opacity: 1; transform: scale(1) rotate(0); }
+      44% { opacity: 1; transform: scale(1.06) rotate(-2deg); filter: blur(0); }
+      100% { opacity: 0; transform: scale(.08) rotate(18deg); filter: blur(.2rem); }
+    }
+
+    @keyframes paywallRain {
+      0% { opacity: 1; transform: translateY(0) skewY(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateY(8rem) skewY(16deg) scaleY(1.7); filter: blur(.16rem); }
+    }
+
+    @keyframes paywallErase {
+      0% { opacity: 1; clip-path: inset(0 0 0 0); }
+      100% { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(1.2rem); }
+    }
+
+    @keyframes paywallSuck {
+      0% { opacity: 1; transform: scale(1) rotate(0); }
+      100% { opacity: 0; transform: scale(0) rotate(680deg); filter: blur(.18rem); }
+    }
+
     @media (max-width: 560px) {
       .app {
         padding: 1rem;
@@ -842,6 +889,7 @@
           </p>
           <div class="upsell-actions">
             <button class="button" id="subscribe" type="button">Abonner</button>
+            <button class="button remove-subscription" id="removeSubscription" type="button">Ta bort</button>
             <button class="button secondary" id="skipSubscribe" type="button">Ikke nå</button>
           </div>
         </div>
@@ -861,6 +909,7 @@
       const again = document.querySelector("#again");
       const upsell = document.querySelector("#upsell");
       const subscribe = document.querySelector("#subscribe");
+      const removeSubscription = document.querySelector("#removeSubscription");
       const skipSubscribe = document.querySelector("#skipSubscribe");
       const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -902,11 +951,13 @@
       subscribe.addEventListener("click", () => {
         bonusRemovals = 100;
         upsellShown = true;
-        upsell.querySelector("p").innerHTML = 'Premium Borte er aktivert. <span class="price">100 ekstra ting</span> kan forsvinne.';
+        setUpsellMessage("Premium Borte er aktivert.", "100 ekstra ting", "kan forsvinne.");
         subscribe.hidden = true;
+        removeSubscription.hidden = true;
         skipSubscribe.textContent = "Perfekt";
         again.textContent = "Ta bort mer";
       });
+      removeSubscription.addEventListener("click", removeSubscriptionWall);
 
       function destroy(text) {
         running = true;
@@ -965,7 +1016,50 @@
 
       function hideUpsell() {
         upsell.classList.remove("is-visible");
+        upsell.classList.remove("is-removing", "vanish-pop", "vanish-rain", "vanish-erase", "vanish-suck");
         again.hidden = false;
+      }
+
+      function removeSubscriptionWall() {
+        const variants = ["vanish-pop", "vanish-rain", "vanish-erase", "vanish-suck"];
+        const chosen = variants[Math.floor(Math.random() * variants.length)];
+        bonusRemovals = Number.POSITIVE_INFINITY;
+        upsellShown = true;
+        subscribe.disabled = true;
+        removeSubscription.disabled = true;
+        skipSubscribe.disabled = true;
+        upsell.classList.add("is-removing", chosen);
+
+        if (chosen === "vanish-pop") createParticles(20, "confetti", 180, 0, done);
+        if (chosen === "vanish-rain") addSubscriptionRain();
+
+        setTimeout(() => {
+          upsell.classList.remove("is-removing", chosen);
+          setUpsellMessage("Abonnementsløsningen er borte.", "Ubegrenset bruk", "Ingen fiktiv blokkering. Ingenting lagres.");
+          subscribe.hidden = true;
+          removeSubscription.hidden = true;
+          skipSubscribe.hidden = true;
+          subscribe.disabled = false;
+          removeSubscription.disabled = false;
+          skipSubscribe.disabled = false;
+          again.hidden = false;
+          again.textContent = "Ta bort mer";
+          upsell.classList.add("is-visible");
+          again.focus();
+        }, 980);
+      }
+
+      function setUpsellMessage(line, price, rest) {
+        upsell.querySelector("p").innerHTML = `${line} <span class="price">${price}</span> ${rest}`;
+      }
+
+      function addSubscriptionRain() {
+        for (let i = 0; i < 18; i += 1) {
+          const drop = addNode("rain", done);
+          drop.style.left = `${random(12, 88)}vw`;
+          drop.style.setProperty("--dur", `${randomInt(480, 850)}ms`);
+          drop.style.animationDelay = `${randomInt(0, 180)}ms`;
+        }
       }
 
       function clearStage() {
@@ -1201,9 +1295,9 @@
         finish(1900);
       }
 
-      function createParticles(count, className, spread = 200, delay = 0) {
+      function createParticles(count, className, spread = 200, delay = 0, parent = stage) {
         for (let i = 0; i < count; i += 1) {
-          const particle = addNode(className);
+          const particle = addNode(className, parent);
           const angle = random(0, Math.PI * 2);
           const distance = random(spread * .28, spread);
           const size = random(.35, 1.35);
