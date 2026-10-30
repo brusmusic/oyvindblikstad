@@ -130,14 +130,14 @@ body.sleeve-idle #listeningRoom .record-display{width:min(88vw,78dvh,620px)!impo
 body.sleeve-idle #listeningRoom .record-display img,body.sleeve-idle #listeningRoom .record-display .record-placeholder{width:100%!important;min-width:0!important;max-width:none!important;box-shadow:0 20px 65px #000a}
 body.sleeve-idle .player{opacity:0;pointer-events:none}
 @media(max-width:600px){#listeningRoom{padding-top:15px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}#listeningRoom .record-display img,#listeningRoom .record-display .record-placeholder{width:min(64vw,220px,calc(100dvh - 330px));min-width:min(42vw,135px)}#listeningRoom .room-hint{gap:7px}#listeningRoom .room-hint button{padding:8px 12px}#listeningRoom .stage-nav{margin-top:14px}}
-</style>
+.personal-tabs .settings-tab{flex-shrink:0;white-space:nowrap;background:transparent;color:#d3dcd6;border:1px solid #52636a}.personal-tabs .settings-tab:hover{background:#2b4246}@media(max-width:600px){.personal-tabs{overflow-x:auto;scrollbar-width:none;justify-content:flex-start}.personal-tabs .settings-tab{flex:0 0 auto}}</style>
 </head>
 <body>
-<div class="shell"><header><div><div class="brand">Mu<span>Li</span></div><div class="small">Musikk som møter mennesker</div></div><button class="secondary" id="settingsOpen" aria-label="Åpne innstillinger">⚙ Innstillinger</button></header>
+<div class="shell"><header><div><div class="brand">Mu<span>Li</span></div><div class="small">Musikk som møter mennesker</div></div></header>
 <main>
 <section id="personal" aria-label="Min musikksamling">
 <div class="personal-hero"><h1>Mine plater</h1></div>
-<nav class="personal-tabs" aria-label="Musikksamling"><button type="button" class="active" data-view="all">Mine plater</button><button type="button" data-view="favorites">♥ Favorittplater</button><button type="button" data-view="rooms">Mine rom</button><button type="button" data-view="shop">Platebutikken</button></nav>
+<nav class="personal-tabs" aria-label="Musikksamling"><button type="button" class="active" data-view="all">Mine plater</button><button type="button" data-view="favorites">♥ Favorittplater</button><button type="button" data-view="rooms">Mine rom</button><button type="button" data-view="shop">Platebutikken</button><button type="button" class="settings-tab" id="settingsOpen" aria-label="Åpne innstillinger">⚙ Innstillinger</button></nav>
 <div class="panel personal-panel focus-stage" id="collectionPanel" data-stage="collection">
 <div class="row between"><h2 id="collectionHeading">Mine plater</h2><span class="small" id="collectionCount"></span></div>
 <div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Utgivelsesår</option><option value="recent">Nylig lagt til</option></select><div id="collectionTransfer" class="hidden"><button type="button" class="secondary" id="exportCollection">Eksporter samling</button><button type="button" class="secondary" id="importCollection">Importer samling</button></div><input type="file" id="importCollectionFile" accept=".json,application/json" class="hidden" aria-label="Velg MuLi-samlingsfil"></div>
