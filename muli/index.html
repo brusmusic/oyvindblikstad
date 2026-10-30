@@ -130,7 +130,14 @@ body.sleeve-idle #listeningRoom .record-display{width:min(88vw,78dvh,620px)!impo
 body.sleeve-idle #listeningRoom .record-display img,body.sleeve-idle #listeningRoom .record-display .record-placeholder{width:100%!important;min-width:0!important;max-width:none!important;box-shadow:0 20px 65px #000a}
 body.sleeve-idle .player{opacity:0;pointer-events:none}
 @media(max-width:600px){#listeningRoom{padding-top:15px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}#listeningRoom .record-display img,#listeningRoom .record-display .record-placeholder{width:min(64vw,220px,calc(100dvh - 330px));min-width:min(42vw,135px)}#listeningRoom .room-hint{gap:7px}#listeningRoom .room-hint button{padding:8px 12px}#listeningRoom .stage-nav{margin-top:14px}}
-.personal-tabs .settings-tab{flex-shrink:0;white-space:nowrap;background:transparent;color:#d3dcd6;border:1px solid #52636a}.personal-tabs .settings-tab:hover{background:#2b4246}@media(max-width:600px){.personal-tabs{overflow-x:auto;scrollbar-width:none;justify-content:flex-start}.personal-tabs .settings-tab{flex:0 0 auto}}</style>
+.personal-tabs .settings-tab{flex-shrink:0;white-space:nowrap;background:transparent;color:#d3dcd6;border:1px solid #52636a}.personal-tabs .settings-tab:hover{background:#2b4246}@media(max-width:600px){.personal-tabs{overflow-x:auto;scrollbar-width:none;justify-content:flex-start}.personal-tabs .settings-tab{flex:0 0 auto}}
+/* Stability fixes: do not snap away from the selected cover; keep idle mode intentional */
+html{scroll-snap-type:none!important}
+.focus-stage{scroll-snap-align:none!important}
+body[data-focus="listening"] #collectionPanel:not(.hidden){filter:none;opacity:1;transform:none}
+body[data-focus="collection"] #listeningRoom:not(.hidden){filter:none;opacity:1;transform:none}
+#listeningRoom{scroll-margin-top:85px}
+</style>
 </head>
 <body>
 <div class="shell"><header><div><div class="brand">Mu<span>Li</span></div><div class="small">Musikk som møter mennesker</div></div></header>
@@ -235,7 +242,7 @@ function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'
 function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
 function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?(a.year||'').localeCompare(b.year||''):String(mode==='title'?a.name:a.artist).localeCompare(String(mode==='title'?b.name:b.artist),'nb'))}
 function renderLibrary(){$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
-function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');$('artistBio').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>{focusStage('listening',true);resetSleeveTimer()});return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
+function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');$('artistBio').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>{focusStage('listening',true);setTimeout(()=>resetSleeveTimer(),900)});return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
 function action(label,fn,secondary=false){const b=document.createElement('button');b.type='button';b.textContent=label;if(secondary)b.className='secondary';b.onclick=fn;actions.append(b);return b}
 action('▶ Spill hele albumet',()=>playAlbum(album));
 if(!saved)action('＋ Legg i samlingen',()=>{library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();showAlbum(album,where);personalNote('«'+album.name+'» er lagt i samlingen.')});
@@ -420,7 +427,7 @@ function focusStage(name,scroll=false){
  const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',bio:'artistBio',shop:'shopPanel'};
  const target=$(targets[name]);if(!target||target.classList.contains('hidden'))return;
  activeStage=name;document.body.dataset.focus=name;if(typeof resetSleeveTimer==='function')resetSleeveTimer();
- if(scroll)target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+ if(scroll){const top=Math.max(0,target.getBoundingClientRect().top+window.scrollY-85);window.scrollTo({top,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
 }
 $('goListeningRoom').onclick=()=>focusStage('listening',true);
 $('goCollection').onclick=()=>focusStage('collection',true);
@@ -437,9 +444,7 @@ if('IntersectionObserver' in window){
 }
 let focusLockUntil=0;
 const originalFocusStage=focusStage;
-focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+850;originalFocusStage(name,scroll)};
-focusStage('collection');
-
+focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+1800;originalFocusStage(name,scroll)};
 /* Five seconds of inactivity while viewing a selected album: show only the sleeve. */
 let sleeveTimer=null;
 function resetSleeveTimer(){
@@ -454,6 +459,7 @@ document.addEventListener('pointerdown',resetSleeveTimer,{passive:true});
 document.addEventListener('keydown',resetSleeveTimer);
 document.addEventListener('visibilitychange',resetSleeveTimer);
 document.addEventListener('scroll',()=>{if(!document.body.classList.contains('sleeve-idle'))resetSleeveTimer()},{passive:true});
+focusStage('collection');
 
 renderLibrary();
 
