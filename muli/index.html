@@ -179,6 +179,23 @@ body.sleeve-idle .immersive-room{opacity:1}
 .discography-actions{display:flex;gap:8px;margin-top:7px}
 .discography-actions button{flex:1;padding:8px 5px;border-radius:9px}
 #discographyPanel{scroll-margin-top:80px}
+
+/* MuLi room atmosphere: side panel over existing listening-room image */
+.ambient-open-btn{position:absolute;z-index:7;bottom:12%;left:5%;background:#241e18d9;color:#fff;border:1px solid #d4b88c88;font-size:13px;padding:10px 12px}
+.ambient-panel{position:absolute;inset:0;z-index:8;background:linear-gradient(145deg,#2c302c,#171d1d 70%);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;padding:25px;transform:translateX(-102%);transition:transform .35s ease;overflow-y:auto}
+.ambient-panel.is-open{transform:translateX(0)}
+.ambient-panel h2{color:#fff;font-size:24px;margin:0}
+.ambient-panel p{font-size:13px;text-align:center;margin:0}
+.ambient-panel button{background:#3d4843;color:#fff;border:1px solid #8e9488}
+.ambient-panel button.ambient-active{background:#c6a77b;color:#1d211e}
+.ambient-window{width:80%;max-width:300px;aspect-ratio:1.25;border:12px solid #78563c;box-shadow:0 0 0 5px #241c18,inset 0 0 30px #0006;display:grid;place-items:center;font-size:65px;background:var(--ambient-sky,#627786);transition:all .6s;cursor:pointer}
+.ambient-window.is-open{border-right:0;transform:perspective(500px) rotateY(-7deg);box-shadow:0 0 35px #e5e1ce55}
+.ambient-fire{font-size:50px;cursor:pointer;filter:grayscale(1);opacity:.45}
+.ambient-fire.is-on{filter:none;opacity:1;text-shadow:0 0 32px #ff8a29}
+.ambient-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ambient-row button,.ambient-panel select{font-size:13px;padding:10px;border-radius:10px;max-width:260px}
+.ambient-panel select{background:#2b3432;color:white;border:1px solid #7a817b}
+.ambient-back{position:absolute;top:24px;left:20px}
 </style>
 </head>
 <body>
@@ -204,7 +221,7 @@ body.sleeve-idle .immersive-room{opacity:1}
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
  <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button><button type="button" class="secondary" id="openDiscography">Diskografi ↓</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><button class="ambient-open-btn" id="ambientOpen" type="button" aria-label="Gå til vindu og peis">☁ Vindu og peis ‹</button><div class="ambient-panel" id="ambientPanel" aria-label="Vindu og peis"><button type="button" class="ambient-back" id="ambientBack">← Lytterommet</button><h2>Ved vinduet</h2><p>Vindu og peis lever videre når musikken stopper.</p><div class="ambient-window" id="ambientWindow" role="button" tabindex="0" aria-label="Åpne eller lukk vinduet">🌧️</div><div class="ambient-row"><button id="ambientWindowButton">Åpne vinduet</button><select id="ambientWeather" aria-label="Testvær"><option value="rain">🌧 Regn</option><option value="wind">🌬 Vind</option><option value="sun">☀ Sol</option><option value="snow">❄ Snø</option></select></div><div class="ambient-fire" id="ambientFire" role="button" tabindex="0" aria-label="Tenn eller slukk peisen">🔥</div><button id="ambientFireButton">Tenn peisen</button><p id="ambientStatus" aria-live="polite">Trykk på vinduet eller peisen for å høre rommet.</p><p>Lydene er foreløpig syntetiske testlyder. Spotify-avspilling demper romlyden.</p></div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
@@ -477,6 +494,7 @@ function setRoomAlbum(album){
  $('roomCoverPlaceholder').classList.toggle('hidden',!!album.image);
 }
 function syncRoomPlayer(paused,track){
+ ambientSpotifyPlaying=!paused;ambientApply();
  roomPlaying=!paused;document.body.classList.toggle('music-paused',paused);$('immersiveCoverToggle').setAttribute('aria-label',paused?'Spill av':'Pause');renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
  $('roomToggle').textContent=paused?'▶':'Ⅱ';
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
@@ -605,6 +623,50 @@ $('immersiveNext').onclick=e=>{e.stopPropagation();player?.nextTrack().catch(err
 document.addEventListener('keydown',resetSleeveTimer);
 document.addEventListener('visibilitychange',resetSleeveTimer);
 document.addEventListener('scroll',()=>{if(!document.body.classList.contains('sleeve-idle'))resetSleeveTimer()},{passive:true});
+
+/* Independent atmosphere engine: no mixing with Spotify playback. */
+let ambientContext=null,ambientWindowOpen=false,ambientFireOn=false,ambientWeather='rain',ambientWind=null,ambientFire=null,ambientTimer=null,ambientSpotifyPlaying=false;
+function ambientInit(){
+ if(ambientContext)return;
+ ambientContext=new (window.AudioContext||window.webkitAudioContext)();
+ const buffer=ambientContext.createBuffer(1,ambientContext.sampleRate*2,ambientContext.sampleRate),samples=buffer.getChannelData(0);
+ for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
+ const source=ambientContext.createBufferSource();source.buffer=buffer;source.loop=true;
+ const low=ambientContext.createBiquadFilter();low.type='lowpass';low.frequency.value=620;
+ ambientWind=ambientContext.createGain();ambientFire=ambientContext.createGain();
+ source.connect(low);low.connect(ambientWind);source.connect(ambientFire);
+ ambientWind.connect(ambientContext.destination);
+ const high=ambientContext.createBiquadFilter();high.type='highpass';high.frequency.value=900;
+ ambientFire.disconnect();source.connect(high);high.connect(ambientFire);ambientFire.connect(ambientContext.destination);
+ source.start();
+ ambientTimer=setInterval(()=>{if(!ambientContext||!ambientFireOn||ambientSpotifyPlaying)return;ambientFire.gain.setTargetAtTime(.015+Math.random()*.06,ambientContext.currentTime,.05)},210);
+ ambientApply();
+}
+async function ambientUnlock(){ambientInit();if(ambientContext.state==='suspended')await ambientContext.resume()}
+function ambientApply(){
+ const mute=ambientSpotifyPlaying;
+ if(ambientContext){const t=ambientContext.currentTime;ambientWind.gain.cancelScheduledValues(t);ambientFire.gain.cancelScheduledValues(t);ambientWind.gain.setTargetAtTime(!mute&&ambientWindowOpen?(ambientWeather==='rain'?.11:ambientWeather==='wind'?.075:ambientWeather==='snow'?.023:.008):0,t,.18);ambientFire.gain.setTargetAtTime(!mute&&ambientFireOn?.045:0,t,.18)}
+ $('ambientWindow').classList.toggle('is-open',ambientWindowOpen);$('ambientFire').classList.toggle('is-on',ambientFireOn);
+ $('ambientWindowButton').textContent=ambientWindowOpen?'Lukk vinduet':'Åpne vinduet';$('ambientFireButton').textContent=ambientFireOn?'Slukk peisen':'Tenn peisen';
+ const w={rain:['🌧️','#667b8a'],wind:['🌬️','#849597'],sun:['☀️','#a6c4d0'],snow:['❄️','#bac6d1']}[ambientWeather];$('ambientWindow').textContent=w[0];$('ambientWindow').style.setProperty('--ambient-sky',w[1]);
+ $('ambientStatus').textContent=mute?'Spotify spiller: romlyden er pauset, men vindu og peis er uendret.':ambientWindowOpen||ambientFireOn?'Romlyd aktiv'+(ambientWindowOpen?' · vindu åpent':'')+(ambientFireOn?' · peis tent':''):'Rommet er stille.';
+ try{localStorage.setItem('muli_ambient_v1',JSON.stringify({windowOpen:ambientWindowOpen,fireOn:ambientFireOn,weather:ambientWeather}))}catch{}
+}
+function ambientPanelOpen(open){$('ambientPanel').classList.toggle('is-open',open)}
+$('ambientOpen').onclick=e=>{e.stopPropagation();ambientPanelOpen(true)};
+$('ambientBack').onclick=e=>{e.stopPropagation();ambientPanelOpen(false)};
+$('ambientWindowButton').onclick=async()=>{await ambientUnlock();ambientWindowOpen=!ambientWindowOpen;ambientApply()};
+$('ambientFireButton').onclick=async()=>{await ambientUnlock();ambientFireOn=!ambientFireOn;ambientApply()};
+$('ambientWindow').onclick=()=>$('ambientWindowButton').click();
+$('ambientFire').onclick=()=>$('ambientFireButton').click();
+for(const id of ['ambientWindow','ambientFire'])$(id).onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$(id).click()}};
+$('ambientWeather').onchange=e=>{ambientWeather=e.target.value;ambientApply()};
+try{const saved=JSON.parse(localStorage.getItem('muli_ambient_v1')||'{}');ambientWindowOpen=!!saved.windowOpen;ambientFireOn=!!saved.fireOn;ambientWeather=['rain','wind','sun','snow'].includes(saved.weather)?saved.weather:'rain';$('ambientWeather').value=ambientWeather}catch{}
+ambientApply();
+let ambientTouchX=null;
+$('immersiveRoom').addEventListener('touchstart',e=>{ambientTouchX=e.touches[0]?.clientX??null},{passive:true});
+$('immersiveRoom').addEventListener('touchend',e=>{if(ambientTouchX===null)return;const delta=(e.changedTouches[0]?.clientX??ambientTouchX)-ambientTouchX;ambientTouchX=null;if(delta< -65&&!$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(true);else if(delta>65&&$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(false)},{passive:true});
+
 focusStage('collection');
 
 renderLibrary();
