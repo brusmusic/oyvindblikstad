@@ -173,7 +173,7 @@ $('login').onclick=async()=>{try{const verifier=random(),state=random();sessionS
 async function handleCallback(){const params=new URLSearchParams(location.search);if(!params.has('code')&&!params.has('error'))return;history.replaceState(null,'',location.pathname);if(params.has('error'))throw Error('Spotify-innlogging ble avbrutt: '+params.get('error'));const stored=JSON.parse(sessionStorage.getItem('muli_pkce')||'null');sessionStorage.removeItem('muli_pkce');if(!stored||stored.state!==params.get('state'))throw Error('Innloggingskontrollen mislyktes. Prøv igjen.');await exchange({client_id:CLIENT_ID,grant_type:'authorization_code',code:params.get('code'),redirect_uri:REDIRECT,code_verifier:stored.verifier});status('Spotify er tilkoblet.')}
 function logout(){sessionStorage.removeItem('muli_auth');auth=null;player?.disconnect();player=null;deviceId=null;$('toggle').disabled=true;$('previousTrack').disabled=true;$('nextTrack').disabled=true;$('roomToggle').disabled=true;$('roomPrevious').disabled=true;$('roomNext').disabled=true;roomPlaying=false;renderDeck();$('account').textContent='';updateAuth();status('Du er logget ut.')} $('logout').onclick=logout;
 window.onSpotifyWebPlaybackSDKReady=()=>{sdkReady=true;startPlayer()};
-function startPlayer(){if(!sdkReady||!auth||player)return;player=new Spotify.Player({name:'MuLi – nettleser',getOAuthToken:cb=>token().then(cb).catch(e=>status(e.message)),volume:0.6});player.addListener('ready',({device_id})=>{deviceId=device_id;status('Spotify-spilleren er klar. Velg en sang.');$('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false});player.addListener('not_ready',()=>{deviceId=null;status('Spotify-spilleren er midlertidig utilgjengelig.')});player.addListener('initialization_error',({message})=>status(message));player.addListener('authentication_error',({message})=>status(message));player.addListener('account_error',()=>status('Spotify Premium kreves for avspilling.'));player.addListener('playback_error',({message})=>status(message));player.addListener('player_state_changed',s=>{if(!s)return;const track=s.track_window.current_track;if(track){$('nowTitle').textContent=track.name;$('nowArtist').textContent=track.artists.map(a=>a.name).join(', ');if(track.album?.uri&&(!roomAlbum||roomAlbum.uri!==track.album.uri)){setRoomAlbum(cleanAlbum(track.album))}}syncRoomPlayer(s.paused,track);$('toggle').textContent=s.paused?'▶':'Ⅱ';$('toggle').disabled=false;$('previousTrack').disabled=false;$('nextTrack').disabled=false;if(!starting)playbackStatus(s.paused?'Pauset':'Spiller nå')});player.connect().then(ok=>{if(!ok)status('Kunne ikke starte Spotify-spilleren i denne nettleseren.')}).catch(e=>status(e.message))}
+function startPlayer(){if(!sdkReady||!auth||player)return;player=new Spotify.Player({name:'MuLi – nettleser',getOAuthToken:cb=>token().then(cb).catch(e=>status(e.message)),volume:0.6});player.addListener('ready',({device_id})=>{deviceId=device_id;status('Spotify-spilleren er klar. Velg en sang.');$('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false});player.addListener('not_ready',()=>{deviceId=null;status('Spotify-spilleren er midlertidig utilgjengelig.')});player.addListener('initialization_error',({message})=>status(message));player.addListener('authentication_error',({message})=>status(message));player.addListener('account_error',()=>status('Spotify Premium kreves for avspilling.'));player.addListener('playback_error',({message})=>status(message));player.addListener('player_state_changed',s=>{if(!s)return;const track=s.track_window.current_track;if(track){$('nowTitle').textContent=track.name;$('nowArtist').textContent=track.artists.map(a=>a.name).join(', ');if(track.album?.uri&&!albumSwitchPending&&(!roomAlbum||roomAlbum.uri!==track.album.uri)){setRoomAlbum(cleanAlbum(track.album))}}syncRoomPlayer(s.paused,track);$('toggle').textContent=s.paused?'▶':'Ⅱ';$('toggle').disabled=false;$('previousTrack').disabled=false;$('nextTrack').disabled=false;if(!starting)playbackStatus(s.paused?'Pauset':'Spiller nå')});player.connect().then(ok=>{if(!ok)status('Kunne ikke starte Spotify-spilleren i denne nettleseren.')}).catch(e=>status(e.message))}
 $('searchForm').onsubmit=async e=>{e.preventDefault();const query=$('query').value.trim();if(!query)return;status('Søker …');$('results').replaceChildren();try{const data=await api('search?'+new URLSearchParams({q:query,type:'track',limit:'10'}));const tracks=data.tracks?.items||[];searchTracks=tracks;for(const track of tracks){const row=document.createElement('div');row.className='track';const image=document.createElement('img');image.src=track.album?.images?.at(-1)?.url||'';image.alt='';const info=document.createElement('div');info.className='info';const title=document.createElement('strong');title.textContent=track.name;const artist=document.createElement('small');artist.textContent=track.artists.map(a=>a.name).join(', ');info.append(title,artist);const play=document.createElement('button');play.textContent='▶ Spill';play.dataset.uri=track.uri;play.onclick=()=>playTrack(track,play);row.append(image,info,play);$('results').append(row)}status(tracks.length?tracks.length+' treff':'Ingen treff')}catch(err){status(err.message)}};
 async function playTrack(track,button){
  if(starting)return;
@@ -252,7 +252,28 @@ async function loadAlbumTracks(album,container,requestId){
  }catch(e){if(requestId===detailRequest&&container.isConnected)msg.textContent='Kunne ikke hente sporlisten: '+e.message}
 }
 
-async function playAlbum(album,position=0){setRoomAlbum(album);if(!deviceId){personalNote('Koble til Spotify Premium og vent til spilleren er klar.');$('settings').classList.remove('hidden');return}try{personalNote('Starter albumet «'+album.name+'» …');await api('me/player',{method:'PUT',body:JSON.stringify({device_ids:[deviceId],play:false})});await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});playingAlbumId=album.id;roomPlaying=true;renderDeck();$('roomPlay').textContent='Ⅱ';$('toggle').disabled=false;$('roomToggle').textContent='Ⅱ';$('roomNow').textContent=album.name+' · '+album.artist;$('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;$('toggle').disabled=false;personalNote(position?'Spiller fra valgt spor på «'+album.name+'».':'Spiller albumet «'+album.name+'» i original rekkefølge.')}catch(e){personalNote('Avspilling feilet: '+e.message)}}
+async function playAlbum(album,position=0){
+ setRoomAlbum(album);
+ if(!deviceId){personalNote('Koble til Spotify Premium og vent til spilleren er klar.');$('settings').classList.remove('hidden');return}
+ const request=++albumSwitchToken;albumSwitchPending=album.id;
+ $('roomPlay').textContent='…';$('roomPlay').disabled=true;
+ try{
+  personalNote('Setter på «'+album.name+'» …');
+  // A single play request replaces the currently playing album, even mid-track.
+  // Transferring with play:false first could pause and race with the SDK state event.
+  await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});
+  if(request!==albumSwitchToken)return;
+  playingAlbumId=album.id;roomPlaying=true;albumSwitchPending=null;renderDeck();
+  $('roomPlay').textContent='Ⅱ';$('toggle').textContent='Ⅱ';$('roomToggle').textContent='Ⅱ';
+  $('roomNow').textContent=album.name+' · '+album.artist;
+  $('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;
+  $('toggle').disabled=false;
+  personalNote(position?'Spiller fra valgt spor på «'+album.name+'».':'Spiller «'+album.name+'» fra starten.');
+ }catch(e){
+  if(request===albumSwitchToken){albumSwitchPending=null;personalNote('Avspilling feilet: '+e.message);$('roomPlay').textContent='▶'}
+ }finally{if(request===albumSwitchToken)$('roomPlay').disabled=false}
+}
+
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{libraryView=b.dataset.view;$('albumDetail').classList.add('hidden');renderLibrary();if(libraryView==='shop'){loadSpotifyTips();focusStage('shop',true)}else focusStage('collection',true)}));
 $('albumSort').onchange=renderLibrary;
 $('addRoom').onclick=()=>{const room=$('roomName').value.trim();if(!room||library.rooms.some(r=>r.toLowerCase()===room.toLowerCase()))return;library.rooms.push(room);activeRoom=room;$('roomName').value='';saveLibrary();renderLibrary()};
@@ -288,7 +309,7 @@ $('importCollectionFile').onchange=async e=>{
 
 /* Listening room state: CD is the default until a different player is saved */
 const DECK_KEY='muli_player_type';
-let deckType='cd',roomPlaying=false,roomAlbum=null,playingAlbumId=null;
+let deckType='cd',roomPlaying=false,roomAlbum=null,playingAlbumId=null,albumSwitchToken=0,albumSwitchPending=null;
 try{const stored=localStorage.getItem(DECK_KEY);if(['lp','cd','cassette'].includes(stored))deckType=stored}catch(e){}
 function renderDeck(){
  const deck=$('roomDeck');deck.className='deck deck-'+deckType+' hidden'+(roomPlaying?' playing':'');const mini=$('miniDeck');mini.className='mini-deck mini-'+deckType+(roomPlaying?' playing':'');
@@ -310,7 +331,7 @@ function syncRoomPlayer(paused,track){
  roomPlaying=!paused;renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
  $('roomToggle').textContent=paused?'▶':'Ⅱ';
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
- if(track){playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}
+ if(track){if(!albumSwitchPending||track.album?.id===albumSwitchPending)playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}
 }
 document.querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>{deckType=b.dataset.deck;try{localStorage.setItem(DECK_KEY,deckType)}catch(e){}renderDeck()});
 $('roomCover').onclick=()=>{if(roomAlbum)playSelectedOrToggle();else focusStage('collection',true)};
@@ -323,6 +344,7 @@ renderDeck();
 
 /* The fixed hi-fi dock is the primary playback control. */
 function playSelectedOrToggle(){
+ if(albumSwitchPending)return;
  if(roomAlbum&&playingAlbumId!==roomAlbum.id){playAlbum(roomAlbum);return}
  if(roomAlbum&&playingAlbumId===null){playAlbum(roomAlbum);return}
  if(!deviceId){personalNote('Koble til Spotify under Innstillinger for å spille albumet.');$('settings').classList.remove('hidden');$('settings').scrollIntoView({behavior:'smooth'});return}
