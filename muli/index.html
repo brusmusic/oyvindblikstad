@@ -160,7 +160,7 @@ body[data-focus="collection"] #listeningRoom:not(.hidden){filter:none;opacity:1;
  <div id="roomDeck" class="deck deck-cd hidden" aria-label="CD-spiller"></div>
  <div class="room-now hidden" id="roomNow">Ingen sang spiller</div>
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
- <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
+ <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
 <section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
@@ -342,8 +342,10 @@ function renderDeck(){
  deck.setAttribute('aria-label',deckType==='lp'?'LP-spiller':deckType==='cd'?'CD-spiller':'Kassettspiller');
  document.querySelectorAll('[data-deck]').forEach(b=>{b.classList.toggle('active',b.dataset.deck===deckType);b.setAttribute('aria-pressed',String(b.dataset.deck===deckType))})
 }
+function updateRoomSaveButton(){const b=$('saveRoomAlbum');if(!b)return;const saved=!!roomAlbum&&library.albums.some(a=>a.id===roomAlbum.id);b.classList.toggle('hidden',!roomAlbum||saved);b.disabled=!roomAlbum||saved}
+$('saveRoomAlbum').onclick=()=>{if(!roomAlbum||library.albums.some(a=>a.id===roomAlbum.id))return;const a={...roomAlbum,rooms:['Stua'],added:Date.now()};library.albums.push(a);saveLibrary();renderLibrary();updateRoomSaveButton();personalNote('«'+a.name+'» er lagt i platesamlingen.')};
 function setRoomAlbum(album){
- if(!album)return;roomAlbum=album;renderDeck();$('roomPlay').disabled=false;$('roomPlay').textContent=playingAlbumId===album.id&&roomPlaying?'Ⅱ':'▶';$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
+ if(!album)return;roomAlbum=album;renderDeck();updateRoomSaveButton();$('roomPlay').disabled=false;$('roomPlay').textContent=playingAlbumId===album.id&&roomPlaying?'Ⅱ':'▶';$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
  $('roomAlbumTitle').textContent=album.name+' · '+album.artist;
  $('roomCoverImage').src=album.image||'';
  $('roomCoverImage').classList.toggle('hidden',!album.image);
