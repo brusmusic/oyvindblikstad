@@ -172,7 +172,7 @@ body.sleeve-idle .immersive-room{opacity:1}
 </div>
 
 <section class="listening-room focus-stage" data-stage="listening" id="listeningRoom" aria-label="Avspillingsrom">
- <div class="listening-top"><h2>Avspillingsrommet</h2><div class="deck-switch" role="group" aria-label="Velg spiller"><button type="button" data-deck="lp" aria-label="LP-spiller" title="LP-spiller">◉</button><button type="button" data-deck="cd" class="active" aria-label="CD-spiller" title="CD-spiller">◎</button><button type="button" data-deck="cassette" aria-label="Kassettspiller" title="Kassettspiller">▣</button></div></div>
+ <div class="listening-top"><h2>Avspillingsrommet</h2></div>
  <button type="button" id="roomPlay" class="room-main-play" aria-label="Spill hele albumet">▶</button><button type="button" class="record-display" id="roomCover" aria-label="Åpne albumets sporliste"><div class="record-placeholder" id="roomCoverPlaceholder">♫</div><img id="roomCoverImage" class="hidden" alt="Albumcover"></button>
  <div class="display-shelf" aria-hidden="true"></div>
  <div class="record-caption" id="roomAlbumTitle">Velg en plate fra samlingen</div>
@@ -359,7 +359,7 @@ function renderDeck(){
  const cassette='<div class="cassette-body"><div class="cassette-window"><div class="cassette-reel"></div><div class="cassette-reel"></div></div></div>';
  deck.innerHTML=deckType==='lp'?lp:deckType==='cd'?cd:cassette;
  deck.setAttribute('aria-label',deckType==='lp'?'LP-spiller':deckType==='cd'?'CD-spiller':'Kassettspiller');
- document.querySelectorAll('[data-deck]').forEach(b=>{b.classList.toggle('active',b.dataset.deck===deckType);b.setAttribute('aria-pressed',String(b.dataset.deck===deckType))})
+ 
 }
 function updateRoomSaveButton(){const b=$('saveRoomAlbum');if(!b)return;const saved=!!roomAlbum&&library.albums.some(a=>a.id===roomAlbum.id);b.classList.toggle('hidden',!roomAlbum||saved);b.disabled=!roomAlbum||saved}
 $('saveRoomAlbum').onclick=()=>{if(!roomAlbum||library.albums.some(a=>a.id===roomAlbum.id))return;const a={...roomAlbum,rooms:['Stua'],added:Date.now()};library.albums.push(a);saveLibrary();renderLibrary();updateRoomSaveButton();personalNote('«'+a.name+'» er lagt i platesamlingen.')};
@@ -376,7 +376,7 @@ function syncRoomPlayer(paused,track){
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
  if(track){if(!albumSwitchPending||track.album?.id===albumSwitchPending)playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}
 }
-document.querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>{deckType=b.dataset.deck;try{localStorage.setItem(DECK_KEY,deckType)}catch(e){}renderDeck()});
+
 $('roomCover').onclick=()=>{if(roomAlbum)playSelectedOrToggle();else focusStage('collection',true)};
 $('openTracklist').onclick=()=>{if(roomAlbum){$('artistBio').classList.add('hidden');showAlbum(roomAlbum,'room')}};
 $('openArtistBio').onclick=showArtistBio;
