@@ -115,6 +115,21 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
 #listeningRoom .record-caption{text-align:center}
 #listeningRoom .room-hint button{opacity:.7;border-color:#625f54;font-size:12px}
 @media(max-width:600px){.player-inner{gap:18px}.player .transport{gap:10px}.room-main-play{width:58px;height:58px;margin-bottom:12px}.personal-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.personal-tabs button{flex-shrink:0}#albumGrid{grid-auto-columns:calc((100% - 24px)/3)}}
+
+/* Viewport-aware listening stage and idle sleeve mode */
+#listeningRoom{scroll-margin-top:76px;min-height:0!important;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+#listeningRoom .record-display img,#listeningRoom .record-display .record-placeholder{width:min(57vw,235px,calc(100dvh - 390px));min-width:min(42vw,145px)}
+#listeningRoom .room-hint{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#artistBio{max-width:820px;margin:12px auto 30px;line-height:1.8;scroll-margin-top:95px}
+#artistBio p{white-space:pre-line;line-height:1.85}
+#artistBio a{display:inline-block;margin:12px 18px 12px 0;color:#d6e8cf}
+body.sleeve-idle{overflow:hidden}
+body.sleeve-idle #listeningRoom{position:fixed!important;inset:0!important;z-index:100!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;display:flex!important;justify-content:center!important;align-items:center!important;padding:24px!important;min-height:100dvh!important;background:radial-gradient(ellipse at center,#39382f,#111e21)!important;filter:none!important;opacity:1!important;transform:none!important}
+body.sleeve-idle #listeningRoom>*:not(.record-display){display:none!important}
+body.sleeve-idle #listeningRoom .record-display{width:min(88vw,78dvh,620px)!important;max-width:none!important;cursor:pointer}
+body.sleeve-idle #listeningRoom .record-display img,body.sleeve-idle #listeningRoom .record-display .record-placeholder{width:100%!important;min-width:0!important;max-width:none!important;box-shadow:0 20px 65px #000a}
+body.sleeve-idle .player{opacity:0;pointer-events:none}
+@media(max-width:600px){#listeningRoom{padding-top:15px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}#listeningRoom .record-display img,#listeningRoom .record-display .record-placeholder{width:min(64vw,220px,calc(100dvh - 330px));min-width:min(42vw,135px)}#listeningRoom .room-hint{gap:7px}#listeningRoom .room-hint button{padding:8px 12px}#listeningRoom .stage-nav{margin-top:14px}}
 </style>
 </head>
 <body>
@@ -138,9 +153,9 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
  <div id="roomDeck" class="deck deck-cd hidden" aria-label="CD-spiller"></div>
  <div class="room-now hidden" id="roomNow">Ingen sang spiller</div>
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
- <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Sporliste</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
+ <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
@@ -220,7 +235,7 @@ function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'
 function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
 function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?(a.year||'').localeCompare(b.year||''):String(mode==='title'?a.name:a.artist).localeCompare(String(mode==='title'?b.name:b.artist),'nb'))}
 function renderLibrary(){$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
-function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>focusStage('listening',true));return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
+function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');$('artistBio').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>{focusStage('listening',true);resetSleeveTimer()});return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
 function action(label,fn,secondary=false){const b=document.createElement('button');b.type='button';b.textContent=label;if(secondary)b.className='secondary';b.onclick=fn;actions.append(b);return b}
 action('▶ Spill hele albumet',()=>playAlbum(album));
 if(!saved)action('＋ Legg i samlingen',()=>{library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();showAlbum(album,where);personalNote('«'+album.name+'» er lagt i samlingen.')});
@@ -335,7 +350,8 @@ function syncRoomPlayer(paused,track){
 }
 document.querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>{deckType=b.dataset.deck;try{localStorage.setItem(DECK_KEY,deckType)}catch(e){}renderDeck()});
 $('roomCover').onclick=()=>{if(roomAlbum)playSelectedOrToggle();else focusStage('collection',true)};
-$('openTracklist').onclick=()=>{if(roomAlbum)showAlbum(roomAlbum,'room')};
+$('openTracklist').onclick=()=>{if(roomAlbum){$('artistBio').classList.add('hidden');showAlbum(roomAlbum,'room')}};
+$('openArtistBio').onclick=showArtistBio;
 $('roomPlay').onclick=playSelectedOrToggle;
 $('roomPrevious').onclick=()=>$('previousTrack').click();
 $('roomToggle').onclick=()=>{if(!roomAlbum){personalNote('Velg en plate fra samlingen først.');return}if(playingAlbumId===roomAlbum.id&&deviceId){$('toggle').click()}else playAlbum(roomAlbum)};
@@ -351,6 +367,28 @@ function playSelectedOrToggle(){
  if(player)player.togglePlay().catch(e=>personalNote(e.message));
 }
 $('toggle').onclick=playSelectedOrToggle;
+
+
+/* Artist reading room: Wikipedia summary, separate from Spotify playback. */
+let bioRequest=0;
+async function showArtistBio(){
+ if(!roomAlbum)return;
+ const album=roomAlbum,request=++bioRequest,artist=album.artist.split(',')[0].trim();
+ const panel=$('artistBio');panel.replaceChildren();panel.classList.remove('hidden');$('albumDetail').classList.add('hidden');
+ const heading=document.createElement('h2');heading.textContent=artist;
+ const text=document.createElement('p');text.textContent='Henter artistens historie …';
+ const back=document.createElement('button');back.className='secondary';back.textContent='← Tilbake til avspillingsrommet';back.onclick=()=>{panel.classList.add('hidden');focusStage('listening',true)};
+ panel.append(heading,text,back);focusStage('bio',true);
+ try{
+  const searchUrl='https://no.wikipedia.org/w/api.php?'+new URLSearchParams({action:'query',generator:'search',gsrsearch:'intitle:'+artist,gsrlimit:'1',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url',format:'json',origin:'*'});
+  const res=await fetch(searchUrl);if(!res.ok)throw Error('Wikipedia utilgjengelig');
+  const data=await res.json();if(request!==bioRequest||roomAlbum?.id!==album.id)return;
+  const page=Object.values(data.query?.pages||{})[0];
+  if(!page?.extract)throw Error('Ingen biografi funnet');
+  text.textContent=page.extract;
+  if(page.fullurl){const link=document.createElement('a');link.href=page.fullurl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Les mer på Wikipedia';panel.insertBefore(link,back)}
+ }catch(e){if(request===bioRequest)text.textContent='Fant ingen tilgjengelig biografi for denne artisten på norsk Wikipedia.'}
+}
 
 let tipsLoaded=false;
 async function loadSpotifyTips(){
@@ -379,9 +417,9 @@ $('refreshTips').onclick=loadSpotifyTips;
 /* Focused spatial navigation; scrolling remains natural for long record shelves */
 let activeStage='collection';
 function focusStage(name,scroll=false){
- const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',shop:'shopPanel'};
+ const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',bio:'artistBio',shop:'shopPanel'};
  const target=$(targets[name]);if(!target||target.classList.contains('hidden'))return;
- activeStage=name;document.body.dataset.focus=name;
+ activeStage=name;document.body.dataset.focus=name;if(typeof resetSleeveTimer==='function')resetSleeveTimer();
  if(scroll)target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
 }
 $('goListeningRoom').onclick=()=>focusStage('listening',true);
@@ -401,6 +439,21 @@ let focusLockUntil=0;
 const originalFocusStage=focusStage;
 focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+850;originalFocusStage(name,scroll)};
 focusStage('collection');
+
+/* Five seconds of inactivity while viewing a selected album: show only the sleeve. */
+let sleeveTimer=null;
+function resetSleeveTimer(){
+ clearTimeout(sleeveTimer);
+ if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');return}
+ if(!roomAlbum||document.hidden||activeStage!=='listening')return;
+ sleeveTimer=setTimeout(()=>{
+  if(roomAlbum&&activeStage==='listening'&&!document.hidden&&!document.querySelector('dialog[open]'))document.body.classList.add('sleeve-idle');
+ },5000);
+}
+document.addEventListener('pointerdown',resetSleeveTimer,{passive:true});
+document.addEventListener('keydown',resetSleeveTimer);
+document.addEventListener('visibilitychange',resetSleeveTimer);
+document.addEventListener('scroll',()=>{if(!document.body.classList.contains('sleeve-idle'))resetSleeveTimer()},{passive:true});
 
 renderLibrary();
 
