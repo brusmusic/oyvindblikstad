@@ -92,7 +92,7 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
 .record-display img,.record-display .record-placeholder{width:min(64vw,290px)}
 .player{z-index:20;background:linear-gradient(160deg,#263532,#14282c);border-top:1px solid #8e8170;box-shadow:0 -10px 30px #0007;padding:10px 13px max(12px,env(safe-area-inset-bottom))}
 .player-inner{gap:12px}
-.mini-deck{width:62px;height:55px;flex:0 0 62px;border-radius:10px;background:linear-gradient(145deg,#b9b9ae,#63746e);border:1px solid #b7b9a8;box-shadow:inset 0 1px #fff8,0 3px 8px #0006;position:relative;display:grid;place-items:center;overflow:hidden}
+.mini-deck{padding:0;cursor:pointer;width:62px;height:55px;flex:0 0 62px;border-radius:10px;background:linear-gradient(145deg,#b9b9ae,#63746e);border:1px solid #b7b9a8;box-shadow:inset 0 1px #fff8,0 3px 8px #0006;position:relative;display:grid;place-items:center;overflow:hidden}
 .mini-disc{width:41px;height:41px;border-radius:50%;background:repeating-radial-gradient(circle,#121a1b 0 3px,#323d3e 4px 5px);box-shadow:0 2px 4px #0008}
 .mini-center{position:absolute;width:13px;height:13px;border-radius:50%;background:#dfc39d;border:3px solid #343f3c}
 .mini-lp{background:linear-gradient(140deg,#aa825e,#5a4031)}
@@ -198,7 +198,7 @@ body.sleeve-idle .immersive-room{opacity:1}
 <div class="notice">MuLi er en teknisk prototype. Spotify Premium kreves for nettleseravspilling. Bruk i institusjon må avklares opp mot Spotifys vilkår og musikkrettigheter.</div>
 </div><section class="panel hidden" id="settings"><div class="row between"><h2>Innstillinger</h2><button class="secondary" id="settingsClose">Lukk</button></div><div class="hidden"><h3>Lytteprofiler</h3><p class="small">Navn lagres bare i denne nettleseren. Ikke legg inn sensitive personopplysninger.</p><div class="row"><input id="newResident" placeholder="Navn eller kallenavn" maxlength="60" style="flex:1;min-width:170px"><button id="addResident">Legg til</button></div><div class="results" id="residentList"></div></div><h3>Spotify</h3><p class="small">Logg inn med Spotify for å søke og spille musikk. Innlogging bruker PKCE uten klienthemmelighet.</p><div class="row"><button id="login">Koble til Spotify</button><button id="logout" class="secondary hidden">Logg ut</button></div><p class="small" id="account"></p></section>
 </main><footer>MuLi Personal 2.0 · Samlingen lagres lokalt i denne nettleseren. Ingen lydfiler hostes her.</footer></div>
-<div class="player"><div class="player-inner"><div class="mini-deck" id="miniDeck" aria-hidden="true"><div class="mini-disc"></div><div class="mini-center"></div></div><div class="player-text visually-hidden"><strong id="nowTitle">Ingen sang valgt</strong><small id="nowArtist">Koble til Spotify for å begynne</small><div id="playbackStatus" class="live-status" role="status"></div></div><div class="transport"><button id="previousTrack" class="skip" disabled aria-label="Forrige spor">⏮</button><button id="toggle" class="circle" disabled aria-label="Spill av eller pause">▶</button><button id="nextTrack" class="skip" disabled aria-label="Neste spor">⏭</button></div></div></div>
+<div class="player"><div class="player-inner"><button type="button" class="mini-deck" id="miniDeck" aria-label="Åpne lytterommet" title="Åpne lytterommet"><div class="mini-disc"></div><div class="mini-center"></div></button><div class="player-text visually-hidden"><strong id="nowTitle">Ingen sang valgt</strong><small id="nowArtist">Koble til Spotify for å begynne</small><div id="playbackStatus" class="live-status" role="status"></div></div><div class="transport"><button id="previousTrack" class="skip" disabled aria-label="Forrige spor">⏮</button><button id="toggle" class="circle" disabled aria-label="Spill av eller pause">▶</button><button id="nextTrack" class="skip" disabled aria-label="Neste spor">⏭</button></div></div></div>
 <script src="https://sdk.scdn.co/spotify-player.js"></script>
 <script>
 (()=>{'use strict';
@@ -489,6 +489,7 @@ let focusLockUntil=0;
 const originalFocusStage=focusStage;
 focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+1800;originalFocusStage(name,scroll)};
 /* Five seconds of inactivity while viewing a selected album: show the listening room. */
+$('miniDeck').onclick=()=>{if(!roomAlbum){focusStage('listening',true);return}clearTimeout(sleeveTimer);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false')};
 function resetSleeveTimer(){
  clearTimeout(sleeveTimer);
  if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','true');return}
