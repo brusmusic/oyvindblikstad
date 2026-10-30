@@ -459,6 +459,7 @@ $('refreshTips').onclick=loadSpotifyTips;
 
 /* Focused spatial navigation; scrolling remains natural for long record shelves */
 let activeStage='collection';
+let sleeveTimer=null;
 function focusStage(name,scroll=false){
  const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',bio:'artistBio',shop:'shopPanel'};
  const target=$(targets[name]);if(!target||target.classList.contains('hidden'))return;
@@ -481,14 +482,13 @@ if('IntersectionObserver' in window){
 let focusLockUntil=0;
 const originalFocusStage=focusStage;
 focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+1800;originalFocusStage(name,scroll)};
-/* Five seconds of inactivity while viewing a selected album: show only the sleeve. */
-let sleeveTimer=null;
+/* Five seconds of inactivity while viewing a selected album: show the listening room. */
 function resetSleeveTimer(){
  clearTimeout(sleeveTimer);
  if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','true');return}
- if(!roomAlbum||document.hidden||activeStage!=='listening')return;
+ if(!roomAlbum||document.hidden)return;
  sleeveTimer=setTimeout(()=>{
-  if(roomAlbum&&activeStage==='listening'&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
+  if(roomAlbum&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
  },5000);
 }
 document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle')&&e.target.closest('.immersive-controls'))return;resetSleeveTimer()},{passive:true});
