@@ -237,6 +237,7 @@ body.music-paused .immersive-cover-frame{filter:none}
 .room-play-status{position:absolute;z-index:6;left:12%;right:12%;bottom:4%;font-size:12px;text-align:center;padding:7px;border-radius:8px;background:#171411bc;color:#f5e4c8;pointer-events:none}
 .immersive-turntable:disabled{opacity:.65;cursor:wait}
 .room-library-empty{margin-top:20px}
+.immersive-cover-frame.local-selected{background:linear-gradient(135deg,#463424,#241d1a)}.immersive-cover-frame.local-selected:after{content:"♫";position:absolute;inset:0;display:grid;place-items:center;color:#d4b78d;font-size:clamp(40px,9vh,90px)}.immersive-cover-frame.local-selected img{visibility:hidden}
 </style>
 </head>
 <body>
@@ -750,6 +751,7 @@ function roomSelectAlbum(album){
  if(roomPlaying&&player){player.pause().catch(()=>{});}
  setRoomAlbum(album);
  roomWantedSource=roomIsLocal(album)?'local':'spotify';
+ $('immersiveCoverToggle').classList.toggle('local-selected',roomIsLocal(album)||!album.image);
  roomApplyPlayback();
 }
 async function roomToggleTurntable(){
@@ -795,7 +797,7 @@ function openRoomLibrary(){
  $('roomLibraryEmpty').classList.toggle('hidden',albums.length>0);
  for(const album of albums){
   const button=document.createElement('button');button.type='button';button.className='room-library-item';
-  const cover=document.createElement('img');cover.src=album.image||'';cover.alt='Cover: '+album.name;cover.loading='lazy';
+  const cover=document.createElement('img');cover.src=album.image||'';cover.alt='Cover: '+album.name;cover.loading='lazy';if(!album.image){cover.style.display='none';button.style.background='linear-gradient(135deg,#5e4732,#29221d)';button.style.borderRadius='8px';button.style.padding='20px';button.style.minHeight='190px'}
   const title=document.createElement('strong');title.textContent=album.name;
   const artist=document.createElement('small');artist.textContent=album.artist;
   button.append(cover,title,artist);
