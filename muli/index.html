@@ -137,6 +137,25 @@ html{scroll-snap-type:none!important}
 body[data-focus="listening"] #collectionPanel:not(.hidden){filter:none;opacity:1;transform:none}
 body[data-focus="collection"] #listeningRoom:not(.hidden){filter:none;opacity:1;transform:none}
 #listeningRoom{scroll-margin-top:85px}
+
+/* Immersive analog listening room: cover, light dimmer and real Spotify controls */
+.immersive-room{position:fixed;inset:0;z-index:1000;display:none;overflow:hidden;background:#181713}
+body.sleeve-idle .immersive-room{display:flex;align-items:center;justify-content:center}
+body.sleeve-idle #listeningRoom{visibility:hidden!important}
+.immersive-scene{position:relative;height:100dvh;aspect-ratio:1086/1448;max-width:none;background:linear-gradient(90deg,#21150f,#573721 18%,#332217 45%,#4b2b1b 80%,#20130d);box-shadow:0 0 110px #0008}
+.immersive-scene:before{content:"";position:absolute;inset:0;background-image:url('listening-room.webp');background-position:center;background-size:100% 100%;background-repeat:no-repeat}
+.immersive-cover-frame{position:absolute;left:32.6%;top:15.1%;width:33.4%;height:22.4%;overflow:hidden;background:#201a14;box-shadow:0 0 0 5px #4c2c19,0 0 18px 8px #0009;z-index:1}
+.immersive-cover-frame img{width:100%;height:100%;object-fit:fill;display:block}
+.immersive-controls{position:absolute;z-index:3;top:27%;left:18%;width:64%;display:flex;align-items:center;justify-content:space-between}
+.immersive-controls button{width:56px;height:56px;border-radius:50%;border:1px solid #e2c393a6;background:#1b1716a8;color:#f9e3c0;font-size:22px;backdrop-filter:blur(8px)}
+.immersive-controls button:nth-child(2){width:72px;height:72px;font-size:27px}
+.immersive-dimmer{position:absolute;inset:0;background:#090c0dbb;opacity:0;pointer-events:none;transition:opacity 1s ease;z-index:2}
+body.music-paused .immersive-dimmer{opacity:1}
+body.music-paused .immersive-controls{filter:brightness(.72)}
+.immersive-room{opacity:0;transition:opacity 1s ease}
+body.sleeve-idle .immersive-room{opacity:1}
+@media(min-aspect-ratio:1086/1448){.immersive-room{background:radial-gradient(ellipse at center,#4e3423,#120f0e)}.immersive-scene{height:100dvh}}
+@media(max-aspect-ratio:1086/1448){.immersive-scene{height:100dvh;flex-shrink:0}}
 </style>
 </head>
 <body>
@@ -162,7 +181,7 @@ body[data-focus="collection"] #listeningRoom:not(.hidden){filter:none;opacity:1;
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
  <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><div class="immersive-cover-frame"><img id="immersiveCover" alt="Albumcover"></div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveToggle" aria-label="Pause eller spill av">Ⅱ</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
@@ -285,7 +304,7 @@ async function playAlbum(album,position=0){
   // Transferring with play:false first could pause and race with the SDK state event.
   await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});
   if(request!==albumSwitchToken)return;
-  playingAlbumId=album.id;roomPlaying=true;albumSwitchPending=null;renderDeck();
+  playingAlbumId=album.id;roomPlaying=true;document.body.classList.remove('music-paused');$('immersiveToggle').textContent='Ⅱ';albumSwitchPending=null;renderDeck();
   $('roomPlay').textContent='Ⅱ';$('toggle').textContent='Ⅱ';$('roomToggle').textContent='Ⅱ';
   $('roomNow').textContent=album.name+' · '+album.artist;
   $('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;
@@ -345,14 +364,14 @@ function renderDeck(){
 function updateRoomSaveButton(){const b=$('saveRoomAlbum');if(!b)return;const saved=!!roomAlbum&&library.albums.some(a=>a.id===roomAlbum.id);b.classList.toggle('hidden',!roomAlbum||saved);b.disabled=!roomAlbum||saved}
 $('saveRoomAlbum').onclick=()=>{if(!roomAlbum||library.albums.some(a=>a.id===roomAlbum.id))return;const a={...roomAlbum,rooms:['Stua'],added:Date.now()};library.albums.push(a);saveLibrary();renderLibrary();updateRoomSaveButton();personalNote('«'+a.name+'» er lagt i platesamlingen.')};
 function setRoomAlbum(album){
- if(!album)return;roomAlbum=album;renderDeck();updateRoomSaveButton();$('roomPlay').disabled=false;$('roomPlay').textContent=playingAlbumId===album.id&&roomPlaying?'Ⅱ':'▶';$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
+ if(!album)return;roomAlbum=album;$('immersiveCover').src=album.image||'';renderDeck();updateRoomSaveButton();$('roomPlay').disabled=false;$('roomPlay').textContent=playingAlbumId===album.id&&roomPlaying?'Ⅱ':'▶';$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
  $('roomAlbumTitle').textContent=album.name+' · '+album.artist;
  $('roomCoverImage').src=album.image||'';
  $('roomCoverImage').classList.toggle('hidden',!album.image);
  $('roomCoverPlaceholder').classList.toggle('hidden',!!album.image);
 }
 function syncRoomPlayer(paused,track){
- roomPlaying=!paused;renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
+ roomPlaying=!paused;document.body.classList.toggle('music-paused',paused);$('immersiveToggle').textContent=paused?'▶':'Ⅱ';renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
  $('roomToggle').textContent=paused?'▶':'Ⅱ';
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
  if(track){if(!albumSwitchPending||track.album?.id===albumSwitchPending)playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}
@@ -466,13 +485,16 @@ focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+1800;
 let sleeveTimer=null;
 function resetSleeveTimer(){
  clearTimeout(sleeveTimer);
- if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');return}
+ if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','true');return}
  if(!roomAlbum||document.hidden||activeStage!=='listening')return;
  sleeveTimer=setTimeout(()=>{
-  if(roomAlbum&&activeStage==='listening'&&!document.hidden&&!document.querySelector('dialog[open]'))document.body.classList.add('sleeve-idle');
+  if(roomAlbum&&activeStage==='listening'&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
  },5000);
 }
-document.addEventListener('pointerdown',resetSleeveTimer,{passive:true});
+document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle')&&e.target.closest('.immersive-controls'))return;resetSleeveTimer()},{passive:true});
+$('immersiveToggle').onclick=e=>{e.stopPropagation();playSelectedOrToggle()};
+$('immersivePrevious').onclick=e=>{e.stopPropagation();player?.previousTrack().catch(err=>personalNote(err.message))};
+$('immersiveNext').onclick=e=>{e.stopPropagation();player?.nextTrack().catch(err=>personalNote(err.message))};
 document.addEventListener('keydown',resetSleeveTimer);
 document.addEventListener('visibilitychange',resetSleeveTimer);
 document.addEventListener('scroll',()=>{if(!document.body.classList.contains('sleeve-idle'))resetSleeveTimer()},{passive:true});
