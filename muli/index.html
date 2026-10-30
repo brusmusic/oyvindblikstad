@@ -38,6 +38,26 @@
 .deck-cassette{min-height:185px}.deck-cassette .cassette-body{width:240px;height:128px;background:linear-gradient(160deg,#333a39,#151d1f);border-color:#d1c4a8;box-shadow:0 6px 15px #000a}.deck-cassette .cassette-window{height:65px;background:linear-gradient(135deg,#b9c4b9,#6f8885)}
 .room-controls{margin-top:22px;gap:13px}.room-controls button{min-width:54px;min-height:54px;border-radius:50%;background:#dac3a2;color:#29241f;box-shadow:0 4px 10px #0007}.room-controls button.secondary{background:#364340;color:#f2e7d7;border:1px solid #7c8177}.room-now{margin-top:19px;color:#f3e7d7}.room-hint{margin-top:14px}.room-hint button{background:transparent;border:1px solid #867b6b;color:#e6d7c3;font-size:13px;padding:10px 18px}
 @media(max-width:600px){.deck{max-width:100%}.deck-lp .vinyl{width:155px;height:155px}.deck-lp .tonearm{right:26px}.listening-top{justify-content:center;text-align:center}}
+
+/* Spatial stages: focused rooms with soft edges and gentle landing positions */
+html{scroll-behavior:smooth;scroll-padding-top:110px;scroll-snap-type:y proximity}
+body{overflow-x:hidden}
+.shell{max-width:980px}
+header{position:relative;z-index:5}
+.personal-tabs{position:sticky;top:0;z-index:6;background:linear-gradient(180deg,#13232af5 85%,#13232a00);backdrop-filter:blur(14px);padding:13px 0 20px}
+.focus-stage{position:relative;scroll-snap-align:start;scroll-margin-top:90px;transition:filter .45s ease,opacity .45s ease,transform .45s ease;will-change:filter,opacity}
+#collectionPanel{min-height:min(70svh,780px);padding-bottom:36px}
+#listeningRoom{min-height:min(77svh,850px);display:flex;flex-direction:column;justify-content:center}
+#listeningRoom.hidden{display:none}
+.stage-nav{display:flex;justify-content:center;margin-top:25px}
+.stage-nav button{background:transparent;color:#d6cbb9;border:1px solid #6e756d;font-size:13px;font-weight:600;padding:11px 17px}
+body[data-focus="collection"] #listeningRoom:not(.hidden){filter:blur(5px);opacity:.38;transform:scale(.985)}
+body[data-focus="listening"] #collectionPanel:not(.hidden){filter:blur(5px);opacity:.35;transform:scale(.985)}
+body[data-focus="details"] #collectionPanel:not(.hidden),body[data-focus="details"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.42}
+body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
+.focus-stage:focus-within{filter:none!important;opacity:1!important;transform:none!important}
+@media(max-width:600px){html{scroll-padding-top:75px}.focus-stage{scroll-margin-top:65px}.personal-tabs{top:0}#collectionPanel{min-height:60svh}#listeningRoom{min-height:76svh}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.focus-stage{transition:none;transform:none!important}}
 </style>
 </head>
 <body>
@@ -46,14 +66,14 @@
 <section id="personal" aria-label="Min musikksamling">
 <div class="personal-hero"><h1>Mine plater</h1></div>
 <nav class="personal-tabs" aria-label="Musikksamling"><button type="button" class="active" data-view="all">Mine plater</button><button type="button" data-view="favorites">♥ Favorittplater</button><button type="button" data-view="rooms">Mine rom</button><button type="button" data-view="shop">Platebutikken</button></nav>
-<div class="panel personal-panel" id="collectionPanel">
+<div class="panel personal-panel focus-stage" id="collectionPanel" data-stage="collection">
 <div class="row between"><h2 id="collectionHeading">Mine plater</h2><span class="small" id="collectionCount"></span></div>
 <div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Utgivelsesår</option><option value="recent">Nylig lagt til</option></select><div id="collectionTransfer" class="hidden"><button type="button" class="secondary" id="exportCollection">Eksporter samling</button><button type="button" class="secondary" id="importCollection">Importer samling</button></div><input type="file" id="importCollectionFile" accept=".json,application/json" class="hidden" aria-label="Velg MuLi-samlingsfil"></div>
 <div id="roomControls" class="hidden"><div class="row"><input id="roomName" placeholder="Navn på nytt rom" maxlength="45" style="flex:1;min-width:160px"><button type="button" id="addRoom">Opprett rom</button></div><div id="roomList" class="row" style="margin:14px 0"></div></div>
-<div id="collectionEmpty" class="small"></div><div id="albumGrid" class="album-grid"></div>
+<div id="collectionEmpty" class="small"></div><div id="albumGrid" class="album-grid"></div><div class="stage-nav"><button type="button" class="secondary" id="goListeningRoom">Til avspillingsrommet ↓</button></div>
 </div>
 
-<section class="listening-room" id="listeningRoom" aria-label="Avspillingsrom">
+<section class="listening-room focus-stage" data-stage="listening" id="listeningRoom" aria-label="Avspillingsrom">
  <div class="listening-top"><h2>Avspillingsrommet</h2><div class="deck-switch" role="group" aria-label="Velg spiller"><button type="button" data-deck="lp">LP</button><button type="button" data-deck="cd" class="active">CD</button><button type="button" data-deck="cassette">Kassett</button></div></div>
  <button type="button" class="record-display" id="roomCover" aria-label="Åpne albumets sporliste"><div class="record-placeholder" id="roomCoverPlaceholder">♫</div><img id="roomCoverImage" class="hidden" alt="Albumcover"></button>
  <div class="display-shelf" aria-hidden="true"></div>
@@ -61,10 +81,10 @@
  <div id="roomDeck" class="deck deck-cd" aria-label="CD-spiller"><div class="cd-slot"><div class="cd-disc"></div></div></div>
  <div class="room-now" id="roomNow">Ingen sang spiller</div>
  <div class="room-controls"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" disabled aria-label="Spill eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
- <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Se sporlisten og velg sang</button></div>
+ <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Se sporlisten og velg sang</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section class="panel hidden" id="albumDetail" aria-live="polite"></section>
-<section class="panel hidden" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
+<section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
 <div id="legacyPrototype" class="hidden"><div class="eyebrow">Tidligere prototype · enkeltsanger</div><h1>Hva skal vi høre<br>på i dag?</h1><p>Finn musikk som skaper minner, ro og glede.</p>
@@ -143,7 +163,7 @@ function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'
 function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
 function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?(a.year||'').localeCompare(b.year||''):String(mode==='title'?a.name:a.artist).localeCompare(String(mode==='title'?b.name:b.artist),'nb'))}
 function renderLibrary(){$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
-function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>$('listeningRoom').scrollIntoView({behavior:'smooth',block:'start'}));return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
+function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>focusStage('listening',true));return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
 function action(label,fn,secondary=false){const b=document.createElement('button');b.type='button';b.textContent=label;if(secondary)b.className='secondary';b.onclick=fn;actions.append(b);return b}
 action('▶ Spill hele albumet',()=>playAlbum(album));
 if(!saved)action('＋ Legg i samlingen',()=>{library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();showAlbum(album,where);personalNote('«'+album.name+'» er lagt i samlingen.')});
@@ -151,7 +171,7 @@ else{action(library.favorites.includes(album.id)?'♥ Fjern favoritt':'♡ Favor
 action('Legg tilbake',()=>panel.classList.add('hidden'),true);
 info.append(heading,by,actions);
 if(saved){const caption=document.createElement('p');caption.className='small';caption.textContent='Hvor vil du ha denne platen? Du kan velge flere rom.';info.append(caption);library.rooms.forEach(room=>{const chip=document.createElement('label');chip.className='room-chip';const cb=document.createElement('input');cb.type='checkbox';cb.checked=(saved.rooms||[]).includes(room);cb.onchange=()=>{saved.rooms=cb.checked?[...new Set([...(saved.rooms||[]),room])]:(saved.rooms||[]).filter(x=>x!==room);saveLibrary();renderLibrary()};chip.append(cb,document.createTextNode(room));info.append(chip)})}
-wrap.append(cover,info);panel.append(wrap);const tracksPanel=document.createElement('div');tracksPanel.className='album-tracklist';panel.append(tracksPanel);loadAlbumTracks(album,tracksPanel,++detailRequest);panel.scrollIntoView({behavior:'smooth',block:'start'})}
+wrap.append(cover,info);panel.append(wrap);const tracksPanel=document.createElement('div');tracksPanel.className='album-tracklist';panel.append(tracksPanel);loadAlbumTracks(album,tracksPanel,++detailRequest);focusStage('details',true)}
 
 async function loadAlbumTracks(album,container,requestId){
  const heading=document.createElement('h3');heading.textContent='Spor på albumet';const msg=document.createElement('p');msg.className='small';msg.textContent='Henter sporlisten …';container.append(heading,msg);
@@ -176,7 +196,7 @@ async function loadAlbumTracks(album,container,requestId){
 }
 
 async function playAlbum(album,position=0){setRoomAlbum(album);if(!deviceId){personalNote('Koble til Spotify Premium og vent til spilleren er klar.');$('settings').classList.remove('hidden');return}try{personalNote('Starter albumet «'+album.name+'» …');await api('me/player',{method:'PUT',body:JSON.stringify({device_ids:[deviceId],play:false})});await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});$('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;$('toggle').disabled=false;personalNote(position?'Spiller fra valgt spor på «'+album.name+'».':'Spiller albumet «'+album.name+'» i original rekkefølge.')}catch(e){personalNote('Avspilling feilet: '+e.message)}}
-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{libraryView=b.dataset.view;$('albumDetail').classList.add('hidden');renderLibrary();if(libraryView==='shop')loadSpotifyTips()}));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{libraryView=b.dataset.view;$('albumDetail').classList.add('hidden');renderLibrary();if(libraryView==='shop'){loadSpotifyTips();focusStage('shop',true)}else focusStage('collection',true)}));
 $('albumSort').onchange=renderLibrary;
 $('addRoom').onclick=()=>{const room=$('roomName').value.trim();if(!room||library.rooms.some(r=>r.toLowerCase()===room.toLowerCase()))return;library.rooms.push(room);activeRoom=room;$('roomName').value='';saveLibrary();renderLibrary()};
 $('albumSearchForm').onsubmit=async e=>{e.preventDefault();const q=$('albumQuery').value.trim();if(!q)return;$('albumSearchStatus').textContent='Søker etter plater …';try{const d=await api('search?'+new URLSearchParams({q,type:'album',limit:'10'}));shopAlbums=(d.albums?.items||[]).map(cleanAlbum);$('shopGrid').replaceChildren(...shopAlbums.map(a=>albumCard(a,'shop')));$('albumSearchStatus').textContent=shopAlbums.length+' album funnet.'}catch(err){$('albumSearchStatus').textContent=err.message}};
@@ -266,6 +286,33 @@ async function loadSpotifyTips(){
  finally{$('refreshTips').disabled=false}
 }
 $('refreshTips').onclick=loadSpotifyTips;
+
+
+/* Focused spatial navigation; scrolling remains natural for long record shelves */
+let activeStage='collection';
+function focusStage(name,scroll=false){
+ const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',shop:'shopPanel'};
+ const target=$(targets[name]);if(!target||target.classList.contains('hidden'))return;
+ activeStage=name;document.body.dataset.focus=name;
+ if(scroll)target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+}
+$('goListeningRoom').onclick=()=>focusStage('listening',true);
+$('goCollection').onclick=()=>focusStage('collection',true);
+if('IntersectionObserver' in window){
+ const focusObserver=new IntersectionObserver(entries=>{
+  if(Date.now()<focusLockUntil)return;
+  const visible=entries.filter(e=>e.isIntersecting&&!e.target.classList.contains('hidden'));
+  if(!visible.length)return;
+  visible.sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
+  const name=visible[0].target.dataset.stage;
+  if(name&&name!==activeStage)focusStage(name);
+ },{root:null,rootMargin:'-22% 0px -35% 0px',threshold:[0,.15,.35,.65]});
+ document.querySelectorAll('.focus-stage').forEach(el=>focusObserver.observe(el));
+}
+let focusLockUntil=0;
+const originalFocusStage=focusStage;
+focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+850;originalFocusStage(name,scroll)};
+focusStage('collection');
 
 renderLibrary();
 
