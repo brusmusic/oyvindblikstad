@@ -196,10 +196,26 @@ body.sleeve-idle .immersive-room{opacity:1}
 .ambient-row button,.ambient-panel select{font-size:13px;padding:10px;border-radius:10px;max-width:260px}
 .ambient-panel select{background:#2b3432;color:white;border:1px solid #7a817b}
 .ambient-back{position:absolute;top:24px;left:20px}
+
+/* The listening room is the home screen; collection opens inside it. */
+.room-library-open{position:absolute;z-index:7;right:5%;bottom:12%;background:#251e18dd;color:#fff;border:1px solid #d4b88c88;font-size:13px;padding:10px 12px}
+.room-library-overlay{position:absolute;inset:0;z-index:12;background:#171714f2;color:#f6eee1;display:none;flex-direction:column;padding:20px 15px 30px;overflow:hidden;backdrop-filter:blur(18px)}
+.room-library-overlay.is-open{display:flex}
+.room-library-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:15px 0}
+.room-library-head h2{margin:0;font-size:22px;color:#f6eee1}
+.room-library-head button{background:#514739;color:#fff}
+.room-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;overflow-y:auto;align-content:start;padding:8px 3px 45px}
+.room-library-item{background:transparent;border:0;color:#fff;padding:0;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0}
+.room-library-item img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;box-shadow:0 5px 12px #0008}
+.room-library-item strong,.room-library-item small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.room-library-item strong{font-size:12px}.room-library-item small{font-size:11px;color:#c9bdac}
+.room-library-empty{color:#ddd0bb;line-height:1.5;font-size:14px}
+.room-entry{position:fixed;z-index:20;bottom:90px;right:16px;border:1px solid #c6a77b;background:#2c261f;color:#fff;font-size:13px;box-shadow:0 5px 20px #0007}
+@media(min-width:650px){.room-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<div class="shell"><header><div><div class="brand">Mu<span>Li</span></div><div class="small">Musikk som møter mennesker</div></div></header>
+<button type="button" class="room-entry" id="roomEntry">⌂ Gå til lytterommet</button><div class="shell"><header><div><div class="brand">Mu<span>Li</span></div><div class="small">Musikk som møter mennesker</div></div></header>
 <main>
 <section id="personal" aria-label="Min musikksamling">
 <div class="personal-hero"><h1>Mine plater</h1></div>
@@ -221,7 +237,7 @@ body.sleeve-idle .immersive-room{opacity:1}
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
  <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button><button type="button" class="secondary" id="openDiscography">Diskografi ↓</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><button class="ambient-open-btn" id="ambientOpen" type="button" aria-label="Gå til vindu og peis">☁ Vindu og peis ‹</button><div class="ambient-panel" id="ambientPanel" aria-label="Vindu og peis"><button type="button" class="ambient-back" id="ambientBack">← Lytterommet</button><h2>Ved vinduet</h2><p>Vindu og peis lever videre når musikken stopper.</p><div class="ambient-window" id="ambientWindow" role="button" tabindex="0" aria-label="Åpne eller lukk vinduet">🌧️</div><div class="ambient-row"><button id="ambientWindowButton">Åpne vinduet</button><select id="ambientWeather" aria-label="Testvær"><option value="rain">🌧 Regn</option><option value="wind">🌬 Vind</option><option value="sun">☀ Sol</option><option value="snow">❄ Snø</option></select></div><div class="ambient-fire" id="ambientFire" role="button" tabindex="0" aria-label="Tenn eller slukk peisen">🔥</div><button id="ambientFireButton">Tenn peisen</button><p id="ambientStatus" aria-live="polite">Trykk på vinduet eller peisen for å høre rommet.</p><p>Lydene er foreløpig syntetiske testlyder. Spotify-avspilling demper romlyden.</p></div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><button class="ambient-open-btn" id="ambientOpen" type="button" aria-label="Gå til vindu og peis">☁ Vindu og peis ‹</button><div class="ambient-panel" id="ambientPanel" aria-label="Vindu og peis"><button type="button" class="ambient-back" id="ambientBack">← Lytterommet</button><h2>Ved vinduet</h2><p>Vindu og peis lever videre når musikken stopper.</p><div class="ambient-window" id="ambientWindow" role="button" tabindex="0" aria-label="Åpne eller lukk vinduet">🌧️</div><div class="ambient-row"><button id="ambientWindowButton">Åpne vinduet</button><select id="ambientWeather" aria-label="Testvær"><option value="rain">🌧 Regn</option><option value="wind">🌬 Vind</option><option value="sun">☀ Sol</option><option value="snow">❄ Snø</option></select></div><div class="ambient-fire" id="ambientFire" role="button" tabindex="0" aria-label="Tenn eller slukk peisen">🔥</div><button id="ambientFireButton">Tenn peisen</button><p id="ambientStatus" aria-live="polite">Trykk på vinduet eller peisen for å høre rommet.</p><p>Lydene er foreløpig syntetiske testlyder. Spotify-avspilling demper romlyden.</p></div><button type="button" class="room-library-open" id="roomLibraryOpen">▦ Platesamlingen ›</button><div class="room-library-overlay" id="roomLibraryOverlay" aria-label="Min platesamling"><div class="room-library-head"><h2>Mine plater</h2><button type="button" id="roomLibraryClose">Tilbake til rommet ✕</button></div><p class="small">Velg en plate. Musikken starter først når du trykker Play.</p><div class="room-library-grid" id="roomLibraryGrid"></div><p class="room-library-empty hidden" id="roomLibraryEmpty">Samlingen er tom. Legg til plater fra platebutikken.</p></div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
@@ -616,7 +632,7 @@ function resetSleeveTimer(){
   if(roomAlbum&&roomPlaying&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
  },5000);
 }
-document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle')&&e.target.closest('.immersive-controls, .immersive-cover-frame'))return;resetSleeveTimer()},{passive:true});
+document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle')&&e.target.closest('.immersive-controls, .immersive-cover-frame, .room-library-open, .room-library-overlay, .ambient-open-btn, .ambient-panel'))return;resetSleeveTimer()},{passive:true});
 $('immersiveCoverToggle').onclick=e=>{e.stopPropagation();playSelectedOrToggle()};
 $('immersivePrevious').onclick=e=>{e.stopPropagation();player?.previousTrack().catch(err=>personalNote(err.message))};
 $('immersiveNext').onclick=e=>{e.stopPropagation();player?.nextTrack().catch(err=>personalNote(err.message))};
@@ -666,6 +682,32 @@ ambientApply();
 let ambientTouchX=null;
 $('immersiveRoom').addEventListener('touchstart',e=>{ambientTouchX=e.touches[0]?.clientX??null},{passive:true});
 $('immersiveRoom').addEventListener('touchend',e=>{if(ambientTouchX===null)return;const delta=(e.changedTouches[0]?.clientX??ambientTouchX)-ambientTouchX;ambientTouchX=null;if(delta< -65&&!$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(true);else if(delta>65&&$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(false)},{passive:true});
+
+
+function openRoomHome(){
+ document.body.classList.add('sleeve-idle');
+ $('immersiveRoom').setAttribute('aria-hidden','false');
+ clearTimeout(sleeveTimer);
+}
+function closeRoomLibrary(){$('roomLibraryOverlay').classList.remove('is-open')}
+function openRoomLibrary(){
+ const grid=$('roomLibraryGrid');grid.replaceChildren();
+ const albums=sortedAlbums(library.albums);
+ $('roomLibraryEmpty').classList.toggle('hidden',albums.length>0);
+ for(const album of albums){
+  const button=document.createElement('button');button.type='button';button.className='room-library-item';
+  const cover=document.createElement('img');cover.src=album.image||'';cover.alt='Cover: '+album.name;cover.loading='lazy';
+  const title=document.createElement('strong');title.textContent=album.name;
+  const artist=document.createElement('small');artist.textContent=album.artist;
+  button.append(cover,title,artist);
+  button.onclick=e=>{e.stopPropagation();setRoomAlbum(album);closeRoomLibrary();openRoomHome()};
+  grid.append(button);
+ }
+ $('roomLibraryOverlay').classList.add('is-open');
+}
+$('roomLibraryOpen').onclick=e=>{e.stopPropagation();openRoomLibrary()};
+$('roomLibraryClose').onclick=e=>{e.stopPropagation();closeRoomLibrary()};
+$('roomEntry').onclick=()=>{closeRoomLibrary();ambientPanelOpen(false);openRoomHome()};
 
 focusStage('collection');
 
