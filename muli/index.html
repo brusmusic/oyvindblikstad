@@ -302,6 +302,10 @@ $('albumSort').addEventListener('change',renderLibrary);
 let discographyRequest=0;
 $('closeDiscography').onclick=()=>{$('discographyPanel').classList.add('hidden');focusStage('listening',true)};
 $('openDiscography').onclick=showDiscography;
+let discographyTouchY=null;
+$('listeningRoom').addEventListener('touchstart',e=>{if(e.touches.length===1)discographyTouchY=e.touches[0].clientY},{passive:true});
+$('listeningRoom').addEventListener('touchend',e=>{if(discographyTouchY===null||!roomAlbum)return;const distance=discographyTouchY-e.changedTouches[0].clientY;discographyTouchY=null;if(distance>85&&!document.body.classList.contains('sleeve-idle'))showDiscography()},{passive:true});
+
 async function showDiscography(){
  if(!roomAlbum)return;
  const album=roomAlbum,request=++discographyRequest,panel=$('discographyPanel'),grid=$('discographyAlbums');
