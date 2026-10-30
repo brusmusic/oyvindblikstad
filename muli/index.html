@@ -142,20 +142,24 @@ body[data-focus="collection"] #listeningRoom:not(.hidden){filter:none;opacity:1;
 .immersive-room{position:fixed;inset:0;z-index:1000;display:none;overflow:hidden;background:#181713}
 body.sleeve-idle .immersive-room{display:flex;align-items:center;justify-content:center}
 body.sleeve-idle #listeningRoom{visibility:hidden!important}
-.immersive-scene{position:relative;height:100dvh;aspect-ratio:1086/1448;max-width:none;background:linear-gradient(90deg,#21150f,#573721 18%,#332217 45%,#4b2b1b 80%,#20130d);box-shadow:0 0 110px #0008}
-.immersive-scene:before{content:"";position:absolute;inset:0;background-image:url('listening-room.webp.PNG');background-position:center;background-size:100% 100%;background-repeat:no-repeat}
-.immersive-cover-frame{position:absolute;left:32.6%;top:15.1%;width:33.4%;height:22.4%;overflow:hidden;background:#201a14;box-shadow:0 0 0 5px #4c2c19,0 0 18px 8px #0009;z-index:1}
+.immersive-scene{position:relative;height:100dvh;aspect-ratio:768/1024;max-width:none;background:linear-gradient(90deg,#21150f,#573721 18%,#332217 45%,#4b2b1b 80%,#20130d);box-shadow:0 0 110px #0008}
+.immersive-scene:before,.immersive-scene:after{content:"";position:absolute;inset:0;background-image:url('listening-room.webp.PNG');background-size:200% 100%;background-repeat:no-repeat;transition:opacity 1s ease;pointer-events:none}
+.immersive-scene:before{background-position:left center;opacity:1}
+.immersive-scene:after{background-position:right center;opacity:0}
+body.music-paused .immersive-scene:before{opacity:0}
+body.music-paused .immersive-scene:after{opacity:1}
+.immersive-cover-frame{position:absolute;left:34%;top:17.1%;width:35%;height:25.2%;overflow:hidden;background:#201a14;box-shadow:0 0 0 5px #4c2c19,0 0 18px 8px #0009;z-index:1}
 .immersive-cover-frame img{width:100%;height:100%;object-fit:fill;display:block}
-.immersive-controls{position:absolute;z-index:3;top:27%;left:18%;width:64%;display:flex;align-items:center;justify-content:space-between}
+.immersive-controls{position:absolute;z-index:3;top:28%;left:14%;width:72%;display:flex;align-items:center;justify-content:space-between}
 .immersive-controls button{width:56px;height:56px;border-radius:50%;border:1px solid #e2c393a6;background:#1b1716a8;color:#f9e3c0;font-size:22px;backdrop-filter:blur(8px)}
 .immersive-controls button:nth-child(2){width:72px;height:72px;font-size:27px}
 .immersive-dimmer{position:absolute;inset:0;background:#090c0dbb;opacity:0;pointer-events:none;transition:opacity 1s ease;z-index:2}
-body.music-paused .immersive-dimmer{opacity:1}
+body.music-paused .immersive-dimmer{opacity:0}
 body.music-paused .immersive-controls{filter:brightness(.72)}
 .immersive-room{opacity:0;transition:opacity 1s ease}
 body.sleeve-idle .immersive-room{opacity:1}
-@media(min-aspect-ratio:1086/1448){.immersive-room{background:radial-gradient(ellipse at center,#4e3423,#120f0e)}.immersive-scene{height:100dvh}}
-@media(max-aspect-ratio:1086/1448){.immersive-scene{height:100dvh;flex-shrink:0}}
+@media(min-aspect-ratio:768/1024){.immersive-room{background:radial-gradient(ellipse at center,#4e3423,#120f0e)}.immersive-scene{height:100dvh}}
+@media(max-aspect-ratio:768/1024){.immersive-scene{height:100dvh;flex-shrink:0}}
 </style>
 </head>
 <body>
