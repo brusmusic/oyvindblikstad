@@ -306,35 +306,64 @@ let discographyTouchY=null;
 $('listeningRoom').addEventListener('touchstart',e=>{if(e.touches.length===1)discographyTouchY=e.touches[0].clientY},{passive:true});
 $('listeningRoom').addEventListener('touchend',e=>{if(discographyTouchY===null||!roomAlbum)return;const distance=discographyTouchY-e.changedTouches[0].clientY;discographyTouchY=null;if(distance>85&&!document.body.classList.contains('sleeve-idle'))showDiscography()},{passive:true});
 
+let discographyState=null;
 async function showDiscography(){
  if(!roomAlbum)return;
  const album=roomAlbum,request=++discographyRequest,panel=$('discographyPanel'),grid=$('discographyAlbums');
- $('discographyTitle').textContent='Diskografi · '+album.artist.split(',')[0];$('discographyStatus').textContent='Henter utgivelser fra Spotify …';grid.replaceChildren();panel.classList.remove('hidden');
+ discographyState={request,artistId:album.artistId||'',album,offset:0,seen:new Set(),loaded:0,hasMore:true,loading:false};
+ $('discographyTitle').textContent='Diskografi · '+album.artist.split(',')[0];
+ $('discographyStatus').textContent='Henter de første ti utgivelsene …';
+ grid.replaceChildren();panel.classList.remove('hidden');
+ let more=$('discographyMore');
+ if(!more){more=document.createElement('button');more.id='discographyMore';more.className='secondary';more.textContent='Hent flere (10 neste)';panel.append(more)}
+ more.classList.add('hidden');more.onclick=()=>loadMoreDiscography();
  panel.scrollIntoView({behavior:'smooth',block:'start'});
  try{
-  let artistId=album.artistId;
-  if(!artistId){const data=await api('albums/'+encodeURIComponent(album.id));artistId=data.artists?.[0]?.id}
-  if(!artistId)throw Error('Fant ikke artist-ID');
-  let offset=0,all=[];
-  do{
-   const data=await api('artists/'+encodeURIComponent(artistId)+'/albums?'+new URLSearchParams({include_groups:'album,single',market:'from_token',limit:'50',offset:String(offset)}));
-   all.push(...(data.items||[]));offset+=data.items?.length||0;
-   if(!data.next||!data.items?.length||offset>=500)break;
-  }while(true);
-  if(request!==discographyRequest)return;
-  const unique=[...new Map(all.map(x=>[x.name.toLocaleLowerCase('nb')+'|'+String(x.release_date||'').slice(0,4)+'|'+x.album_type,x])).values()];
+  if(!discographyState.artistId){
+   const data=await api('albums/'+encodeURIComponent(album.id));
+   if(request!==discographyRequest)return;
+   discographyState.artistId=data.artists?.[0]?.id||'';
+  }
+  if(!discographyState.artistId)throw Error('Fant ikke artist-ID');
+  await loadMoreDiscography();
+ }catch(e){if(request===discographyRequest)$('discographyStatus').textContent='Kunne ikke hente diskografien: '+e.message}
+}
+async function loadMoreDiscography(){
+ const state=discographyState;
+ if(!state||state.request!==discographyRequest||state.loading||!state.hasMore)return;
+ state.loading=true;
+ const more=$('discographyMore'),grid=$('discographyAlbums');
+ more.disabled=true;more.textContent='Henter …';
+ try{
+  const data=await api('artists/'+encodeURIComponent(state.artistId)+'/albums?'+new URLSearchParams({include_groups:'album,single',limit:'10',offset:String(state.offset)}));
+  if(state!==discographyState||state.request!==discographyRequest)return;
+  const items=data.items||[];
+  state.offset+=items.length;state.hasMore=!!data.next&&items.length>0;
+  const unique=items.filter(x=>{
+   const key=x.name.toLocaleLowerCase('nb')+'|'+String(x.release_date||'').slice(0,4)+'|'+x.album_type;
+   if(state.seen.has(key))return false;
+   state.seen.add(key);return true;
+  });
   unique.sort((a,b)=>(a.album_type==='single')-(b.album_type==='single')||String(b.release_date||'').localeCompare(String(a.release_date||'')));
   for(const item of unique){
    const entry=cleanAlbum(item),card=document.createElement('div');card.className='discography-card';
+   card.dataset.kind=item.album_type==='single'?'single':'album';
    const open=albumCard(entry,'discography');open.querySelector('small').textContent=entry.year||entry.artist;
    const actions=document.createElement('div');actions.className='discography-actions';
-   const play=document.createElement('button');play.textContent='▶';play.setAttribute('aria-label','Spill '+entry.name);play.onclick=()=>{setRoomAlbum(entry);playAlbum(entry);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false')};
+   const play=document.createElement('button');play.textContent='▶';play.setAttribute('aria-label','Spill '+entry.name);
+   play.onclick=()=>{setRoomAlbum(entry);playAlbum(entry);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false')};
    const add=document.createElement('button');add.textContent=library.albums.some(x=>x.id===entry.id)?'✓':'＋';add.disabled=library.albums.some(x=>x.id===entry.id);add.setAttribute('aria-label','Legg '+entry.name+' i samlingen');
    add.onclick=()=>{if(library.albums.some(x=>x.id===entry.id))return;library.albums.push(entry);saveLibrary();renderLibrary();add.textContent='✓';add.disabled=true};
-   actions.append(play,add);card.append(open,actions);grid.append(card);
+   actions.append(play,add);card.append(open,actions);
+   const firstSingle=[...grid.children].find(x=>x.dataset.kind==='single');
+   if(card.dataset.kind==='album'&&firstSingle)grid.insertBefore(card,firstSingle);
+   else grid.append(card);
   }
-  $('discographyStatus').textContent=unique.length+' utgivelser · album først, deretter singler';
- }catch(e){if(request===discographyRequest)$('discographyStatus').textContent='Kunne ikke hente diskografien: '+e.message}
+  state.loaded+=unique.length;
+  $('discographyStatus').textContent=state.loaded+' utgivelser vist · album før singler';
+  more.classList.toggle('hidden',!state.hasMore);
+ }catch(e){if(state===discographyState){$('discographyStatus').textContent='Kunne ikke hente flere utgivelser: '+e.message;more.classList.remove('hidden')}}
+ finally{if(state===discographyState){state.loading=false;more.disabled=false;more.textContent='Hent flere (10 neste)'}}
 }
 
 function renderLibrary(){applyCollectionPrefs();$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
