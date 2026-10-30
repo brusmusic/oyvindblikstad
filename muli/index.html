@@ -21,7 +21,7 @@
 <nav class="personal-tabs" aria-label="Musikksamling"><button type="button" class="active" data-view="all">Mine plater</button><button type="button" data-view="favorites">♥ Favorittplater</button><button type="button" data-view="rooms">Mine rom</button><button type="button" data-view="shop">Platebutikken</button></nav>
 <div class="panel personal-panel" id="collectionPanel">
 <div class="row between"><h2 id="collectionHeading">Mine plater</h2><span class="small" id="collectionCount"></span></div>
-<div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Utgivelsesår</option><option value="recent">Nylig lagt til</option></select><button type="button" class="secondary" id="exportCollection">Eksporter samling</button></div>
+<div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Utgivelsesår</option><option value="recent">Nylig lagt til</option></select><button type="button" class="secondary" id="exportCollection">Eksporter samling</button><button type="button" class="secondary" id="importCollection">Importer samling</button><input type="file" id="importCollectionFile" accept=".json,application/json" class="hidden" aria-label="Velg MuLi-samlingsfil"></div>
 <div id="roomControls" class="hidden"><div class="row"><input id="roomName" placeholder="Navn på nytt rom" maxlength="45" style="flex:1;min-width:160px"><button type="button" id="addRoom">Opprett rom</button></div><div id="roomList" class="row" style="margin:14px 0"></div></div>
 <div id="collectionEmpty" class="small"></div><div id="albumGrid" class="album-grid"></div>
 </div>
@@ -143,6 +143,33 @@ $('albumSort').onchange=renderLibrary;
 $('addRoom').onclick=()=>{const room=$('roomName').value.trim();if(!room||library.rooms.some(r=>r.toLowerCase()===room.toLowerCase()))return;library.rooms.push(room);activeRoom=room;$('roomName').value='';saveLibrary();renderLibrary()};
 $('albumSearchForm').onsubmit=async e=>{e.preventDefault();const q=$('albumQuery').value.trim();if(!q)return;$('albumSearchStatus').textContent='Søker etter plater …';try{const d=await api('search?'+new URLSearchParams({q,type:'album',limit:'10'}));shopAlbums=(d.albums?.items||[]).map(cleanAlbum);$('shopGrid').replaceChildren(...shopAlbums.map(a=>albumCard(a,'shop')));$('albumSearchStatus').textContent=shopAlbums.length+' album funnet.'}catch(err){$('albumSearchStatus').textContent=err.message}};
 $('exportCollection').onclick=()=>{const blob=new Blob([JSON.stringify({version:2,exported:new Date().toISOString(),...library},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='muli-platesamling.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1500)};
+
+$('importCollection').onclick=()=>$('importCollectionFile').click();
+$('importCollectionFile').onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>5*1024*1024)throw Error('Filen er for stor (maks 5 MB).');
+  const data=JSON.parse(await file.text());
+  if(!data||!Array.isArray(data.albums)||!Array.isArray(data.rooms)||!Array.isArray(data.favorites))throw Error('Dette er ikke en gyldig MuLi-samlingsfil.');
+  if(data.albums.length>5000||data.rooms.length>200)throw Error('Samlingen er større enn importgrensen.');
+  const albums=data.albums.map(a=>{
+   if(!a||typeof a.id!=='string'||!/^[a-zA-Z0-9]{22}$/.test(a.id)||typeof a.name!=='string'||typeof a.artist!=='string')throw Error('Filen inneholder ugyldige albumdata.');
+   return{id:a.id,uri:'spotify:album:'+a.id,name:a.name.slice(0,300),artist:a.artist.slice(0,300),image:typeof a.image==='string'&&a.image.startsWith('https://i.scdn.co/')?a.image:'',year:String(a.year||'').slice(0,4),type:String(a.type||'album').slice(0,30),added:Number.isFinite(a.added)?a.added:Date.now(),rooms:Array.isArray(a.rooms)?a.rooms.filter(x=>typeof x==='string').map(x=>x.slice(0,45)).slice(0,200):['Stua']}
+  });
+  const uniqueAlbums=[...new Map(albums.map(a=>[a.id,a])).values()];
+  const rooms=[...new Set(['Stua',...data.rooms.filter(x=>typeof x==='string').map(x=>x.trim().slice(0,45)).filter(Boolean),...uniqueAlbums.flatMap(a=>a.rooms)])].slice(0,200);
+  const ids=new Set(uniqueAlbums.map(a=>a.id));
+  const favorites=[...new Set(data.favorites.filter(x=>typeof x==='string'&&ids.has(x)))];
+  const merge=confirm('Importer '+uniqueAlbums.length+' plater?\n\nOK: Legg til i eksisterende samling (anbefalt).\nAvbryt: Ikke importer.');
+  if(!merge)return;
+  const byId=new Map(library.albums.map(a=>[a.id,a]));
+  for(const album of uniqueAlbums){const existing=byId.get(album.id);if(existing){existing.rooms=[...new Set([...(existing.rooms||[]),...album.rooms])]}else byId.set(album.id,album)}
+  library.albums=[...byId.values()];library.rooms=[...new Set([...library.rooms,...rooms])];library.favorites=[...new Set([...library.favorites,...favorites])];
+  saveLibrary();renderLibrary();personalNote('Import fullført: '+uniqueAlbums.length+' plater lest inn. Samlingen har nå '+library.albums.length+' plater.');
+ }catch(err){personalNote('Import mislyktes: '+err.message)}
+ finally{e.target.value=''}
+};
+
 renderLibrary();
 
 $('loadSuggestions').onclick=()=>loadSuggestions();renderSaved();
