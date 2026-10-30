@@ -383,18 +383,33 @@ async function showArtistBio(){
  const album=roomAlbum,request=++bioRequest,artist=album.artist.split(',')[0].trim();
  const panel=$('artistBio');panel.replaceChildren();panel.classList.remove('hidden');$('albumDetail').classList.add('hidden');
  const heading=document.createElement('h2');heading.textContent=artist;
- const text=document.createElement('p');text.textContent='Henter artistens historie …';
+ const info=document.createElement('p');info.textContent='Leter etter artistens historie …';
+ const sources=document.createElement('div');
  const back=document.createElement('button');back.className='secondary';back.textContent='← Tilbake til avspillingsrommet';back.onclick=()=>{panel.classList.add('hidden');focusStage('listening',true)};
- panel.append(heading,text,back);focusStage('bio',true);
- try{
-  const searchUrl='https://no.wikipedia.org/w/api.php?'+new URLSearchParams({action:'query',generator:'search',gsrsearch:'intitle:'+artist,gsrlimit:'1',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url',format:'json',origin:'*'});
-  const res=await fetch(searchUrl);if(!res.ok)throw Error('Wikipedia utilgjengelig');
-  const data=await res.json();if(request!==bioRequest||roomAlbum?.id!==album.id)return;
-  const page=Object.values(data.query?.pages||{})[0];
-  if(!page?.extract)throw Error('Ingen biografi funnet');
-  text.textContent=page.extract;
-  if(page.fullurl){const link=document.createElement('a');link.href=page.fullurl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Les mer på Wikipedia';panel.insertBefore(link,back)}
- }catch(e){if(request===bioRequest)text.textContent='Fant ingen tilgjengelig biografi for denne artisten på norsk Wikipedia.'}
+ panel.append(heading,info,sources,back);focusStage('bio',true);
+ const addLink=(url,label)=>{const el=document.createElement('a');el.href=url;el.target='_blank';el.rel='noopener noreferrer';el.textContent=label;sources.append(el)};
+ let found=false;
+ for(const lang of ['no','en','de','fr','es','it','pt','sv','nl','ja']){
+  if(request!==bioRequest||roomAlbum?.id!==album.id)return;
+  try{
+   const q=new URLSearchParams({action:'query',generator:'search',gsrsearch:'intitle:"'+artist+'"',gsrlimit:'4',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url',format:'json',origin:'*'});
+   const res=await fetch('https://'+lang+'.wikipedia.org/w/api.php?'+q);
+   if(!res.ok)continue;
+   const data=await res.json();
+   const pages=Object.values(data.query?.pages||{}).filter(p=>p.extract&&p.extract.length>110);
+   const page=pages.find(p=>p.title.toLocaleLowerCase()===artist.toLocaleLowerCase())||pages.find(p=>p.title.toLocaleLowerCase().includes(artist.toLocaleLowerCase()));
+   if(!page)continue;
+   if(request!==bioRequest||roomAlbum?.id!==album.id)return;
+   info.textContent=page.extract;
+   addLink(page.fullurl||'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(page.title),'Les mer på Wikipedia ('+lang.toUpperCase()+')');
+   found=true;break;
+  }catch(e){}
+ }
+ if(request!==bioRequest||roomAlbum?.id!==album.id)return;
+ if(!found){
+  info.textContent='Fant ingen passende biografi på Wikipedia. Du kan lete videre på AllMusic.';
+  addLink('https://www.allmusic.com/search/artists/'+encodeURIComponent(artist),'Søk etter '+artist+' på AllMusic');
+ }
 }
 
 let tipsLoaded=false;
