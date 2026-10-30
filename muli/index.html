@@ -162,6 +162,23 @@ body.music-paused .immersive-controls{filter:brightness(.72)}
 body.sleeve-idle .immersive-room{opacity:1}
 @media(min-aspect-ratio:768/1024){.immersive-room{background:radial-gradient(ellipse at center,#4e3423,#120f0e)}.immersive-scene{height:100dvh}}
 @media(max-aspect-ratio:768/1024){.immersive-scene{height:100dvh;flex-shrink:0}}
+
+.collection-menu-button{background:transparent;border:1px solid #61716d;color:#e6e8d8;font-size:26px;line-height:1;padding:3px 12px}
+.collection-menu{background:#21383b;border:1px solid #52696b;border-radius:15px;padding:14px;margin:0 0 14px;max-width:440px}
+.collection-menu>label{display:block;margin:8px 0;font-size:14px}
+.collection-menu input[type=checkbox]{width:auto;margin-right:7px}
+.collection-menu .personal-controls{display:flex;align-items:center;gap:8px}
+.collection-menu .personal-controls label{font-size:12px}
+.collection-menu select{max-width:150px;min-width:75px}
+#albumGrid{display:grid!important;grid-template-columns:none!important;grid-template-rows:repeat(var(--rows,3),auto)!important;grid-auto-columns:calc((100% - (var(--cols,3) - 1)*12px)/var(--cols,3))!important;grid-auto-flow:column!important;overflow-x:auto!important;overflow-y:hidden!important;gap:16px 12px!important;scroll-snap-type:x proximity;padding-bottom:16px}
+#albumGrid>.album-card{scroll-snap-align:start}
+#albumGrid.hide-labels .album-label{display:none}
+.discography-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:18px 12px}
+.discography-card{min-width:0}
+.discography-card .album-card{width:100%}
+.discography-actions{display:flex;gap:8px;margin-top:7px}
+.discography-actions button{flex:1;padding:8px 5px;border-radius:9px}
+#discographyPanel{scroll-margin-top:80px}
 </style>
 </head>
 <body>
@@ -171,9 +188,9 @@ body.sleeve-idle .immersive-room{opacity:1}
 <div class="personal-hero"><h1>Mine plater</h1></div>
 <nav class="personal-tabs" aria-label="Musikksamling"><button type="button" class="active" data-view="all">Mine plater</button><button type="button" data-view="favorites">♥ Favorittplater</button><button type="button" data-view="rooms">Mine rom</button><button type="button" data-view="shop">Platebutikken</button><button type="button" class="settings-tab" id="settingsOpen" aria-label="Åpne innstillinger">⚙ Innstillinger</button></nav>
 <div class="panel personal-panel focus-stage" id="collectionPanel" data-stage="collection">
-<div class="row between"><h2 id="collectionHeading">Mine plater</h2><span class="small" id="collectionCount"></span></div>
-<div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Utgivelsesår</option><option value="recent">Nylig lagt til</option></select><div id="collectionTransfer" class="hidden"><button type="button" class="secondary" id="exportCollection">Eksporter samling</button><button type="button" class="secondary" id="importCollection">Importer samling</button></div><input type="file" id="importCollectionFile" accept=".json,application/json" class="hidden" aria-label="Velg MuLi-samlingsfil"></div>
-<div id="roomControls" class="hidden"><div class="row"><input id="roomName" placeholder="Navn på nytt rom" maxlength="45" style="flex:1;min-width:160px"><button type="button" id="addRoom">Opprett rom</button></div><div id="roomList" class="row" style="margin:14px 0"></div></div>
+<div class="row between"><h2 id="collectionHeading">Mine plater</h2><div class="row" style="gap:10px"><span class="small" id="collectionCount"></span><button type="button" id="collectionMenuButton" class="collection-menu-button" aria-label="Vis valg for platesamlingen" aria-expanded="false">⋮</button></div></div><div id="collectionMenu" class="collection-menu hidden"><label><input type="checkbox" id="showAlbumLabels" checked> Vis artist og album</label><label for="albumSort">Sorter etter</label>
+<div class="personal-controls"><select id="albumSort" aria-label="Sorter plater"><option value="artist">Artist A–Å</option><option value="title">Album A–Å</option><option value="year">Årstall</option><option value="label">Plateselskap</option><option value="recent">Nylig lagt til</option></select><label for="gridCols">Cover per rad</label><select id="gridCols" aria-label="Antall cover per rad"><option>1</option><option>2</option><option selected>3</option><option>4</option></select><label for="gridRows">Synlige rader</label><select id="gridRows" aria-label="Antall synlige rader"><option>1</option><option>2</option><option selected>3</option></select><div id="collectionTransfer" class="hidden"><button type="button" class="secondary" id="exportCollection">Eksporter samling</button><button type="button" class="secondary" id="importCollection">Importer samling</button></div><input type="file" id="importCollectionFile" accept=".json,application/json" class="hidden" aria-label="Velg MuLi-samlingsfil"></div>
+</div></div><div id="roomControls" class="hidden"><div class="row"><input id="roomName" placeholder="Navn på nytt rom" maxlength="45" style="flex:1;min-width:160px"><button type="button" id="addRoom">Opprett rom</button></div><div id="roomList" class="row" style="margin:14px 0"></div></div>
 <div id="collectionEmpty" class="small"></div><div id="albumGrid" class="album-grid"></div><div class="stage-nav"><button type="button" class="secondary" id="goListeningRoom">Til avspillingsrommet ↓</button></div>
 </div>
 
@@ -185,9 +202,9 @@ body.sleeve-idle .immersive-room{opacity:1}
  <div id="roomDeck" class="deck deck-cd hidden" aria-label="CD-spiller"></div>
  <div class="room-now hidden" id="roomNow">Ingen sang spiller</div>
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
- <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
+ <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button><button type="button" class="secondary" id="openDiscography">Diskografi ↓</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
-<section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
+<section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for pause eller avspilling"><img id="immersiveCover" alt="Albumcover"></button><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
@@ -263,11 +280,61 @@ try{const data=JSON.parse(localStorage.getItem(LIBKEY)||'null');if(data&&Array.i
 if(!library.rooms.includes('Stua'))library.rooms.unshift('Stua');
 function saveLibrary(){try{localStorage.setItem(LIBKEY,JSON.stringify(library))}catch(e){personalNote('Kunne ikke lagre samlingen på denne enheten.')}}
 function personalNote(message){$('personalMessage').textContent=message}
-function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'+a.id),name:String(a.name||''),artist:(a.artists||[]).map(x=>x.name).join(', '),image:a.images?.[0]?.url||'',year:String(a.release_date||'').slice(0,4),type:a.album_type||'album',added:Date.now(),rooms:['Stua']}}
-function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
-function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?(a.year||'').localeCompare(b.year||''):String(mode==='title'?a.name:a.artist).localeCompare(String(mode==='title'?b.name:b.artist),'nb'))}
-function renderLibrary(){$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
-function showAlbum(album,where){setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');$('artistBio').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>{focusStage('listening',true);setTimeout(()=>resetSleeveTimer(),900)});return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
+function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'+a.id),name:String(a.name||''),artist:(a.artists||[]).map(x=>x.name).join(', '),artistId:a.artists?.[0]?.id||'',label:a.label||'',image:a.images?.[0]?.url||'',year:String(a.release_date||'').slice(0,4),type:a.album_type||'album',added:Date.now(),rooms:['Stua']}}
+function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;title.className='album-label';sub.className='album-label';btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
+function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?String(a.year||'').localeCompare(String(b.year||'')):String(mode==='title'?a.name:mode==='label'?a.label||'':a.artist).localeCompare(String(mode==='title'?b.name:mode==='label'?b.label||'':b.artist),'nb'))}
+
+/* Collection display settings, kept on this device */
+const COLPREF='muli_collection_display';
+let collectionPrefs={labels:true,cols:3,rows:3};
+try{collectionPrefs={...collectionPrefs,...JSON.parse(localStorage.getItem(COLPREF)||'{}')}}catch(e){}
+function applyCollectionPrefs(){
+ const grid=$('albumGrid');grid.style.setProperty('--cols',Math.max(1,Math.min(4,+collectionPrefs.cols||3)));grid.style.setProperty('--rows',Math.max(1,Math.min(3,+collectionPrefs.rows||3)));
+ grid.classList.toggle('hide-labels',!collectionPrefs.labels);
+}
+$('collectionMenuButton').onclick=()=>{const open=$('collectionMenu').classList.toggle('hidden');$('collectionMenuButton').setAttribute('aria-expanded',String(!open))};
+$('showAlbumLabels').checked=!!collectionPrefs.labels;$('gridCols').value=String(collectionPrefs.cols);$('gridRows').value=String(collectionPrefs.rows);
+function saveCollectionPrefs(){collectionPrefs={labels:$('showAlbumLabels').checked,cols:+$('gridCols').value,rows:+$('gridRows').value};localStorage.setItem(COLPREF,JSON.stringify(collectionPrefs));applyCollectionPrefs()}
+['showAlbumLabels','gridCols','gridRows'].forEach(id=>$(id).addEventListener('change',saveCollectionPrefs));
+$('albumSort').addEventListener('change',renderLibrary);
+
+/* Spotify discography: full releases, albums before singles, direct play and add. */
+let discographyRequest=0;
+$('closeDiscography').onclick=()=>{$('discographyPanel').classList.add('hidden');focusStage('listening',true)};
+$('openDiscography').onclick=showDiscography;
+async function showDiscography(){
+ if(!roomAlbum)return;
+ const album=roomAlbum,request=++discographyRequest,panel=$('discographyPanel'),grid=$('discographyAlbums');
+ $('discographyTitle').textContent='Diskografi · '+album.artist.split(',')[0];$('discographyStatus').textContent='Henter utgivelser fra Spotify …';grid.replaceChildren();panel.classList.remove('hidden');
+ panel.scrollIntoView({behavior:'smooth',block:'start'});
+ try{
+  let artistId=album.artistId;
+  if(!artistId){const data=await api('albums/'+encodeURIComponent(album.id));artistId=data.artists?.[0]?.id}
+  if(!artistId)throw Error('Fant ikke artist-ID');
+  let offset=0,all=[];
+  do{
+   const data=await api('artists/'+encodeURIComponent(artistId)+'/albums?'+new URLSearchParams({include_groups:'album,single',market:'from_token',limit:'50',offset:String(offset)}));
+   all.push(...(data.items||[]));offset+=data.items?.length||0;
+   if(!data.next||!data.items?.length||offset>=500)break;
+  }while(true);
+  if(request!==discographyRequest)return;
+  const unique=[...new Map(all.map(x=>[x.name.toLocaleLowerCase('nb')+'|'+String(x.release_date||'').slice(0,4)+'|'+x.album_type,x])).values()];
+  unique.sort((a,b)=>(a.album_type==='single')-(b.album_type==='single')||String(b.release_date||'').localeCompare(String(a.release_date||'')));
+  for(const item of unique){
+   const entry=cleanAlbum(item),card=document.createElement('div');card.className='discography-card';
+   const open=albumCard(entry,'discography');open.querySelector('small').textContent=entry.year||entry.artist;
+   const actions=document.createElement('div');actions.className='discography-actions';
+   const play=document.createElement('button');play.textContent='▶';play.setAttribute('aria-label','Spill '+entry.name);play.onclick=()=>{setRoomAlbum(entry);playAlbum(entry);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false')};
+   const add=document.createElement('button');add.textContent=library.albums.some(x=>x.id===entry.id)?'✓':'＋';add.disabled=library.albums.some(x=>x.id===entry.id);add.setAttribute('aria-label','Legg '+entry.name+' i samlingen');
+   add.onclick=()=>{if(library.albums.some(x=>x.id===entry.id))return;library.albums.push(entry);saveLibrary();renderLibrary();add.textContent='✓';add.disabled=true};
+   actions.append(play,add);card.append(open,actions);grid.append(card);
+  }
+  $('discographyStatus').textContent=unique.length+' utgivelser · album først, deretter singler';
+ }catch(e){if(request===discographyRequest)$('discographyStatus').textContent='Kunne ikke hente diskografien: '+e.message}
+}
+
+function renderLibrary(){applyCollectionPrefs();$('collectionTransfer').classList.toggle('hidden',libraryView!=='rooms');$('listeningRoom').classList.toggle('hidden',libraryView==='shop'&&!roomAlbum);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===libraryView));$('collectionPanel').classList.toggle('hidden',libraryView==='shop');$('shopPanel').classList.toggle('hidden',libraryView!=='shop');$('roomControls').classList.toggle('hidden',libraryView!=='rooms');const headings={all:'Mine plater',favorites:'Mine favorittplater',rooms:'Mine rom'};$('collectionHeading').textContent=libraryView==='rooms'?activeRoom:headings[libraryView]||'Mine plater';$('roomList').replaceChildren();library.rooms.forEach(room=>{const b=document.createElement('button');b.className=room===activeRoom?'':'secondary';b.textContent=room;b.onclick=()=>{activeRoom=room;renderLibrary()};$('roomList').append(b)});let items=library.albums;if(libraryView==='favorites')items=items.filter(a=>library.favorites.includes(a.id));if(libraryView==='rooms')items=items.filter(a=>(a.rooms||[]).includes(activeRoom));$('collectionCount').textContent=items.length+' plater';$('albumGrid').replaceChildren(...sortedAlbums(items).map(a=>albumCard(a,'collection')));$('collectionEmpty').textContent=items.length?'':libraryView==='all'?'Samlingen din er tom. Gå til Platebutikken og finn din første plate.':libraryView==='favorites'?'Åpne en plate og trykk ♥ Favoritt for å legge den her.':'Ingen plater i dette rommet ennå.'}
+function showAlbum(album,where){$('discographyPanel').classList.add('hidden');setRoomAlbum(album);detailAlbum=album;if(where!=='room'){detailRequest++;$('albumDetail').classList.add('hidden');$('artistBio').classList.add('hidden');if(libraryView==='shop'){$('listeningRoom').classList.remove('hidden')}requestAnimationFrame(()=>{focusStage('listening',true);setTimeout(()=>resetSleeveTimer(),900)});return;}const saved=library.albums.find(a=>a.id===album.id);const panel=$('albumDetail');panel.classList.remove('hidden');panel.replaceChildren();const wrap=document.createElement('div');wrap.className='album-detail';const cover=document.createElement('img');cover.src=album.image;cover.alt='Omslag: '+album.name;const info=document.createElement('div');info.className='album-detail-info';const heading=document.createElement('h2');heading.textContent=album.name;const by=document.createElement('p');by.textContent=album.artist+(album.year?' · '+album.year:'');const actions=document.createElement('div');actions.className='album-actions';
 function action(label,fn,secondary=false){const b=document.createElement('button');b.type='button';b.textContent=label;if(secondary)b.className='secondary';b.onclick=fn;actions.append(b);return b}
 action('▶ Spill hele albumet',()=>playAlbum(album));
 if(!saved)action('＋ Legg i samlingen',()=>{library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();showAlbum(album,where);personalNote('«'+album.name+'» er lagt i samlingen.')});
@@ -386,7 +453,7 @@ function syncRoomPlayer(paused,track){
 $('roomCover').onclick=()=>{if(roomAlbum)playSelectedOrToggle();else focusStage('collection',true)};
 $('openTracklist').onclick=()=>{if(roomAlbum){$('artistBio').classList.add('hidden');showAlbum(roomAlbum,'room')}};
 $('openArtistBio').onclick=showArtistBio;
-$('roomPlay').onclick=playSelectedOrToggle;
+$('roomPlay').onclick=()=>{if(!roomAlbum)return;clearTimeout(sleeveTimer);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');if(playingAlbumId!==roomAlbum.id||!roomPlaying)playAlbum(roomAlbum)};
 $('roomPrevious').onclick=()=>$('previousTrack').click();
 $('roomToggle').onclick=()=>{if(!roomAlbum){personalNote('Velg en plate fra samlingen først.');return}if(playingAlbumId===roomAlbum.id&&deviceId){$('toggle').click()}else playAlbum(roomAlbum)};
 $('roomNext').onclick=()=>$('nextTrack').click();
@@ -493,9 +560,9 @@ $('miniDeck').onclick=()=>{if(!roomAlbum){focusStage('listening',true);return}cl
 function resetSleeveTimer(){
  clearTimeout(sleeveTimer);
  if(document.body.classList.contains('sleeve-idle')){document.body.classList.remove('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','true');return}
- if(!roomAlbum||document.hidden)return;
+ if(!roomAlbum||!roomPlaying||document.hidden)return;
  sleeveTimer=setTimeout(()=>{
-  if(roomAlbum&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
+  if(roomAlbum&&roomPlaying&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
  },5000);
 }
 document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle')&&e.target.closest('.immersive-controls, .immersive-cover-frame'))return;resetSleeveTimer()},{passive:true});
