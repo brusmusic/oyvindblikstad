@@ -150,6 +150,8 @@ body.music-paused .immersive-scene:before{opacity:0}
 body.music-paused .immersive-scene:after{opacity:1}
 .immersive-cover-frame{position:absolute;left:34%;top:17.1%;width:35%;height:25.2%;overflow:hidden;background:#201a14;box-shadow:0 0 0 5px #4c2c19,0 0 18px 8px #0009;z-index:1}
 .immersive-cover-frame img{width:100%;height:100%;object-fit:fill;display:block}
+.immersive-cover-frame{transition:filter 1s ease}
+body.music-paused .immersive-cover-frame{filter:brightness(.28)}
 .immersive-controls{position:absolute;z-index:3;top:28%;left:14%;width:72%;display:flex;align-items:center;justify-content:space-between}
 .immersive-controls button{width:56px;height:56px;border-radius:50%;border:1px solid #e2c393a6;background:#1b1716a8;color:#f9e3c0;font-size:22px;backdrop-filter:blur(8px)}
 .immersive-controls button:nth-child(2){width:72px;height:72px;font-size:27px}
