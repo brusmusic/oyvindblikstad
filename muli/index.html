@@ -105,6 +105,16 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
 .player .transport{flex-shrink:0}
 @media(max-width:600px){.player{padding:9px 10px max(10px,env(safe-area-inset-bottom))}.mini-deck{width:47px;height:45px;flex-basis:47px;border-radius:8px}.mini-disc{width:33px;height:33px}.mini-cassette .mini-disc{width:37px;height:24px}.player-inner{gap:7px}.player-text strong{font-size:12px}.player-text small{font-size:11px}.player .transport{gap:3px}.player .circle{width:44px;height:44px}.record-display img,.record-display .record-placeholder{width:min(67vw,265px)}}
 @media(prefers-reduced-motion:reduce){.mini-deck.playing .mini-disc{animation:none}}
+
+/* Album-first listening: play above the cover, no track metadata in the dock */
+.room-main-play{display:block;margin:0 auto 15px;width:62px;height:62px;border-radius:50%;background:#e2c8a7;color:#2b2a25;font-size:28px;line-height:1;box-shadow:0 6px 20px #0008;border:1px solid #f1d9b7}
+.room-main-play:active{transform:scale(.96)}
+.player-text.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.player-inner{justify-content:center;gap:24px}
+.player .transport{display:flex;align-items:center;gap:12px}
+#listeningRoom .record-caption{text-align:center}
+#listeningRoom .room-hint button{opacity:.7;border-color:#625f54;font-size:12px}
+@media(max-width:600px){.player-inner{gap:18px}.player .transport{gap:10px}.room-main-play{width:58px;height:58px;margin-bottom:12px}.personal-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.personal-tabs button{flex-shrink:0}#albumGrid{grid-auto-columns:calc((100% - 24px)/3)}}
 </style>
 </head>
 <body>
@@ -122,13 +132,13 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
 
 <section class="listening-room focus-stage" data-stage="listening" id="listeningRoom" aria-label="Avspillingsrom">
  <div class="listening-top"><h2>Avspillingsrommet</h2><div class="deck-switch" role="group" aria-label="Velg spiller"><button type="button" data-deck="lp" aria-label="LP-spiller" title="LP-spiller">◉</button><button type="button" data-deck="cd" class="active" aria-label="CD-spiller" title="CD-spiller">◎</button><button type="button" data-deck="cassette" aria-label="Kassettspiller" title="Kassettspiller">▣</button></div></div>
- <button type="button" class="record-display" id="roomCover" aria-label="Åpne albumets sporliste"><div class="record-placeholder" id="roomCoverPlaceholder">♫</div><img id="roomCoverImage" class="hidden" alt="Albumcover"></button>
+ <button type="button" id="roomPlay" class="room-main-play" aria-label="Spill hele albumet">▶</button><button type="button" class="record-display" id="roomCover" aria-label="Åpne albumets sporliste"><div class="record-placeholder" id="roomCoverPlaceholder">♫</div><img id="roomCoverImage" class="hidden" alt="Albumcover"></button>
  <div class="display-shelf" aria-hidden="true"></div>
  <div class="record-caption" id="roomAlbumTitle">Velg en plate fra samlingen</div>
  <div id="roomDeck" class="deck deck-cd hidden" aria-label="CD-spiller"></div>
- <div class="room-now" id="roomNow">Ingen sang spiller</div>
+ <div class="room-now hidden" id="roomNow">Ingen sang spiller</div>
  <div class="room-controls hidden"><button type="button" class="secondary" id="roomPrevious" disabled aria-label="Forrige sang">⏮</button><button type="button" id="roomToggle" aria-label="Spill album eller pause">▶</button><button type="button" class="secondary" id="roomNext" disabled aria-label="Neste sang">⏭</button></div>
- <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Se sporlisten og velg sang</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
+ <div class="room-hint"><button type="button" class="secondary" id="openTracklist">Sporliste</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
 <section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
 <section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
@@ -141,7 +151,7 @@ body[data-focus="shop"] #listeningRoom:not(.hidden){filter:blur(4px);opacity:.3}
 <div class="notice">MuLi er en teknisk prototype. Spotify Premium kreves for nettleseravspilling. Bruk i institusjon må avklares opp mot Spotifys vilkår og musikkrettigheter.</div>
 </div><section class="panel hidden" id="settings"><div class="row between"><h2>Innstillinger</h2><button class="secondary" id="settingsClose">Lukk</button></div><div class="hidden"><h3>Lytteprofiler</h3><p class="small">Navn lagres bare i denne nettleseren. Ikke legg inn sensitive personopplysninger.</p><div class="row"><input id="newResident" placeholder="Navn eller kallenavn" maxlength="60" style="flex:1;min-width:170px"><button id="addResident">Legg til</button></div><div class="results" id="residentList"></div></div><h3>Spotify</h3><p class="small">Logg inn med Spotify for å søke og spille musikk. Innlogging bruker PKCE uten klienthemmelighet.</p><div class="row"><button id="login">Koble til Spotify</button><button id="logout" class="secondary hidden">Logg ut</button></div><p class="small" id="account"></p></section>
 </main><footer>MuLi Personal 2.0 · Samlingen lagres lokalt i denne nettleseren. Ingen lydfiler hostes her.</footer></div>
-<div class="player"><div class="player-inner"><div class="mini-deck" id="miniDeck" aria-hidden="true"><div class="mini-disc"></div><div class="mini-center"></div></div><div class="player-text"><strong id="nowTitle">Ingen sang valgt</strong><small id="nowArtist">Koble til Spotify for å begynne</small><div id="playbackStatus" class="live-status" role="status"></div></div><div class="transport"><button id="previousTrack" class="skip" disabled aria-label="Forrige spor">⏮</button><button id="toggle" class="circle" disabled aria-label="Spill av eller pause">▶</button><button id="nextTrack" class="skip" disabled aria-label="Neste spor">⏭</button></div></div></div>
+<div class="player"><div class="player-inner"><div class="mini-deck" id="miniDeck" aria-hidden="true"><div class="mini-disc"></div><div class="mini-center"></div></div><div class="player-text visually-hidden"><strong id="nowTitle">Ingen sang valgt</strong><small id="nowArtist">Koble til Spotify for å begynne</small><div id="playbackStatus" class="live-status" role="status"></div></div><div class="transport"><button id="previousTrack" class="skip" disabled aria-label="Forrige spor">⏮</button><button id="toggle" class="circle" disabled aria-label="Spill av eller pause">▶</button><button id="nextTrack" class="skip" disabled aria-label="Neste spor">⏭</button></div></div></div>
 <script src="https://sdk.scdn.co/spotify-player.js"></script>
 <script>
 (()=>{'use strict';
@@ -242,7 +252,7 @@ async function loadAlbumTracks(album,container,requestId){
  }catch(e){if(requestId===detailRequest&&container.isConnected)msg.textContent='Kunne ikke hente sporlisten: '+e.message}
 }
 
-async function playAlbum(album,position=0){setRoomAlbum(album);if(!deviceId){personalNote('Koble til Spotify Premium og vent til spilleren er klar.');$('settings').classList.remove('hidden');return}try{personalNote('Starter albumet «'+album.name+'» …');await api('me/player',{method:'PUT',body:JSON.stringify({device_ids:[deviceId],play:false})});await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});playingAlbumId=album.id;roomPlaying=true;renderDeck();$('toggle').disabled=false;$('roomToggle').textContent='Ⅱ';$('roomNow').textContent=album.name+' · '+album.artist;$('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;$('toggle').disabled=false;personalNote(position?'Spiller fra valgt spor på «'+album.name+'».':'Spiller albumet «'+album.name+'» i original rekkefølge.')}catch(e){personalNote('Avspilling feilet: '+e.message)}}
+async function playAlbum(album,position=0){setRoomAlbum(album);if(!deviceId){personalNote('Koble til Spotify Premium og vent til spilleren er klar.');$('settings').classList.remove('hidden');return}try{personalNote('Starter albumet «'+album.name+'» …');await api('me/player',{method:'PUT',body:JSON.stringify({device_ids:[deviceId],play:false})});await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});playingAlbumId=album.id;roomPlaying=true;renderDeck();$('roomPlay').textContent='Ⅱ';$('toggle').disabled=false;$('roomToggle').textContent='Ⅱ';$('roomNow').textContent=album.name+' · '+album.artist;$('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;$('toggle').disabled=false;personalNote(position?'Spiller fra valgt spor på «'+album.name+'».':'Spiller albumet «'+album.name+'» i original rekkefølge.')}catch(e){personalNote('Avspilling feilet: '+e.message)}}
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{libraryView=b.dataset.view;$('albumDetail').classList.add('hidden');renderLibrary();if(libraryView==='shop'){loadSpotifyTips();focusStage('shop',true)}else focusStage('collection',true)}));
 $('albumSort').onchange=renderLibrary;
 $('addRoom').onclick=()=>{const room=$('roomName').value.trim();if(!room||library.rooms.some(r=>r.toLowerCase()===room.toLowerCase()))return;library.rooms.push(room);activeRoom=room;$('roomName').value='';saveLibrary();renderLibrary()};
@@ -290,21 +300,22 @@ function renderDeck(){
  document.querySelectorAll('[data-deck]').forEach(b=>{b.classList.toggle('active',b.dataset.deck===deckType);b.setAttribute('aria-pressed',String(b.dataset.deck===deckType))})
 }
 function setRoomAlbum(album){
- if(!album)return;roomAlbum=album;renderDeck();$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
+ if(!album)return;roomAlbum=album;renderDeck();$('roomPlay').disabled=false;$('roomPlay').textContent=playingAlbumId===album.id&&roomPlaying?'Ⅱ':'▶';$('roomToggle').disabled=false;$('roomToggle').textContent=roomPlaying?'Ⅱ':'▶';
  $('roomAlbumTitle').textContent=album.name+' · '+album.artist;
  $('roomCoverImage').src=album.image||'';
  $('roomCoverImage').classList.toggle('hidden',!album.image);
  $('roomCoverPlaceholder').classList.toggle('hidden',!!album.image);
 }
 function syncRoomPlayer(paused,track){
- roomPlaying=!paused;renderDeck();
+ roomPlaying=!paused;renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
  $('roomToggle').textContent=paused?'▶':'Ⅱ';
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
  if(track){playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}
 }
 document.querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>{deckType=b.dataset.deck;try{localStorage.setItem(DECK_KEY,deckType)}catch(e){}renderDeck()});
-$('roomCover').onclick=()=>{if(roomAlbum){showAlbum(roomAlbum,'room')}else{libraryView='all';renderLibrary();$('collectionPanel').scrollIntoView({behavior:'smooth'})}};
+$('roomCover').onclick=()=>{if(roomAlbum)playSelectedOrToggle();else focusStage('collection',true)};
 $('openTracklist').onclick=()=>{if(roomAlbum)showAlbum(roomAlbum,'room')};
+$('roomPlay').onclick=playSelectedOrToggle;
 $('roomPrevious').onclick=()=>$('previousTrack').click();
 $('roomToggle').onclick=()=>{if(!roomAlbum){personalNote('Velg en plate fra samlingen først.');return}if(playingAlbumId===roomAlbum.id&&deviceId){$('toggle').click()}else playAlbum(roomAlbum)};
 $('roomNext').onclick=()=>$('nextTrack').click();
@@ -314,7 +325,7 @@ renderDeck();
 function playSelectedOrToggle(){
  if(roomAlbum&&playingAlbumId!==roomAlbum.id){playAlbum(roomAlbum);return}
  if(roomAlbum&&playingAlbumId===null){playAlbum(roomAlbum);return}
- if(!deviceId){personalNote('Koble til Spotify under Innstillinger for å spille albumet.');$('settings').classList.remove('hidden');return}
+ if(!deviceId){personalNote('Koble til Spotify under Innstillinger for å spille albumet.');$('settings').classList.remove('hidden');$('settings').scrollIntoView({behavior:'smooth'});return}
  if(player)player.togglePlay().catch(e=>personalNote(e.message));
 }
 $('toggle').onclick=playSelectedOrToggle;
@@ -372,7 +383,7 @@ focusStage('collection');
 renderLibrary();
 
 $('loadSuggestions').onclick=()=>loadSuggestions();renderSaved();
-$('toggle').onclick=()=>player?.togglePlay().catch(e=>status(e.message));
+$('toggle').onclick=playSelectedOrToggle;
 $('previousTrack').onclick=()=>player?.previousTrack().catch(e=>personalNote('Kunne ikke gå til forrige spor: '+e.message));
 $('nextTrack').onclick=()=>player?.nextTrack().catch(e=>personalNote('Kunne ikke gå til neste spor: '+e.message));
 async function boot(){readProfiles();try{auth=JSON.parse(sessionStorage.getItem('muli_auth')||'null')}catch{}updateAuth();try{await handleCallback();if(auth){const me=await api('me');$('account').textContent='Innlogget som '+(me.display_name||me.id);startPlayer()}else status('Koble til Spotify under Innstillinger for å søke etter musikk.')}catch(e){status(e.message)}}boot();
