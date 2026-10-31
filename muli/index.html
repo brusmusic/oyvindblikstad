@@ -344,6 +344,16 @@ body.sleeve-idle{overflow-x:hidden;overflow-y:auto}
 .shop-record-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
 .shop-record-actions button{font-size:11px;padding:7px;flex:1;min-width:45px}
 #shopPreviewStatus{min-height:16px}
+
+.shop-counter{background:linear-gradient(130deg,#4c3426,#251d1b);border:1px solid #866d53;border-radius:16px;padding:13px;margin-bottom:15px;color:#f3e3cf}
+.shop-staff{display:flex;align-items:center;gap:12px;justify-content:space-between}.shop-staff div{flex:1}.shop-staff strong,.shop-staff small{display:block}.shop-staff strong{font-size:15px}.shop-staff small{font-size:11px;opacity:.8;margin-top:4px}
+.shop-staff-portrait{font-size:30px;background:#b9956e2e;border-radius:50%;padding:6px}
+.shop-wallet{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:13px;font-size:12px;border-top:1px solid #ad8d6955;padding-top:10px}
+.shop-wallet button,.shop-trade button{font-size:11px;padding:8px}
+.shop-trade{padding:10px 0}.shop-trade p{font-size:12px}
+#shopTradeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:220px;overflow:auto}
+.shop-trade-item{display:flex;align-items:center;gap:7px;font-size:11px;background:#0003;padding:5px;border-radius:7px}
+.shop-trade-item img{width:30px;height:30px;object-fit:cover}
 </style>
 </head>
 <body>
@@ -370,7 +380,7 @@ body.sleeve-idle{overflow-x:hidden;overflow-y:auto}
  <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button><button type="button" class="secondary" id="openDiscography">Diskografi ↓</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
 <section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for å starte eller pause musikken"><img id="immersiveCover" alt="Albumcover"></button><button class="ambient-open-btn" id="ambientOpen" type="button" aria-label="Gå til vindu og peis">☁ Vindu og peis ‹</button><div class="ambient-panel" id="ambientPanel" aria-label="Vindu og peis"><button type="button" class="ambient-back" id="ambientBack">← Lytterommet</button><h2>Ved vinduet</h2><p>Vindu og peis lever videre når musikken stopper.</p><div class="ambient-window" id="ambientWindow" role="button" tabindex="0" aria-label="Åpne eller lukk vinduet">🌧️</div><div class="ambient-row"><button id="ambientWindowButton">Åpne vinduet</button><select id="ambientWeather" aria-label="Testvær"><option value="rain">🌧 Regn</option><option value="wind">🌬 Vind</option><option value="sun">☀ Sol</option><option value="snow">❄ Snø</option></select></div><div class="ambient-fire" id="ambientFire" role="button" tabindex="0" aria-label="Tenn eller slukk peisen">🔥</div><button id="ambientFireButton">Tenn peisen</button><p id="ambientStatus" aria-live="polite">Trykk på vinduet eller peisen for å høre rommet.</p><p>Lydene er foreløpig syntetiske testlyder. Spotify-avspilling demper romlyden.</p></div><button type="button" class="immersive-turntable" id="immersiveTurntable" aria-label="Start eller pause platespilleren"><span id="turntableLabel">▶ Spill plate</span></button><button type="button" class="room-library-open" id="roomLibraryOpen">▦ Platesamlingen ›</button><button type="button" class="room-library-backdrop" id="roomLibraryBackdrop" aria-label="Tilbake til lytterommet"></button><div class="room-library-overlay" id="roomLibraryOverlay" aria-label="Min platesamling"><div class="room-library-head"><h2>Platesamlingen</h2><button type="button" id="roomLibraryClose" aria-label="Lukk platesamlingen">✕</button></div><div class="room-library-actions"><label for="roomFileInput" aria-label="Legg til egne lydfiler">＋ Fil</label><input class="room-file-input" id="roomFileInput" type="file" accept="audio/*" multiple><button type="button" id="roomLibrarySpotify" aria-label="Åpne platebutikken">＋</button></div><div class="room-library-grid" id="roomLibraryGrid"></div><p class="room-library-empty hidden" id="roomLibraryEmpty">Samlingen er tom. Legg til plater fra platebutikken.</p></div><button type="button" class="room-shop-keys" id="roomShopKeys" aria-label="Gå til platebutikken" title="Platebutikken">🔑</button><button type="button" class="room-spotify-hotspot" id="roomSpotifyHotspot" aria-label="Spotify-tilkobling"></button><button type="button" class="room-help-toggle" id="roomHelpToggle" aria-label="Vis hjelp">i</button><div class="room-help-panel" id="roomHelpPanel">Cover: spill / pause<br>Plater: åpne samlingen<br>Forsterker: Spotify-tilkobling<br>Bilnøkler: platebutikken</div><div class="room-spotify-panel" id="roomSpotifyPanel"><div id="roomSpotifyState">Spotify</div><button type="button" id="roomSpotifyConnect">Koble til Spotify</button><button type="button" id="roomSpotifyClose">Lukk</button></div><button type="button" class="room-record-shelf" id="roomRecordShelf" aria-label="Åpne platesamlingen"></button><div class="room-play-status" id="roomPlayStatus" aria-live="polite">Velg en plate i samlingen</div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
-<section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div class="shop-wishlist-bar"><button type="button" id="shopWishlistToggle">♡ Ønskeliste <span id="shopWishlistCount">0</span></button><button type="button" id="shopAllToggle">Alle plater</button><button type="button" id="shopBackRoom">← Lytterommet</button></div><p class="small" id="shopPreviewStatus" aria-live="polite"></p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
+<section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="shop-counter"><div class="shop-staff"><span class="shop-staff-portrait">👨🏻‍🦳</span><div><strong>Velkommen til platebutikken</strong><small>Ta deg tid. Her kan du lytte før du velger.</small></div><span class="shop-staff-portrait">👩🏻</span></div><div class="shop-wallet"><span id="shopAllowance">2 plater igjen denne uken</span><button type="button" id="shopTradeToggle">Bytt inn 2 → 1</button></div><div class="shop-trade hidden" id="shopTradePanel"><p>Velg to plater du vil bytte inn mot én ny.</p><div id="shopTradeGrid"></div><button type="button" id="shopTradeConfirm">Bytt inn valgte plater</button><p class="small" id="shopTradeStatus"></p></div></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div class="shop-wishlist-bar"><button type="button" id="shopWishlistToggle">♡ Ønskeliste <span id="shopWishlistCount">0</span></button><button type="button" id="shopAllToggle">Alle plater</button><button type="button" id="shopBackRoom">← Lytterommet</button></div><p class="small" id="shopPreviewStatus" aria-live="polite"></p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
 <div id="legacyPrototype" class="hidden"><div class="eyebrow">Tidligere prototype · enkeltsanger</div><h1>Hva skal vi høre<br>på i dag?</h1><p>Finn musikk som skaper minner, ro og glede.</p>
@@ -452,6 +462,49 @@ const SHOP_WISH_KEY='muli_shop_wishlist';
 let shopWishlist=[];
 try{const stored=JSON.parse(localStorage.getItem(SHOP_WISH_KEY)||'[]');if(Array.isArray(stored))shopWishlist=stored}catch(e){}
 let shopWishlistOnly=false,shopPreviewAlbum=null,shopPreviewActive=false;
+const SHOP_WALLET_KEY='muli_shop_weekly_wallet';
+let shopWallet={week:'',spent:0,credits:0};
+try{shopWallet={...shopWallet,...JSON.parse(localStorage.getItem(SHOP_WALLET_KEY)||'{}')}}catch(e){}
+function shopWeekKey(){const d=new Date();const saturday=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+1)%7));return [saturday.getFullYear(),saturday.getMonth()+1,saturday.getDate()].join('-')}
+function shopRefreshWallet(){
+ const week=shopWeekKey();
+ if(shopWallet.week!==week){shopWallet.week=week;shopWallet.spent=0;shopWallet.credits=0}
+ localStorage.setItem(SHOP_WALLET_KEY,JSON.stringify(shopWallet));
+ const left=Math.max(0,2-shopWallet.spent);
+ $('shopAllowance').textContent=left+' av 2 plater igjen denne uken'+(shopWallet.credits?' · '+shopWallet.credits+' innbytte': '');
+}
+function shopBuy(album){
+ shopRefreshWallet();
+ if(library.albums.some(a=>a.id===album.id))return;
+ const left=Math.max(0,2-shopWallet.spent);
+ if(!left&&!shopWallet.credits){$('shopPreviewStatus').textContent='Ukelønnen er brukt. Nye plater kommer lørdag, eller du kan bytte inn to gamle.';return}
+ if(!confirm('Ta med «'+album.name+'» hjem?'))return;
+ if(left)shopWallet.spent++;else shopWallet.credits--;
+ library.albums.push({...album,rooms:['Stua'],added:Date.now()});
+ saveLibrary();shopRefreshWallet();renderLibrary();shopRenderResults();
+ $('shopPreviewStatus').textContent='«'+album.name+'» er nå i platesamlingen din.';
+}
+function shopRenderTrade(){
+ const box=$('shopTradeGrid');box.replaceChildren();
+ for(const album of library.albums){
+ const label=document.createElement('label');label.className='shop-trade-item';
+ const cb=document.createElement('input');cb.type='checkbox';cb.value=album.id;
+ const img=document.createElement('img');img.src=album.image||'';img.alt='';
+ const name=document.createElement('span');name.textContent=album.name;
+ label.append(cb,img,name);box.append(label);
+ }
+}
+$('shopTradeToggle').onclick=()=>{$('shopTradePanel').classList.toggle('hidden');shopRenderTrade()};
+$('shopTradeConfirm').onclick=()=>{
+ const ids=[...document.querySelectorAll('#shopTradeGrid input:checked')].map(x=>x.value);
+ if(ids.length!==2){$('shopTradeStatus').textContent='Velg akkurat to plater.';return}
+ if(!confirm('Bytte bort disse to platene for én innbytteplate?'))return;
+ library.albums=library.albums.filter(a=>!ids.includes(a.id));
+ library.favorites=library.favorites.filter(id=>!ids.includes(id));
+ shopWallet.credits++;saveLibrary();shopRefreshWallet();renderLibrary();shopRenderTrade();
+ $('shopTradeStatus').textContent='Du kan nå velge én ny plate i butikken.';
+};
+
 function shopSaveWishlist(){localStorage.setItem(SHOP_WISH_KEY,JSON.stringify(shopWishlist));$('shopWishlistCount').textContent=shopWishlist.length}
 function shopAlbumCard(album){
  const card=document.createElement('div');card.className='shop-record';
@@ -462,13 +515,13 @@ function shopAlbumCard(album){
  const listen=document.createElement('button');listen.type='button';listen.textContent=shopPreviewActive&&shopPreviewAlbum?.id===album.id?'Ⅱ Stopp':'▶ Lytt';
  listen.onclick=()=>shopListen(album);
  const wish=document.createElement('button');wish.type='button';wish.textContent=shopWishlist.some(a=>a.id===album.id)?'♥':'♡';wish.setAttribute('aria-label','Ønskeliste');
- wish.onclick=()=>{shopWishlist=shopWishlist.some(a=>a.id===album.id)?shopWishlist.filter(a=>a.id!==album.id):[...shopWishlist,album];shopSaveWishlist();shopRenderResults()};
+ wish.onclick=()=>{shopWishlist=shopWishlist.some(a=>a.id===album.id)?shopWishlist.filter(a=>a.id!==album.id):[...shopWishlist,album];shopSaveWishlist();shopRefreshWallet();shopRenderResults()};
  const buy=document.createElement('button');buy.type='button';buy.textContent=library.albums.some(a=>a.id===album.id)?'I samlingen':'Kjøp';
  buy.disabled=library.albums.some(a=>a.id===album.id);
- buy.onclick=()=>{if(library.albums.some(a=>a.id===album.id))return;library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();shopRenderResults();$('shopPreviewStatus').textContent='«'+album.name+'» er kjøpt og lagt i platesamlingen.'};
+ buy.onclick=()=>shopBuy(album);
  actions.append(listen,wish,buy);card.append(img,title,artist,actions);return card;
 }
-function shopRenderResults(){
+function shopRenderResults(){shopRefreshWallet();
  const items=shopWishlistOnly?shopWishlist:shopAlbums;
  $('shopGrid').replaceChildren(...items.map(shopAlbumCard));
  $('shopWishlistToggle').classList.toggle('active',shopWishlistOnly);
