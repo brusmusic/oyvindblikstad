@@ -335,6 +335,15 @@ html,body{scroll-snap-type:none!important;scroll-behavior:auto!important}
 .focus-stage{scroll-snap-align:none!important;scroll-margin-top:0!important}
 body[data-focus] .focus-stage{filter:none!important;opacity:1!important;transform:none!important}
 body.sleeve-idle{overflow-x:hidden;overflow-y:auto}
+
+.shop-wishlist-bar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.shop-wishlist-bar button{font-size:12px;padding:8px 10px}
+.shop-record{display:flex;flex-direction:column;gap:5px;min-width:0}
+.shop-record>img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:5px}
+.shop-record>strong{font-size:12px}.shop-record>small{font-size:11px}
+.shop-record-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
+.shop-record-actions button{font-size:11px;padding:7px;flex:1;min-width:45px}
+#shopPreviewStatus{min-height:16px}
 </style>
 </head>
 <body>
@@ -361,7 +370,7 @@ body.sleeve-idle{overflow-x:hidden;overflow-y:auto}
  <div class="room-hint"><button type="button" class="secondary" id="saveRoomAlbum">＋ Legg i platesamlingen</button><button type="button" class="secondary" id="openTracklist">Sporliste</button><button type="button" class="secondary" id="openArtistBio">Artistens historie</button><button type="button" class="secondary" id="openDiscography">Diskografi ↓</button></div><div class="stage-nav"><button type="button" class="secondary" id="goCollection">↑ Tilbake til platesamlingen</button></div>
 </section>
 <section id="discographyPanel" class="panel hidden" aria-label="Artistens diskografi"><div class="row between"><h2 id="discographyTitle">Diskografi</h2><button type="button" id="closeDiscography" class="secondary">Lukk</button></div><p class="small" id="discographyStatus"></p><div id="discographyAlbums" class="discography-grid"></div></section><section class="panel hidden focus-stage" data-stage="bio" id="artistBio" aria-live="polite"></section><div id="immersiveRoom" class="immersive-room" aria-label="Lytterom" aria-hidden="true"><div class="immersive-scene"><button type="button" class="immersive-cover-frame" id="immersiveCoverToggle" aria-label="Pause eller spill av" title="Trykk på coveret for å starte eller pause musikken"><img id="immersiveCover" alt="Albumcover"></button><button class="ambient-open-btn" id="ambientOpen" type="button" aria-label="Gå til vindu og peis">☁ Vindu og peis ‹</button><div class="ambient-panel" id="ambientPanel" aria-label="Vindu og peis"><button type="button" class="ambient-back" id="ambientBack">← Lytterommet</button><h2>Ved vinduet</h2><p>Vindu og peis lever videre når musikken stopper.</p><div class="ambient-window" id="ambientWindow" role="button" tabindex="0" aria-label="Åpne eller lukk vinduet">🌧️</div><div class="ambient-row"><button id="ambientWindowButton">Åpne vinduet</button><select id="ambientWeather" aria-label="Testvær"><option value="rain">🌧 Regn</option><option value="wind">🌬 Vind</option><option value="sun">☀ Sol</option><option value="snow">❄ Snø</option></select></div><div class="ambient-fire" id="ambientFire" role="button" tabindex="0" aria-label="Tenn eller slukk peisen">🔥</div><button id="ambientFireButton">Tenn peisen</button><p id="ambientStatus" aria-live="polite">Trykk på vinduet eller peisen for å høre rommet.</p><p>Lydene er foreløpig syntetiske testlyder. Spotify-avspilling demper romlyden.</p></div><button type="button" class="immersive-turntable" id="immersiveTurntable" aria-label="Start eller pause platespilleren"><span id="turntableLabel">▶ Spill plate</span></button><button type="button" class="room-library-open" id="roomLibraryOpen">▦ Platesamlingen ›</button><button type="button" class="room-library-backdrop" id="roomLibraryBackdrop" aria-label="Tilbake til lytterommet"></button><div class="room-library-overlay" id="roomLibraryOverlay" aria-label="Min platesamling"><div class="room-library-head"><h2>Platesamlingen</h2><button type="button" id="roomLibraryClose" aria-label="Lukk platesamlingen">✕</button></div><div class="room-library-actions"><label for="roomFileInput" aria-label="Legg til egne lydfiler">＋ Fil</label><input class="room-file-input" id="roomFileInput" type="file" accept="audio/*" multiple><button type="button" id="roomLibrarySpotify" aria-label="Åpne platebutikken">＋</button></div><div class="room-library-grid" id="roomLibraryGrid"></div><p class="room-library-empty hidden" id="roomLibraryEmpty">Samlingen er tom. Legg til plater fra platebutikken.</p></div><button type="button" class="room-shop-keys" id="roomShopKeys" aria-label="Gå til platebutikken" title="Platebutikken">🔑</button><button type="button" class="room-spotify-hotspot" id="roomSpotifyHotspot" aria-label="Spotify-tilkobling"></button><button type="button" class="room-help-toggle" id="roomHelpToggle" aria-label="Vis hjelp">i</button><div class="room-help-panel" id="roomHelpPanel">Cover: spill / pause<br>Plater: åpne samlingen<br>Forsterker: Spotify-tilkobling<br>Bilnøkler: platebutikken</div><div class="room-spotify-panel" id="roomSpotifyPanel"><div id="roomSpotifyState">Spotify</div><button type="button" id="roomSpotifyConnect">Koble til Spotify</button><button type="button" id="roomSpotifyClose">Lukk</button></div><button type="button" class="room-record-shelf" id="roomRecordShelf" aria-label="Åpne platesamlingen"></button><div class="room-play-status" id="roomPlayStatus" aria-live="polite">Velg en plate i samlingen</div><div class="immersive-controls"><button id="immersivePrevious" aria-label="Forrige spor">⏮</button><button id="immersiveNext" aria-label="Neste spor">⏭</button></div></div><div class="immersive-dimmer"></div></div><section class="panel hidden focus-stage" data-stage="details" id="albumDetail" aria-live="polite"></section>
-<section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
+<section class="panel hidden focus-stage" data-stage="shop" id="shopPanel"><div class="row between"><h2>Platebutikken</h2><span class="small">Finn nye plater til samlingen</span></div><form id="albumSearchForm" class="row"><input id="albumQuery" placeholder="Søk etter artist eller album" required style="flex:1;min-width:170px"><button type="submit">Finn plater</button></form><p class="small" id="albumSearchStatus">Koble til Spotify under Innstillinger for å søke etter album.</p><div class="shop-wishlist-bar"><button type="button" id="shopWishlistToggle">♡ Ønskeliste <span id="shopWishlistCount">0</span></button><button type="button" id="shopAllToggle">Alle plater</button><button type="button" id="shopBackRoom">← Lytterommet</button></div><p class="small" id="shopPreviewStatus" aria-live="polite"></p><div id="shopGrid" class="album-grid"></div><section id="spotifyTips" class="shop-tips"><div class="row between"><h2>Tips fra Spotify</h2><button type="button" class="secondary" id="refreshTips">Finn tips</button></div><p class="small">Album fra Spotify-søket, basert på artister du allerede har i samlingen. Ingen automatiske tillegg til hyllen.</p><p class="small" id="tipsStatus"></p><div id="tipsGrid" class="album-grid"></div></section></section>
 <p id="personalMessage" class="personal-message" role="status"></p>
 </section>
 <div id="legacyPrototype" class="hidden"><div class="eyebrow">Tidligere prototype · enkeltsanger</div><h1>Hva skal vi høre<br>på i dag?</h1><p>Finn musikk som skaper minner, ro og glede.</p>
@@ -437,6 +446,54 @@ if(!library.rooms.includes('Stua'))library.rooms.unshift('Stua');
 function saveLibrary(){try{localStorage.setItem(LIBKEY,JSON.stringify(library))}catch(e){personalNote('Kunne ikke lagre samlingen på denne enheten.')}}
 function personalNote(message){$('personalMessage').textContent=message}
 function cleanAlbum(a){return{id:String(a.id),uri:String(a.uri||'spotify:album:'+a.id),name:String(a.name||''),artist:(a.artists||[]).map(x=>x.name).join(', '),artistId:a.artists?.[0]?.id||'',label:a.label||'',image:a.images?.[0]?.url||'',year:String(a.release_date||'').slice(0,4),type:a.album_type||'album',added:Date.now(),rooms:['Stua']}}
+
+/* The record store is independent from the album currently displayed at home. */
+const SHOP_WISH_KEY='muli_shop_wishlist';
+let shopWishlist=[];
+try{const stored=JSON.parse(localStorage.getItem(SHOP_WISH_KEY)||'[]');if(Array.isArray(stored))shopWishlist=stored}catch(e){}
+let shopWishlistOnly=false,shopPreviewAlbum=null,shopPreviewActive=false;
+function shopSaveWishlist(){localStorage.setItem(SHOP_WISH_KEY,JSON.stringify(shopWishlist));$('shopWishlistCount').textContent=shopWishlist.length}
+function shopAlbumCard(album){
+ const card=document.createElement('div');card.className='shop-record';
+ const img=document.createElement('img');img.src=album.image||'';img.alt='Omslag: '+album.name;img.loading='lazy';
+ const title=document.createElement('strong');title.textContent=album.name;
+ const artist=document.createElement('small');artist.textContent=album.artist;
+ const actions=document.createElement('div');actions.className='shop-record-actions';
+ const listen=document.createElement('button');listen.type='button';listen.textContent=shopPreviewActive&&shopPreviewAlbum?.id===album.id?'Ⅱ Stopp':'▶ Lytt';
+ listen.onclick=()=>shopListen(album);
+ const wish=document.createElement('button');wish.type='button';wish.textContent=shopWishlist.some(a=>a.id===album.id)?'♥':'♡';wish.setAttribute('aria-label','Ønskeliste');
+ wish.onclick=()=>{shopWishlist=shopWishlist.some(a=>a.id===album.id)?shopWishlist.filter(a=>a.id!==album.id):[...shopWishlist,album];shopSaveWishlist();shopRenderResults()};
+ const buy=document.createElement('button');buy.type='button';buy.textContent=library.albums.some(a=>a.id===album.id)?'I samlingen':'Kjøp';
+ buy.disabled=library.albums.some(a=>a.id===album.id);
+ buy.onclick=()=>{if(library.albums.some(a=>a.id===album.id))return;library.albums.push({...album,rooms:['Stua'],added:Date.now()});saveLibrary();renderLibrary();shopRenderResults();$('shopPreviewStatus').textContent='«'+album.name+'» er kjøpt og lagt i platesamlingen.'};
+ actions.append(listen,wish,buy);card.append(img,title,artist,actions);return card;
+}
+function shopRenderResults(){
+ const items=shopWishlistOnly?shopWishlist:shopAlbums;
+ $('shopGrid').replaceChildren(...items.map(shopAlbumCard));
+ $('shopWishlistToggle').classList.toggle('active',shopWishlistOnly);
+ $('shopWishlistCount').textContent=shopWishlist.length;
+}
+async function shopListen(album){
+ if(!deviceId){$('shopPreviewStatus').textContent='Koble til Spotify Premium via forsterkeren i lytterommet først.';return}
+ try{
+  if(shopPreviewActive&&shopPreviewAlbum?.id===album.id){
+   await api('me/player/pause?device_id='+encodeURIComponent(deviceId),{method:'PUT'});
+   shopPreviewActive=false;shopPreviewAlbum=null;
+   $('shopPreviewStatus').textContent='Forhåndslytting stoppet.';
+  }else{
+   await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position:0},position_ms:0})});
+   shopPreviewAlbum=album;shopPreviewActive=true;
+   $('shopPreviewStatus').textContent='Prøvelytter: '+album.name+' · '+album.artist;
+  }
+  shopRenderResults();
+ }catch(e){$('shopPreviewStatus').textContent='Kunne ikke forhåndslytte: '+e.message}
+}
+$('shopWishlistToggle').onclick=()=>{shopWishlistOnly=true;shopRenderResults()};
+$('shopAllToggle').onclick=()=>{shopWishlistOnly=false;shopRenderResults()};
+$('shopBackRoom').onclick=async()=>{if(shopPreviewActive){try{await api('me/player/pause?device_id='+encodeURIComponent(deviceId),{method:'PUT'})}catch(e){}shopPreviewActive=false;shopPreviewAlbum=null}libraryView='all';renderLibrary();openRoomHome();shopRenderResults()};
+shopSaveWishlist();
+
 function albumCard(album,where){const btn=document.createElement('button');btn.className='album-card';btn.type='button';const img=document.createElement('img');img.src=album.image;img.alt='Omslag: '+album.name;img.loading='lazy';const title=document.createElement('strong');title.textContent=album.name;const sub=document.createElement('small');sub.textContent=album.artist;title.className='album-label';sub.className='album-label';btn.append(img,title,sub);btn.onclick=()=>showAlbum(album,where);return btn}
 function sortedAlbums(items){const mode=$('albumSort').value;return [...items].sort((a,b)=>mode==='recent'?b.added-a.added:mode==='year'?String(a.year||'').localeCompare(String(b.year||'')):String(mode==='title'?a.name:mode==='label'?a.label||'':a.artist).localeCompare(String(mode==='title'?b.name:mode==='label'?b.label||'':b.artist),'nb'))}
 
@@ -580,7 +637,7 @@ async function playAlbum(album,position=0){
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{libraryView=b.dataset.view;$('albumDetail').classList.add('hidden');renderLibrary();if(libraryView==='shop'){loadSpotifyTips();focusStage('shop',true)}else focusStage('collection',true)}));
 $('albumSort').onchange=renderLibrary;
 $('addRoom').onclick=()=>{const room=$('roomName').value.trim();if(!room||library.rooms.some(r=>r.toLowerCase()===room.toLowerCase()))return;library.rooms.push(room);activeRoom=room;$('roomName').value='';saveLibrary();renderLibrary()};
-$('albumSearchForm').onsubmit=async e=>{e.preventDefault();const q=$('albumQuery').value.trim();if(!q)return;$('albumSearchStatus').textContent='Søker etter plater …';try{const d=await api('search?'+new URLSearchParams({q,type:'album',limit:'10'}));shopAlbums=(d.albums?.items||[]).map(cleanAlbum);$('shopGrid').replaceChildren(...shopAlbums.map(a=>albumCard(a,'shop')));$('albumSearchStatus').textContent=shopAlbums.length+' album funnet.'}catch(err){$('albumSearchStatus').textContent=err.message}};
+$('albumSearchForm').onsubmit=async e=>{e.preventDefault();const q=$('albumQuery').value.trim();if(!q)return;$('albumSearchStatus').textContent='Søker etter plater …';try{const d=await api('search?'+new URLSearchParams({q,type:'album',limit:'10'}));shopAlbums=(d.albums?.items||[]).map(cleanAlbum);shopWishlistOnly=false;$('shopGrid').replaceChildren(...shopAlbums.map(a=>shopAlbumCard(a)));$('albumSearchStatus').textContent=shopAlbums.length+' album funnet.'}catch(err){$('albumSearchStatus').textContent=err.message}};
 $('exportCollection').onclick=()=>{const blob=new Blob([JSON.stringify({version:2,exported:new Date().toISOString(),...library},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='muli-platesamling.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1500)};
 
 $('importCollection').onclick=()=>$('importCollectionFile').click();
@@ -711,7 +768,7 @@ async function loadSpotifyTips(){
   }
   const owned=new Set(library.albums.map(a=>a.id));
   const unique=[...new Map(candidates.filter(a=>!owned.has(a.id)).map(a=>[a.id,a])).values()].slice(0,20);
-  grid.replaceChildren(...unique.map(a=>albumCard(a,'shop')));
+  grid.replaceChildren(...unique.map(a=>shopAlbumCard(a)));
   label.textContent=unique.length?'Flere album fra artister i samlingen din.':'Fant ingen nye album fra artistene i samlingen.';
   tipsLoaded=true;
  }catch(e){label.textContent='Kunne ikke hente tips: '+e.message}
