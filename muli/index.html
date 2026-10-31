@@ -293,6 +293,12 @@ body.room-music-playing .immersive-scene:after{opacity:1!important}
 .immersive-dimmer{opacity:0!important;transition:opacity .9s ease}
 body.room-music-playing .immersive-dimmer{opacity:.5!important}
 .immersive-cover-frame{filter:none!important;z-index:5!important}
+
+/* Discreet track navigation beside the illuminated album sleeve. */
+.immersive-controls{display:flex!important;position:absolute;z-index:7;top:26%;left:22%;width:58%;height:9%;align-items:center;justify-content:space-between;pointer-events:none;filter:none!important}
+.immersive-controls button{pointer-events:auto;width:clamp(29px,8vw,39px);height:clamp(29px,8vw,39px);border-radius:50%;border:1px solid #ead9bd69;background:#1c1916a6;color:#fff0d6;font-size:16px;line-height:1;display:grid;place-items:center;padding:0;box-shadow:0 2px 12px #0005;backdrop-filter:blur(5px);transition:background .2s,transform .2s,opacity .2s}
+.immersive-controls button:active{transform:scale(.92)}
+.immersive-controls button:disabled{opacity:.28}
 </style>
 </head>
 <body>
@@ -715,8 +721,8 @@ function resetSleeveTimer(){
 }
 document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle'))return;resetSleeveTimer()},{passive:true});
 $('immersiveCoverToggle').onclick=e=>{e.stopPropagation();roomToggleTurntable()};
-$('immersivePrevious').onclick=e=>{e.stopPropagation();player?.previousTrack().catch(err=>personalNote(err.message))};
-$('immersiveNext').onclick=e=>{e.stopPropagation();player?.nextTrack().catch(err=>personalNote(err.message))};
+$('immersivePrevious').onclick=e=>{e.stopPropagation();roomIsLocal()?roomLocalStep(-1):player?.previousTrack().catch(err=>personalNote(err.message))};
+$('immersiveNext').onclick=e=>{e.stopPropagation();roomIsLocal()?roomLocalStep(1):player?.nextTrack().catch(err=>personalNote(err.message))};
 document.addEventListener('keydown',resetSleeveTimer);
 document.addEventListener('visibilitychange',resetSleeveTimer);
 document.addEventListener('scroll',()=>{if(!document.body.classList.contains('sleeve-idle'))resetSleeveTimer()},{passive:true});
@@ -785,6 +791,8 @@ function roomAudioElement(){
  return roomAudio;
 }
 function roomIsLocal(album=roomAlbum){return !!album&&album.localFile===true}
+async function roomLocalStep(direction){const i=roomLocalTracks.findIndex(a=>a.id===roomAlbum?.id);if(i<0)return;const next=roomLocalTracks[i+direction];if(!next)return;const wasPlaying=roomAudio&&!roomAudio.paused;roomSelectAlbum(next);if(wasPlaying)await roomToggleTurntable()}
+
 function roomApplyPlayback(note){
  const localSelected=roomIsLocal(),localPlaying=localSelected&&roomAudio&&!roomAudio.paused&&!roomAudio.ended;
  const spotifySelected=!localSelected&&!!roomAlbum&&playingAlbumId===roomAlbum.id&&roomPlaying;
@@ -793,8 +801,8 @@ function roomApplyPlayback(note){
  document.body.classList.toggle('room-music-playing',active);
  $('turntableLabel').textContent=roomAudioBusy?'…':active?'Ⅱ Pause':roomAlbum?'▶ Spill plate':'▦ Velg plate';
  $('roomPlayStatus').textContent=note||(roomAlbum?(roomAlbum.name+' · '+roomAlbum.artist+(active?' · spiller':' · klar')):'Velg en plate i samlingen');
- $('immersivePrevious').disabled=localSelected;
- $('immersiveNext').disabled=localSelected;
+ $('immersivePrevious').disabled=localSelected&&roomLocalTracks.findIndex(a=>a.id===roomAlbum?.id)<=0;
+ $('immersiveNext').disabled=localSelected&&roomLocalTracks.findIndex(a=>a.id===roomAlbum?.id)>=roomLocalTracks.length-1;
  // Spotify's own playback state controls whether the ambience must pause.
  ambientSpotifyPlaying=roomPlaying;
  ambientApply();
