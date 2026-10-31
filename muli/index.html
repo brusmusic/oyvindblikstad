@@ -40,7 +40,7 @@
 @media(max-width:600px){.deck{max-width:100%}.deck-lp .vinyl{width:155px;height:155px}.deck-lp .tonearm{right:26px}.listening-top{justify-content:center;text-align:center}}
 
 /* Spatial stages: focused rooms with soft edges and gentle landing positions */
-html{scroll-behavior:smooth;scroll-padding-top:110px;scroll-snap-type:y proximity}
+html{scroll-behavior:auto;scroll-padding-top:0;scroll-snap-type:none}
 body{overflow-x:hidden}
 .shell{max-width:980px}
 header{position:relative;z-index:5}
@@ -329,6 +329,12 @@ body.spotify-connected .room-spotify-hotspot:after{background:#f9d6a0;box-shadow
 .room-library-item img{max-height:145px!important}
 .room-shop-keys{position:absolute;z-index:7;left:83%;top:77%;width:12%;height:7%;border:0;background:transparent;color:#e3c6a4;cursor:pointer;font-size:22px;text-shadow:0 2px 5px #000c;transform:rotate(-24deg);opacity:.8}
 .room-shop-keys:active{transform:rotate(-24deg) scale(.9)}
+
+/* Remove automatic five-second listening-room takeover and page scroll locking. */
+html,body{scroll-snap-type:none!important;scroll-behavior:auto!important}
+.focus-stage{scroll-snap-align:none!important;scroll-margin-top:0!important}
+body[data-focus] .focus-stage{filter:none!important;opacity:1!important;transform:none!important}
+body.sleeve-idle{overflow-x:hidden;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -717,7 +723,7 @@ $('refreshTips').onclick=loadSpotifyTips;
 /* Focused spatial navigation; scrolling remains natural for long record shelves */
 let activeStage='collection';
 let sleeveTimer=null;
-function focusStage(name,scroll=false){
+function focusStage(name,scroll=false){scroll=false;
  const targets={collection:'collectionPanel',listening:'listeningRoom',details:'albumDetail',bio:'artistBio',shop:'shopPanel'};
  const target=$(targets[name]);if(!target||target.classList.contains('hidden'))return;
  activeStage=name;document.body.dataset.focus=name;if(typeof resetSleeveTimer==='function')resetSleeveTimer();
@@ -741,14 +747,7 @@ const originalFocusStage=focusStage;
 focusStage=function(name,scroll=false){if(scroll)focusLockUntil=Date.now()+1800;originalFocusStage(name,scroll)};
 /* Five seconds of inactivity while viewing a selected album: show the listening room. */
 $('miniDeck').onclick=()=>{if(!roomAlbum){focusStage('listening',true);return}clearTimeout(sleeveTimer);document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false')};
-function resetSleeveTimer(){
- clearTimeout(sleeveTimer);
- if(document.body.classList.contains('sleeve-idle'))return;
- if(!roomAlbum||!roomPlaying||document.hidden)return;
- sleeveTimer=setTimeout(()=>{
-  if(roomAlbum&&roomPlaying&&!document.hidden&&!document.querySelector('dialog[open]')){document.body.classList.add('sleeve-idle');$('immersiveRoom').setAttribute('aria-hidden','false');}
- },5000);
-}
+function resetSleeveTimer(){clearTimeout(sleeveTimer);}
 document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('sleeve-idle'))return;resetSleeveTimer()},{passive:true});
 $('immersiveCoverToggle').onclick=e=>{e.stopPropagation();roomToggleTurntable()};
 $('immersivePrevious').onclick=e=>{e.stopPropagation();roomIsLocal()?roomLocalStep(-1):player?.previousTrack().catch(err=>personalNote(err.message))};
