@@ -305,6 +305,14 @@ body.room-music-playing .immersive-dimmer{opacity:.5!important}
 body.spotify-connected .room-spotify-hotspot{background:linear-gradient(120deg,#f4d39c25,#ffd38a0d)!important;box-shadow:inset 0 0 15px #e6a85a60,0 0 14px #e3aa6a45}
 .room-spotify-hotspot:after{content:"";position:absolute;right:12%;bottom:18%;width:5px;height:5px;border-radius:50%;background:#493e33;transition:background .35s,box-shadow .35s}
 body.spotify-connected .room-spotify-hotspot:after{background:#f9d6a0;box-shadow:0 0 8px 3px #e7a659a0}
+
+/* Invisible amplifier touch area, with no painted rectangle or LED. */
+.room-spotify-hotspot,.room-spotify-hotspot:hover,body.spotify-connected .room-spotify-hotspot{background:transparent!important;box-shadow:none!important;filter:none!important;border:0!important;outline-offset:2px}
+.room-spotify-hotspot:after,body.spotify-connected .room-spotify-hotspot:after{display:none!important}
+/* Navigation stays accessible but visually almost disappears. */
+.immersive-controls button{opacity:.18!important;background:#15120e42!important;border-color:#e7d6bd25!important;color:#f8e9d6!important;box-shadow:none!important;backdrop-filter:none!important}
+.immersive-controls button:active,.immersive-controls button:focus-visible{opacity:.85!important}
+.immersive-controls button:disabled{opacity:.08!important}
 </style>
 </head>
 <body>
