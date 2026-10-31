@@ -238,6 +238,21 @@ body.music-paused .immersive-cover-frame{filter:none}
 .immersive-turntable:disabled{opacity:.65;cursor:wait}
 .room-library-empty{margin-top:20px}
 .immersive-cover-frame.local-selected{background:linear-gradient(135deg,#463424,#241d1a)}.immersive-cover-frame.local-selected:after{content:"♫";position:absolute;inset:0;display:grid;place-items:center;color:#d4b78d;font-size:clamp(40px,9vh,90px)}.immersive-cover-frame.local-selected img{visibility:hidden}
+
+/* Focus on listening room and record shelf; window/fireplace temporarily locked. */
+#ambientOpen,#ambientPanel{display:none!important}
+.room-library-overlay{inset:7% 3% 9%;border-radius:19px;background:linear-gradient(145deg,#2d2924ee,#171513ed);border:1px solid #a98a615c;box-shadow:0 12px 70px #000c;backdrop-filter:blur(10px);padding:14px 10px 18px}
+.room-library-head{padding:0 8px;margin:7px 0 9px}
+.room-library-head h2{font-size:19px}
+.room-library-overlay>p{margin:4px 8px 12px;font-size:12px}
+.room-library-grid{flex:1;max-height:none;gap:12px;padding:10px 10% 18px;align-items:center}
+.room-library-item{flex:0 0 clamp(112px,37%,175px);min-width:112px;scroll-snap-align:center;gap:5px}
+.room-library-item img{max-height:175px}
+.room-library-item strong{font-size:12px}
+.room-library-item small{font-size:10px}
+.room-library-actions{padding:0 8px}
+.room-library-actions button,.room-library-actions label{font-size:12px;padding:9px}
+@media(max-width:400px){.room-library-overlay{inset:7% 2% 9%}.room-library-grid{gap:10px}.room-library-item{flex-basis:40%}}
 </style>
 </head>
 <body>
@@ -686,7 +701,7 @@ function ambientInit(){
 }
 async function ambientUnlock(){ambientInit();if(ambientContext.state==='suspended')await ambientContext.resume()}
 function ambientApply(){
- const mute=ambientSpotifyPlaying;
+ const mute=true; // Window/fireplace audio disabled while core listening flow is being finished.
  if(ambientContext){const t=ambientContext.currentTime;ambientWind.gain.cancelScheduledValues(t);ambientFire.gain.cancelScheduledValues(t);ambientWind.gain.setTargetAtTime(!mute&&ambientWindowOpen?(ambientWeather==='rain'?.11:ambientWeather==='wind'?.075:ambientWeather==='snow'?.023:.008):0,t,.18);ambientFire.gain.setTargetAtTime(!mute&&ambientFireOn?.045:0,t,.18)}
  $('ambientWindow').classList.toggle('is-open',ambientWindowOpen);$('ambientFire').classList.toggle('is-on',ambientFireOn);
  $('ambientWindowButton').textContent=ambientWindowOpen?'Lukk vinduet':'Åpne vinduet';$('ambientFireButton').textContent=ambientFireOn?'Slukk peisen':'Tenn peisen';
@@ -694,7 +709,7 @@ function ambientApply(){
  $('ambientStatus').textContent=mute?'Spotify spiller: romlyden er pauset, men vindu og peis er uendret.':ambientWindowOpen||ambientFireOn?'Romlyd aktiv'+(ambientWindowOpen?' · vindu åpent':'')+(ambientFireOn?' · peis tent':''):'Rommet er stille.';
  try{localStorage.setItem('muli_ambient_v1',JSON.stringify({windowOpen:ambientWindowOpen,fireOn:ambientFireOn,weather:ambientWeather}))}catch{}
 }
-function ambientPanelOpen(open){$('ambientPanel').classList.toggle('is-open',open)}
+function ambientPanelOpen(open){$('ambientPanel').classList.remove('is-open')}
 $('ambientOpen').onclick=e=>{e.stopPropagation();ambientPanelOpen(true)};
 $('ambientBack').onclick=e=>{e.stopPropagation();ambientPanelOpen(false)};
 $('ambientWindowButton').onclick=async()=>{await ambientUnlock();ambientWindowOpen=!ambientWindowOpen;ambientApply()};
@@ -707,7 +722,7 @@ try{const saved=JSON.parse(localStorage.getItem('muli_ambient_v1')||'{}');ambien
 ambientApply();
 let ambientTouchX=null;
 $('immersiveRoom').addEventListener('touchstart',e=>{ambientTouchX=e.touches[0]?.clientX??null},{passive:true});
-$('immersiveRoom').addEventListener('touchend',e=>{if(ambientTouchX===null)return;const delta=(e.changedTouches[0]?.clientX??ambientTouchX)-ambientTouchX;ambientTouchX=null;if(delta< -65&&!$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(true);else if(delta>65&&$('ambientPanel').classList.contains('is-open'))ambientPanelOpen(false)},{passive:true});
+$('immersiveRoom').addEventListener('touchend',e=>{if(ambientTouchX===null)return;const delta=(e.changedTouches[0]?.clientX??ambientTouchX)-ambientTouchX;ambientTouchX=null;/* Window/fireplace room locked during playback flow development. */},{passive:true});
 
 
 function openRoomHome(){
@@ -797,7 +812,7 @@ function openRoomLibrary(){
  $('roomLibraryEmpty').classList.toggle('hidden',albums.length>0);
  for(const album of albums){
   const button=document.createElement('button');button.type='button';button.className='room-library-item';
-  const cover=document.createElement('img');cover.src=album.image||'';cover.alt='Cover: '+album.name;cover.loading='lazy';if(!album.image){cover.style.display='none';button.style.background='linear-gradient(135deg,#5e4732,#29221d)';button.style.borderRadius='8px';button.style.padding='20px';button.style.minHeight='190px'}
+  const cover=document.createElement('img');cover.src=album.image||'';cover.alt='Cover: '+album.name;cover.loading='lazy';if(!album.image){cover.style.display='none';button.style.background='linear-gradient(135deg,#5e4732,#29221d)';button.style.borderRadius='8px';button.style.padding='20px';button.style.minHeight='135px'}
   const title=document.createElement('strong');title.textContent=album.name;
   const artist=document.createElement('small');artist.textContent=album.artist;
   button.append(cover,title,artist);
