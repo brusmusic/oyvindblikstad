@@ -284,6 +284,15 @@ body.room-music-playing .immersive-scene:before,body.room-music-playing .immersi
 .room-spotify-panel{position:absolute;z-index:10;left:8%;right:8%;top:39%;background:#211d1bef;color:#fff;border:1px solid #c4a47a;border-radius:14px;padding:16px;display:none;text-align:center}
 .room-spotify-panel.is-open{display:block}
 .room-spotify-panel button{font-size:13px;margin:7px;padding:10px}
+
+/* Room lighting follows actual playback, not just selected album. */
+.immersive-scene:before{opacity:1!important;filter:none!important}
+.immersive-scene:after{opacity:0!important;filter:none!important}
+body.room-music-playing .immersive-scene:before{opacity:0!important}
+body.room-music-playing .immersive-scene:after{opacity:1!important}
+.immersive-dimmer{opacity:0!important;transition:opacity .9s ease}
+body.room-music-playing .immersive-dimmer{opacity:.5!important}
+.immersive-cover-frame{filter:none!important;z-index:5!important}
 </style>
 </head>
 <body>
@@ -515,7 +524,7 @@ async function playAlbum(album,position=0){
   // Transferring with play:false first could pause and race with the SDK state event.
   await api('me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',body:JSON.stringify({context_uri:album.uri,offset:{position},position_ms:0})});
   if(request!==albumSwitchToken)return;
-  playingAlbumId=album.id;roomPlaying=true;document.body.classList.remove('music-paused');if($('immersiveTurntable')){$('immersiveTurntable').classList.add('is-playing');$('turntableLabel').textContent='Ⅱ Pause'}$('immersiveCoverToggle').setAttribute('aria-label','Pause');albumSwitchPending=null;renderDeck();
+  playingAlbumId=album.id;roomPlaying=true;document.body.classList.remove('music-paused');document.body.classList.add('room-music-playing');if($('immersiveTurntable')){$('immersiveTurntable').classList.add('is-playing');$('turntableLabel').textContent='Ⅱ Pause'}$('immersiveCoverToggle').setAttribute('aria-label','Pause');albumSwitchPending=null;renderDeck();
   $('roomPlay').textContent='Ⅱ';$('toggle').textContent='Ⅱ';$('roomToggle').textContent='Ⅱ';
   $('roomNow').textContent=album.name+' · '+album.artist;
   $('nowTitle').textContent=album.name;$('nowArtist').textContent=album.artist;
@@ -583,7 +592,7 @@ function setRoomAlbum(album){
 }
 function syncRoomPlayer(paused,track){
  ambientSpotifyPlaying=!paused;ambientApply();
- roomPlaying=!paused;document.body.classList.toggle('music-paused',paused);if($('immersiveTurntable')){$('immersiveTurntable').classList.toggle('is-playing',!paused);$('turntableLabel').textContent=paused?'▶ Spill plate':'Ⅱ Pause';}$('immersiveCoverToggle').setAttribute('aria-label',paused?'Spill av':'Pause');renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
+ roomPlaying=!paused;document.body.classList.toggle('music-paused',paused);document.body.classList.toggle('room-music-playing',!paused);if($('immersiveTurntable')){$('immersiveTurntable').classList.toggle('is-playing',!paused);$('turntableLabel').textContent=paused?'▶ Spill plate':'Ⅱ Pause';}$('immersiveCoverToggle').setAttribute('aria-label',paused?'Spill av':'Pause');renderDeck();$('roomPlay').textContent=roomPlaying&&playingAlbumId===roomAlbum?.id?'Ⅱ':'▶';
  $('roomToggle').textContent=paused?'▶':'Ⅱ';
  $('roomToggle').disabled=false;$('roomPrevious').disabled=false;$('roomNext').disabled=false;
  if(track){if(!albumSwitchPending||track.album?.id===albumSwitchPending)playingAlbumId=track.album?.id||playingAlbumId;$('roomNow').textContent=track.name+' · '+track.artists.map(a=>a.name).join(', ')}if(typeof roomApplyPlayback==='function')roomApplyPlayback();
