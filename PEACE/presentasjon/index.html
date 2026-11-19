@@ -7,7 +7,7 @@ body{margin:0;background:#000;color:var(--ink);font-family:Inter,ui-sans-serif,s
 button{font:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 .shell{min-height:100svh;display:flex;flex-direction:column;position:relative}
 header{display:flex;align-items:center;justify-content:space-between;padding:25px clamp(20px,4vw,65px);gap:16px}
-.brand{font-size:12px;letter-spacing:.21em;text-transform:uppercase;color:#c9d9d3;text-decoration:none}
+.brand[hidden]{visibility:hidden;display:block}.brand{font-size:12px;letter-spacing:.21em;text-transform:uppercase;color:#c9d9d3;text-decoration:none}
 .meta{font-size:12px;color:#858d89;letter-spacing:.14em}
 main{width:min(1150px,100%);margin:auto;flex:1;display:flex;align-items:center;padding:24px clamp(24px,6vw,80px) 50px}
 .slide{width:100%;animation:appear .35s ease both}@keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -42,7 +42,7 @@ let current=-1,expanded=false,showNotes=false;
 const stage=document.getElementById('stage');
 function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
 function render(){
-const s=current<0?null:slides[current];stage.replaceChildren();document.getElementById('counter').textContent=(current<0?'0':String(current+1))+' / 10'+(expanded?' · FORDYPNING':'');
+const s=current<0?null:slides[current];stage.replaceChildren();document.querySelector('header .brand').hidden=(current===0);document.getElementById('counter').textContent=(current<0?'0':String(current+1))+' / 10'+(expanded?' · FORDYPNING':'');
 const article=el('article','slide');if(current>=0)article.append(el('div','kicker',expanded?'FORDYPNING · '+String(current+1).padStart(2,'0'):String(current+1).padStart(2,'0')+' / 10 · '+s[0]));
 if(current<0){const intro=el('div','intro');const frame=el('iframe','logo-frame');frame.src='/resonancelab/?embed=peace';frame.title='Interaktiv Resonance Lab-logo med mixer til høyre';frame.loading='eager';intro.append(frame);article.append(intro);}else if(expanded){article.append(el('h1','detail-title',s[0]),el('p','detail',s[3]));}
 else if(current===0){const intro=el('div','intro');const frame=el('iframe','logo-frame');frame.src='/resonancelab/';frame.title='Original interaktiv Resonance Lab-logo og mix';frame.loading='eager';const copy=el('div','intro-copy');copy.append(el('h1','',s[0]),el('h2','',s[1]),el('p','lead',s[2]),el('p','intro-note','Utforsk logoen og MIX · Bruk pil høyre for å fortsette'));intro.append(frame,copy);article.append(intro);}
