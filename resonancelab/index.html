@@ -107,6 +107,10 @@
         margin-top: calc(clamp(24px, 4vw, 44px) * -0.45);
       }
 
+      .mix-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+      .mix-icon-button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(23,32,29,.2); background: rgba(247,246,241,.86); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+      .mix-icon-button:hover { background: #e3e9df; }
+      .mix-icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
       .smallmark {
         align-self: end;
         justify-self: center;
@@ -693,9 +697,15 @@
 
         <h1 id="brand-title">ReSonance Lab</h1>
         <div class="logo-controls">
-          <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="mixer-panel">
-            Mix
-          </button>
+          <div class="mix-actions">
+            <button class="mix-icon-button random-mix" type="button" aria-label="Randomiser de tre mixerkanalene" title="Randomiser">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="mixer-panel">Mix</button>
+            <button class="mix-icon-button reset-mix" type="button" aria-label="Tilbakestill mixer til standard" title="Tilbakestill">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.8 6.5"/><path d="M3 4v7h7"/></svg>
+            </button>
+          </div>
 
           <aside class="mixer-panel" id="mixer-panel" data-open="false" aria-label="Logo color mixer">
             <div class="mixer-header">
@@ -774,6 +784,26 @@
         b: { hue: 214, saturation: 32, lightness: 46, opacity: 55 },
         c: { hue: 32, saturation: 38, lightness: 52, opacity: 55 },
       };
+      const defaults = { a: { hue: 160, opacity: 55 }, b: { hue: 214, opacity: 55 }, c: { hue: 32, opacity: 55 } };
+      function applyMix(values) {
+        for (const channel of ["a", "b", "c"]) {
+          channels[channel].hue = values[channel].hue;
+          channels[channel].opacity = values[channel].opacity;
+          document.querySelector(`[data-channel="${channel}"][data-color]`).value = values[channel].hue;
+          document.querySelector(`[data-channel="${channel}"][data-opacity]`).value = values[channel].opacity;
+          syncChannel(channel);
+        }
+        triggerEmergence();
+      }
+      document.querySelector(".random-mix").addEventListener("click", () => {
+        const values = {};
+        for (const channel of ["a", "b", "c"]) values[channel] = {
+          hue: Math.floor(Math.random() * 361),
+          opacity: 30 + Math.floor(Math.random() * 61)
+        };
+        applyMix(values);
+      });
+      document.querySelector(".reset-mix").addEventListener("click", () => applyMix(defaults));
       let lastSeed = 17;
       let emergenceTimer;
 
