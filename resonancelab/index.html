@@ -587,7 +587,29 @@
           animation: none;
         }
       }
+
+      /* PEACE 0/10: dedicated logo on left and inline mixer on right. */
+      body.peace-embed { background:#000; color:#f3f5f1; display:block; overflow:hidden; }
+      body.peace-embed main { width:100%; height:100dvh; min-height:0; display:block; padding:0; }
+      body.peace-embed .logo-stage { width:100%; height:100%; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto minmax(0,.22fr); column-gap:clamp(12px,3vw,50px); padding:clamp(8px,2vw,26px); align-items:center; justify-items:center; }
+      body.peace-embed .mark { grid-column:1; grid-row:1; align-self:end; width:min(100%,48dvh,420px); }
+      body.peace-embed #brand-title,body.peace-embed .smallmark { display:none; }
+      body.peace-embed .logo-controls { grid-column:1; grid-row:2; margin:0; }
+      body.peace-embed .mixer-panel { position:static; grid-column:2; grid-row:1 / span 3; width:min(100%,410px); max-height:min(90dvh,480px); overflow:auto; background:#101511; border-color:#34443b; box-shadow:none; color:#e6eee9; transform:none; }
+      body.peace-embed .mixer-panel[data-open="true"] { display:block; opacity:1; transform:none; }
+      body.peace-embed .channel-strip { background:#1a211c; border-color:#354239; box-shadow:none; }
+      body.peace-embed .channel-name,body.peace-embed .control-label,body.peace-embed .value-readout { color:#d0dcd3; }
+      body.peace-embed .close-panel { background:#27332b; color:#fff; }
+      body.peace-embed .geometry-line { stroke:rgba(240,245,240,.25); }
+      body.peace-embed .field,body.peace-embed .field-ring { mix-blend-mode:screen; }
+      @media(max-width:620px){
+        body.peace-embed .logo-stage { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; }
+        body.peace-embed .mark { grid-column:1;grid-row:1;width:min(70vw,38dvh); }
+        body.peace-embed .logo-controls { grid-column:1;grid-row:2; }
+        body.peace-embed .mixer-panel { position:fixed;top:8px;left:8px;right:8px;bottom:8px;width:auto;max-height:none;z-index:60; }
+      }
     </style>
+    <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));</script>
   </head>
   <body>
     <main aria-labelledby="brand-title">
