@@ -273,8 +273,12 @@
       }
 
       .mixer-panel {
+        position: fixed;
+        z-index: 50;
+        top: 12px;
+        right: 12px;
         width: min(94vw, 410px);
-        max-height: calc(100vh - 120px);
+        max-height: calc(100dvh - 24px);
         overflow: auto;
         padding: 14px;
         border: 1px solid rgba(255, 255, 255, 0.64);
@@ -292,6 +296,9 @@
           transform 180ms ease;
       }
 
+      @media (max-width: 520px) {
+        .mixer-panel { left: 8px; right: 8px; width: auto; }
+      }
       .mixer-panel[data-open="true"] {
         display: block;
         transform: translateY(0);
