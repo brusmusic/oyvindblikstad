@@ -21,7 +21,7 @@ h2{font-size:clamp(24px,3.1vw,43px);line-height:1.25;letter-spacing:-.035em;font
 footer{padding:20px clamp(20px,4vw,65px) 30px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
 .controls{display:flex;align-items:center;gap:9px}.control{background:#111;border:1px solid #343d38;color:#e4eee8;border-radius:100px;min-width:44px;height:44px}.control:hover{background:#23352c}
 .hint{font-size:12px;color:#808b84}.dots{display:flex;gap:6px}.dot{width:5px;height:5px;border-radius:50%;background:#38413b}.dot.active{background:#b5d7cb}
-.closing-photo{display:block;width:100%;max-height:75dvh;object-fit:contain;margin:auto}.intro{display:block;width:100%}
+.intro-detail-photo{display:block;max-width:100%;max-height:72dvh;object-fit:contain;margin:0 auto}.closing-photo{display:block;width:100%;max-height:75dvh;object-fit:contain;margin:auto}.intro{display:block;width:100%}
 .logo-frame{width:100%;height:min(72dvh,720px);border:0;background:#000;border-radius:0}
 .intro-copy h1{font-size:clamp(54px,8vw,116px)}.intro-copy .lead{max-width:450px}
 .intro-note{font-size:12px;color:#83968c;margin-top:20px}
@@ -44,18 +44,18 @@ function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=
 function render(){
 const s=current<0||current===lastSlide?null:slides[current];stage.replaceChildren();document.querySelector('header .brand').hidden=(current===0);document.getElementById('counter').textContent=(current<0?'0':current===lastSlide?'SLUTT':String(current+1))+' / 10'+(expanded?' · FORDYPNING':'');
 const article=el('article','slide');if(current>=0&&current<lastSlide)article.append(el('div','kicker',expanded?'FORDYPNING · '+String(current+1).padStart(2,'0'):String(current+1).padStart(2,'0')+' / 10 · '+s[0]));
-if(current===lastSlide){const photo=el('img','closing-photo');photo.src='/PEACE/presentasjon/Daglig-bruk.png';photo.alt='PEACE i daglig bruk på en terrasse med utsikt over høstlandskap';article.append(photo);}else if(current<0){const intro=el('div','intro');const frame=el('iframe','logo-frame');frame.src='/resonancelab/?embed=peace';frame.title='Interaktiv Resonance Lab-logo med mixer til høyre';frame.loading='eager';intro.append(frame);article.append(intro);}else if(expanded){article.append(el('h1','detail-title',s[0]),el('p','detail',s[3]));}
+if(current===lastSlide){const photo=el('img','closing-photo');photo.src='/PEACE/presentasjon/Daglig-bruk.png';photo.alt='PEACE i daglig bruk på en terrasse med utsikt over høstlandskap';article.append(photo);}else if(current<0&&expanded){const photo=el('img','intro-detail-photo');photo.src='/PEACE/presentasjon/Lydstolen.HEIC';photo.alt='Lydstolen';article.append(photo);}else if(current<0){const intro=el('div','intro');const frame=el('iframe','logo-frame');frame.src='/resonancelab/?embed=peace';frame.title='Interaktiv Resonance Lab-logo med mixer til høyre';frame.loading='eager';intro.append(frame);article.append(intro);}else if(expanded){article.append(el('h1','detail-title',s[0]),el('p','detail',s[3]));}
 else{article.append(el('h1','',s[0]),el('h2','',s[1]),el('p','lead',s[2]));}
 if(showNotes && current>=0 && current<lastSlide){const n=el('section','notes');n.append(el('h3','', 'Muntlig manus'),el('p','',s[4]));article.append(n);}
 stage.append(article);const dots=document.getElementById('dots');dots.replaceChildren();[-1,...slides.map((_,i)=>i),lastSlide].forEach(i=>{const d=el('span','dot'+(i===current?' active':''));dots.append(d)});
-document.getElementById('up').disabled=!expanded;document.getElementById('down').disabled=expanded||current<0||current===lastSlide;document.getElementById('notesButton').textContent=showNotes?'Skjul manus':'Manus';
+document.getElementById('up').disabled=!expanded;document.getElementById('down').disabled=expanded||current===lastSlide;document.getElementById('notesButton').textContent=showNotes?'Skjul manus':'Manus';
 history.replaceState(null,'','#'+(current+1)+(expanded?'-mer':''));
 }
 function move(n){current=Math.max(-1,Math.min(lastSlide,current+n));expanded=false;render()}
-function detail(open){if(current<0||current===lastSlide)return;expanded=open;render()}
+function detail(open){if(current===lastSlide)return;expanded=open;render()}
 document.getElementById('prev').onclick=()=>move(-1);document.getElementById('next').onclick=()=>move(1);
 document.getElementById('down').onclick=()=>detail(true);document.getElementById('up').onclick=()=>detail(false);
 document.getElementById('notesButton').onclick=()=>{showNotes=!showNotes;render()};
 document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select'))return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1);if(e.key==='ArrowDown')detail(true);if(e.key==='ArrowUp')detail(false)}});
-const hash=location.hash.match(/^#(\d+)(-mer)?$/);if(hash){current=Math.min(lastSlide,Math.max(-1,Number(hash[1])-1));expanded=current>=0&&Boolean(hash[2])}render();
+const hash=location.hash.match(/^#(\d+)(-mer)?$/);if(hash){current=Math.min(lastSlide,Math.max(-1,Number(hash[1])-1));expanded=Boolean(hash[2])}render();
 </script></body></html>
