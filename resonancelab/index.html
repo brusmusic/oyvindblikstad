@@ -662,6 +662,14 @@
         body.pitch-embed .mixer { gap:4px; }
         body.pitch-embed .control-label { font-size:8px; }
       }
+      /* PEACE pitch: invite interaction with a gently animated dice button. */
+      body.pitch-embed .random-mix { animation:dice-invite 3.8s ease-in-out infinite; transform-origin:center; box-shadow:0 0 0 0 rgba(178,213,198,0); }
+      body.pitch-embed .random-mix svg { animation:dice-wiggle 3.8s ease-in-out infinite; transform-origin:center; }
+      body.pitch-embed .random-mix:hover { animation-play-state:paused; box-shadow:0 0 0 5px rgba(178,213,198,.23),0 0 22px rgba(178,213,198,.3); transform:scale(1.09); }
+      body.pitch-embed .random-mix:hover svg { animation-play-state:paused; }
+      @keyframes dice-invite { 0%,66%,100% { box-shadow:0 0 0 0 rgba(178,213,198,0); } 73% { box-shadow:0 0 0 5px rgba(178,213,198,.2); } 82% { box-shadow:0 0 0 9px rgba(178,213,198,0); } }
+      @keyframes dice-wiggle { 0%,63%,84%,100% { transform:rotate(0); } 68% { transform:rotate(-13deg); } 73% { transform:rotate(15deg); } 78% { transform:rotate(-7deg); } }
+      @media(prefers-reduced-motion:reduce){body.pitch-embed .random-mix,body.pitch-embed .random-mix svg{animation:none}}
     </style>
     <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));if(new URLSearchParams(location.search).get("embed")==="pitch")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed","pitch-embed"));</script>
   </head>
@@ -1026,6 +1034,12 @@
         });
       });
 
+      if (new URLSearchParams(location.search).get("embed") === "pitch") {
+        for (const channel of ["a", "b", "c"]) {
+          channels[channel].opacity = 0;
+          document.querySelector(`[data-channel="${channel}"][data-opacity]`).value = 0;
+        }
+      }
       Object.keys(channels).forEach(syncChannel);
     </script>
   </body>
