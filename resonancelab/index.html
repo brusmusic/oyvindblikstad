@@ -608,6 +608,18 @@
         body.peace-embed .logo-controls { grid-column:1;grid-row:2; }
         body.peace-embed .mixer-panel { position:fixed;top:8px;left:8px;right:8px;bottom:8px;width:auto;max-height:none;z-index:60; }
       }
+      body.peace-embed .logo-stage { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+      body.peace-embed .mark { grid-column:2; }
+      body.peace-embed .logo-controls { grid-column:2; }
+      body.peace-embed .mixer-panel { grid-column:1; grid-row:1 / span 3; }
+      body.peace-embed .reset-mix { display:none; }
+      .emergence-prompt { display:none; }
+      body.peace-embed .emergence-prompt { display:block; grid-column:2; grid-row:3; align-self:start; margin:8px 0 0; text-align:center; font-size:clamp(11px,1.3vw,15px); letter-spacing:.06em; color:#9eb8ab; }
+      @media(max-width:620px){
+        body.peace-embed .mark, body.peace-embed .logo-controls, body.peace-embed .emergence-prompt { grid-column:1; }
+        body.peace-embed .emergence-prompt { grid-row:3; }
+        body.peace-embed .logo-stage { grid-template-rows:minmax(0,1fr) auto auto; }
+      }
     </style>
     <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));</script>
   </head>
@@ -793,6 +805,7 @@
             </div>
           </aside>
         </div>
+        <p class="emergence-prompt">change inputs, watch the emergens</p>
       </section>
 
       <img class="smallmark" src="./resonance-lab-mark.svg" alt="" />
