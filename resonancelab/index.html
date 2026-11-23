@@ -637,6 +637,16 @@
         body.peace-embed .channel-controls { gap:3px; }
         body.peace-embed .control-label { font-size:8px; }
       }
+      /* PEACE: double the logo's size budget and match the dice button to Mix. */
+      body.peace-embed .logo-stage { grid-template-columns:minmax(0,38fr) minmax(0,62fr); }
+      body.peace-embed .mark { width:min(100%,76dvh,680px); max-height:72dvh; align-self:center; justify-self:center; }
+      body.peace-embed .mix-icon-button.random-mix { width:44px; height:44px; border-radius:999px; }
+      body.peace-embed .mix-icon-button.random-mix svg { width:22px; height:22px; }
+      body.peace-embed .mixer-panel { z-index:2; }
+      @media(max-width:620px){
+        body.peace-embed .logo-stage { grid-template-columns:minmax(0,42fr) minmax(0,58fr); }
+        body.peace-embed .mark { width:100%; max-height:60dvh; }
+      }
     </style>
     <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));</script>
   </head>
