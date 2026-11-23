@@ -620,6 +620,23 @@
         body.peace-embed .emergence-prompt { grid-row:3; }
         body.peace-embed .logo-stage { grid-template-rows:minmax(0,1fr) auto auto; }
       }
+      /* PEACE layout: mixer is a sibling of the controls, so it can occupy its own grid column. */
+      body.peace-embed .logo-stage { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto auto; overflow:hidden; }
+      body.peace-embed .mark { grid-column:2; grid-row:1; width:min(100%,38dvh,340px); align-self:end; }
+      body.peace-embed .logo-controls { grid-column:2; grid-row:2; }
+      body.peace-embed .emergence-prompt { grid-column:2; grid-row:3; margin:4px 0 0; }
+      body.peace-embed .mixer-panel { position:static; grid-column:1; grid-row:1 / 4; justify-self:center; align-self:center; width:min(100%,410px); max-height:calc(100dvh - 30px); }
+      @media(max-width:620px){
+        body.peace-embed .logo-stage { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto auto; gap:6px; padding:6px; }
+        body.peace-embed .mark { grid-column:2; grid-row:1; width:min(100%,35dvh); }
+        body.peace-embed .logo-controls { grid-column:2; grid-row:2; }
+        body.peace-embed .emergence-prompt { grid-column:2; grid-row:3; font-size:10px; }
+        body.peace-embed .mixer-panel { position:static; grid-column:1; grid-row:1 / 4; width:100%; max-height:calc(100dvh - 16px); padding:7px; }
+        body.peace-embed .mixer { gap:4px; }
+        body.peace-embed .channel-strip { padding:5px 2px; min-width:0; }
+        body.peace-embed .channel-controls { gap:3px; }
+        body.peace-embed .control-label { font-size:8px; }
+      }
     </style>
     <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));</script>
   </head>
@@ -748,6 +765,8 @@
             </button>
           </div>
 
+
+        </div>
           <aside class="mixer-panel" id="mixer-panel" data-open="false" aria-label="Logo color mixer">
             <div class="mixer-header">
               <h2>Mixer</h2>
@@ -804,7 +823,6 @@
               </section>
             </div>
           </aside>
-        </div>
         <p class="emergence-prompt">change inputs, watch the emergens</p>
       </section>
 
