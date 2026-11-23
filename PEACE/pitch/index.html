@@ -32,5 +32,5 @@
 const gate=document.getElementById('gate'),site=document.getElementById('site');
 function unlock(){gate.hidden=true;site.hidden=false;sessionStorage.setItem('peace-pitch-access','yes')}
 if(sessionStorage.getItem('peace-pitch-access')==='yes')unlock();
-document.getElementById('gateform').addEventListener('submit',e=>{e.preventDefault();if(document.getElementById('password').value==='Tune1337'){unlock()}else{document.getElementById('error').textContent='Feil passord. Prøv igjen.';document.getElementById('password').value=''}});
+document.getElementById('gateform').addEventListener('submit',e=>{e.preventDefault();if(document.getElementById('password').value==='jatakk'){unlock()}else{document.getElementById('error').textContent='Feil passord. Prøv igjen.';document.getElementById('password').value=''}});
 </script></body></html>
