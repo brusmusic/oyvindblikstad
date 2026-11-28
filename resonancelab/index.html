@@ -670,7 +670,21 @@
       @keyframes dice-invite { 0%,66%,100% { box-shadow:0 0 0 0 rgba(178,213,198,0); } 73% { box-shadow:0 0 0 5px rgba(178,213,198,.2); } 82% { box-shadow:0 0 0 9px rgba(178,213,198,0); } }
       @keyframes dice-wiggle { 0%,63%,84%,100% { transform:rotate(0); } 68% { transform:rotate(-13deg); } 73% { transform:rotate(15deg); } 78% { transform:rotate(-7deg); } }
       @media(prefers-reduced-motion:reduce){body.pitch-embed .random-mix,body.pitch-embed .random-mix svg{animation:none}}
-    </style>
+    
+      /* Pitch: center the living mark when the mixer is closed; overlay mixer on narrow screens. */
+      body.pitch-embed .logo-stage:not(:has(.mixer-panel[data-open="true"])) { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; align-content:center; row-gap:12px; }
+      body.pitch-embed .logo-stage:not(:has(.mixer-panel[data-open="true"])) .mark { grid-column:1; width:min(88vw,65dvh,680px); max-height:65dvh; align-self:center; }
+      body.pitch-embed .logo-stage:not(:has(.mixer-panel[data-open="true"])) .logo-controls,body.pitch-embed .logo-stage:not(:has(.mixer-panel[data-open="true"])) .emergence-prompt { grid-column:1; }
+      @media(max-width:760px){
+        body.pitch-embed .logo-stage { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; align-content:center; row-gap:12px; }
+        body.pitch-embed .mark { grid-column:1; width:min(96vw,65dvh); max-height:65dvh; align-self:center; }
+        body.pitch-embed .logo-stage:not(:has(.mixer-panel[data-open="true"])) .mark { width:min(96vw,65dvh); }
+        body.pitch-embed .logo-controls,body.pitch-embed .emergence-prompt { grid-column:1; }
+        body.pitch-embed .mixer-panel { position:fixed; inset:8px; width:auto; max-height:calc(100dvh - 16px); z-index:60; padding:14px; }
+        body.pitch-embed .mixer { grid-template-columns:repeat(3,minmax(0,1fr)); justify-content:center; }
+        body.pitch-embed .channel-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      }
+</style>
     <script>if(new URLSearchParams(location.search).get("embed")==="peace")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed"));if(new URLSearchParams(location.search).get("embed")==="pitch")document.addEventListener("DOMContentLoaded",()=>document.body.classList.add("peace-embed","pitch-embed"));</script>
   </head>
   <body>
